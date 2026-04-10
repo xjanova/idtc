@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDTC Dashboard — Wallet & Token Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#22c55e;--green-dark:#16a34a;--green-deep:#0a3d1f;
+  --green-light:#dcfce7;--gray-50:#f8fafc;--gray-100:#f1f5f9;
+  --gray-200:#e2e8f0;--gray-700:#334155;--gray-900:#0f172a;
+  --red:#ef4444;--gold:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;
+  --shadow:0 4px 24px rgba(0,0,0,.07);--shadow-lg:0 12px 48px rgba(0,0,0,.12)
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:#f0f4f8;color:var(--gray-900);min-height:100vh}
+
+/* NAV */
+nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{height:36px;width:36px;border-radius:50%}
+.nav-logo span{font-family:'Montserrat',sans-serif;font-weight:800;font-size:1rem;background:linear-gradient(135deg,#0a3d1f,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:.25rem}
+.nav-links a{text-decoration:none;color:var(--gray-700);font-size:.83rem;font-weight:500;padding:.4rem .8rem;border-radius:8px;transition:all .2s}
+.nav-links a:hover,.nav-links a.active{background:var(--green-light);color:var(--green-dark)}
+.btn-connect{display:flex;align-items:center;gap:.5rem;padding:.5rem 1.1rem;border-radius:10px;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;border:none;font-family:'Inter',sans-serif}
+.btn-connect.disconnected{background:linear-gradient(135deg,var(--green-deep),var(--green-dark));color:#fff}
+.btn-connect.connected{background:var(--green-light);color:var(--green-dark);border:1.5px solid var(--green)}
+.btn-connect:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(22,163,74,.3)}
+.wallet-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+
+/* LAYOUT */
+.main{max-width:1200px;margin:0 auto;padding:2rem}
+.page-header{margin-bottom:2rem}
+.page-header h1{font-family:'Montserrat',sans-serif;font-size:1.6rem;font-weight:800;color:var(--gray-900)}
+.page-header p{color:var(--gray-700);font-size:.9rem;margin-top:.25rem}
+
+/* CARDS */
+.card{background:#fff;border-radius:16px;padding:1.5rem;box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+.card-sm{background:#fff;border-radius:12px;padding:1.1rem 1.25rem;box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem;margin-bottom:1.5rem}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:1.5rem}
+
+/* STAT CARDS */
+.stat-card{position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.08}
+.stat-card.green::after{background:var(--green)}
+.stat-card.blue::after{background:var(--blue)}
+.stat-card.gold::after{background:var(--gold)}
+.stat-card.purple::after{background:var(--purple)}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:.75rem}
+.stat-icon.green{background:#dcfce7}
+.stat-icon.blue{background:#dbeafe}
+.stat-icon.gold{background:#fef9c3}
+.stat-icon.purple{background:#ede9fe}
+.stat-label{font-size:.75rem;font-weight:600;color:var(--gray-700);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
+.stat-value{font-size:1.6rem;font-weight:800;font-family:'Montserrat',sans-serif;color:var(--gray-900);line-height:1.1}
+.stat-value.loading{background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;height:2rem;width:80%}
+.stat-sub{font-size:.78rem;color:var(--gray-700);margin-top:.3rem;display:flex;align-items:center;gap:.3rem}
+.stat-sub.up{color:var(--green-dark)}
+.stat-sub.down{color:var(--red)}
+
+/* CONNECT PROMPT */
+#connect-prompt{background:linear-gradient(135deg,#f0fdf4,#fff);border:2px dashed var(--green);border-radius:20px;padding:3rem;text-align:center;margin-bottom:1.5rem}
+#connect-prompt h2{font-family:'Montserrat',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:.5rem;color:var(--green-deep)}
+#connect-prompt p{color:var(--gray-700);font-size:.9rem;margin-bottom:1.5rem}
+.wallet-options{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.wallet-btn{display:flex;align-items:center;gap:.6rem;padding:.7rem 1.4rem;border-radius:12px;border:1.5px solid var(--gray-200);background:#fff;cursor:pointer;font-weight:600;font-size:.88rem;transition:all .2s;font-family:'Inter',sans-serif}
+.wallet-btn:hover{border-color:var(--green);background:var(--green-light);transform:translateY(-2px)}
+.wallet-btn img,.wallet-btn span.emoji{width:24px;height:24px;object-fit:contain;font-size:1.2rem;line-height:1}
+
+/* CHART SECTION */
+.chart-container{position:relative;height:280px}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--gray-900);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.chart-tabs{display:flex;gap:.25rem;background:var(--gray-100);border-radius:8px;padding:3px}
+.chart-tab{padding:.25rem .6rem;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;color:var(--gray-700);transition:all .2s;border:none;background:transparent;font-family:'Inter',sans-serif}
+.chart-tab.active{background:#fff;color:var(--green-dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* TOKEN INFO TABLE */
+.info-table{width:100%;border-collapse:collapse}
+.info-table tr{border-bottom:1px solid var(--gray-100)}
+.info-table tr:last-child{border-bottom:none}
+.info-table td{padding:.6rem .5rem;font-size:.85rem}
+.info-table td:first-child{color:var(--gray-700);font-weight:500;width:45%}
+.info-table td:last-child{color:var(--gray-900);font-weight:600;text-align:right}
+.badge-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:999px;font-size:.73rem;font-weight:600}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-purple{background:#ede9fe;color:#6d28d9}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+
+/* WALLET INFO */
+.address-box{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:.75rem 1rem;font-family:monospace;font-size:.82rem;color:var(--gray-700);display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.copy-btn{background:none;border:none;cursor:pointer;color:var(--green-dark);font-size:.8rem;font-weight:600;font-family:'Inter',sans-serif;padding:.2rem .5rem;border-radius:6px;transition:background .2s}
+.copy-btn:hover{background:var(--green-light)}
+
+/* ADD TOKEN */
+.add-token-btn{width:100%;margin-top:.75rem;padding:.65rem;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;font-family:'Inter',sans-serif}
+.add-token-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,58,237,.35)}
+
+/* NETWORK WARNING */
+.network-warning{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:.75rem 1rem;font-size:.83rem;color:#92400e;display:none;align-items:center;gap:.5rem;margin-bottom:1rem}
+
+/* TX LIST */
+.tx-item{display:flex;align-items:center;gap.75rem;padding:.65rem 0;border-bottom:1px solid var(--gray-100)}
+.tx-item:last-child{border-bottom:none}
+.tx-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.tx-icon.in{background:#dcfce7}
+.tx-icon.out{background:#fee2e2}
+.tx-details{flex:1;min-width:0;margin-left:.75rem}
+.tx-type{font-size:.83rem;font-weight:600;color:var(--gray-900)}
+.tx-hash{font-size:.72rem;color:var(--gray-700);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-amount{font-size:.88rem;font-weight:700;text-align:right}
+.tx-amount.in{color:var(--green-dark)}
+.tx-amount.out{color:var(--red)}
+
+/* DISTRIBUTION CHART */
+.donut-wrap{position:relative;max-width:200px;margin:0 auto}
+
+/* ANIMATIONS */
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease both}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .main{padding:1rem}
+  nav{padding:0 1rem}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="./f7d43e9e-dbbf-48ba-ae73-25af2025d6a2.jpg" alt="IDTC" onerror="this.style.display='none'">
+    <span>IDTC</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Whitepaper</a>
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="sale.html">Token Sale</a>
+  </div>
+  <button class="btn-connect disconnected" id="connectBtn" onclick="connectWallet()">
+    <span>🔗</span> Connect Wallet
+  </button>
+</nav>
+
+<div class="main">
+
+  <!-- CONNECT PROMPT (shown when disconnected) -->
+  <div id="connect-prompt">
+    <div style="font-size:3rem;margin-bottom:1rem">🔗</div>
+    <h2>Connect Your Wallet</h2>
+    <p>Connect your wallet to view your IDTC balance, portfolio analytics, and transaction history.</p>
+    <div class="wallet-options">
+      <button class="wallet-btn" onclick="connectWallet('metamask')">
+        <span class="emoji">🦊</span> MetaMask
+      </button>
+      <button class="wallet-btn" onclick="connectWallet('walletconnect')">
+        <span class="emoji">🔗</span> WalletConnect
+      </button>
+      <button class="wallet-btn" onclick="connectWallet('coinbase')">
+        <span class="emoji">🪙</span> Coinbase Wallet
+      </button>
+      <button class="wallet-btn" onclick="connectWallet('trust')">
+        <span class="emoji">🛡️</span> Trust Wallet
+      </button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD (shown when connected) -->
+  <div id="dashboard" style="display:none">
+
+    <!-- Network warning -->
+    <div class="network-warning" id="networkWarning">
+      ⚠️ Please switch to <strong>Polygon Mainnet</strong> (Chain ID: 137) to use IDTC.
+      <button onclick="switchToPolygon()" style="margin-left:.5rem;background:var(--gold);border:none;padding:.25rem .6rem;border-radius:6px;cursor:pointer;font-weight:600;font-size:.78rem">Switch Now</button>
+    </div>
+
+    <!-- WALLET HEADER -->
+    <div class="page-header">
+      <h1>My IDTC Portfolio</h1>
+      <p id="walletAddressShort" style="color:var(--gray-700);font-size:.88rem">Connected: —</p>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="grid-4">
+      <div class="card stat-card green">
+        <div class="stat-icon green">💎</div>
+        <div class="stat-label">IDTC Balance</div>
+        <div class="stat-value" id="idtcBalance">—</div>
+        <div class="stat-sub" id="idtcValueUSD">≈ $0.00 USD</div>
+      </div>
+      <div class="card stat-card blue">
+        <div class="stat-icon blue">🔷</div>
+        <div class="stat-label">MATIC Balance</div>
+        <div class="stat-value" id="maticBalance">—</div>
+        <div class="stat-sub">Gas Token</div>
+      </div>
+      <div class="card stat-card gold">
+        <div class="stat-icon gold">📈</div>
+        <div class="stat-label">IDTC Price</div>
+        <div class="stat-value" id="idtcPrice">$0.05</div>
+        <div class="stat-sub up" id="priceChange">▲ Public Sale Price</div>
+      </div>
+      <div class="card stat-card purple">
+        <div class="stat-icon purple">🔒</div>
+        <div class="stat-label">Staked IDTC</div>
+        <div class="stat-value" id="stakedBalance">0</div>
+        <div class="stat-sub">Yield: —%</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="grid-2">
+
+      <!-- Price Chart -->
+      <div class="card">
+        <div class="chart-title">
+          <span>📊 IDTC Price Chart</span>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="updatePriceChart('1D',this)">1D</button>
+            <button class="chart-tab" onclick="updatePriceChart('7D',this)">7D</button>
+            <button class="chart-tab" onclick="updatePriceChart('1M',this)">1M</button>
+            <button class="chart-tab" onclick="updatePriceChart('ALL',this)">ALL</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="priceChart"></canvas></div>
+      </div>
+
+      <!-- Distribution Donut -->
+      <div class="card">
+        <div class="chart-title">🥧 Token Distribution</div>
+        <div class="chart-container" style="height:240px"><canvas id="distChart"></canvas></div>
+        <div id="distLegend" style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.75rem"></div>
+      </div>
+    </div>
+
+    <!-- MARKET + WALLET INFO -->
+    <div class="grid-3">
+
+      <!-- Token Info -->
+      <div class="card">
+        <div class="chart-title">⬡ Token Information</div>
+        <table class="info-table">
+          <tr><td>Token</td><td><span class="badge-pill badge-green">IDTC</span></td></tr>
+          <tr><td>Blockchain</td><td><span class="badge-pill badge-purple">Polygon</span></td></tr>
+          <tr><td>Total Supply</td><td>100,000,000</td></tr>
+          <tr><td>Circulating</td><td id="circSupply">—</td></tr>
+          <tr><td>Market Cap</td><td id="marketCap">—</td></tr>
+          <tr><td>Contract</td><td><a id="contractLink" href="#" target="_blank" style="color:var(--green-dark);font-size:.75rem;font-family:monospace" id="contractShort">—</a></td></tr>
+          <tr><td>Decimals</td><td>18</td></tr>
+          <tr><td>Standard</td><td><span class="badge-pill badge-blue">ERC-20</span></td></tr>
+        </table>
+        <button class="add-token-btn" onclick="addTokenToWallet()">
+          🦊 Add IDTC to MetaMask
+        </button>
+      </div>
+
+      <!-- Wallet Details -->
+      <div class="card">
+        <div class="chart-title">👛 Wallet Details</div>
+        <div class="address-box">
+          <span id="walletAddressFull" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">—</span>
+          <button class="copy-btn" onclick="copyAddress()">Copy</button>
+        </div>
+        <table class="info-table">
+          <tr><td>Network</td><td id="networkName">—</td></tr>
+          <tr><td>Chain ID</td><td id="chainId">—</td></tr>
+          <tr><td>MATIC Balance</td><td id="maticBalanceFull">—</td></tr>
+          <tr><td>IDTC Balance</td><td id="idtcBalanceFull">—</td></tr>
+          <tr><td>Portfolio Value</td><td id="portfolioValue">—</td></tr>
+          <tr><td>Tokens Bought</td><td id="tokensBought">—</td></tr>
+        </table>
+        <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <a href="sale.html" style="text-decoration:none;text-align:center;padding:.55rem;background:linear-gradient(135deg,var(--green-deep),var(--green-dark));color:#fff;border-radius:8px;font-weight:600;font-size:.82rem">Buy IDTC</a>
+          <button onclick="disconnectWallet()" style="padding:.55rem;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;font-family:'Inter',sans-serif;color:var(--gray-700)">Disconnect</button>
+        </div>
+      </div>
+
+      <!-- Volume Chart -->
+      <div class="card">
+        <div class="chart-title">📉 Volume (7D)</div>
+        <div class="chart-container" style="height:180px;margin-bottom:.75rem"><canvas id="volumeChart"></canvas></div>
+        <div class="chart-title" style="margin-top:.5rem">🏦 Sale Progress</div>
+        <div style="margin-top:.5rem">
+          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--gray-700);margin-bottom:.3rem"><span>Seed Round</span><span id="seedPct">35%</span></div>
+          <div style="background:var(--gray-100);border-radius:999px;height:6px;margin-bottom:.65rem"><div style="background:var(--green);height:100%;border-radius:999px;width:35%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--gray-700);margin-bottom:.3rem"><span>Private Sale</span><span>18%</span></div>
+          <div style="background:var(--gray-100);border-radius:999px;height:6px;margin-bottom:.65rem"><div style="background:var(--blue);height:100%;border-radius:999px;width:18%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--gray-700);margin-bottom:.3rem"><span>Public Sale</span><span>8%</span></div>
+          <div style="background:var(--gray-100);border-radius:999px;height:6px"><div style="background:var(--gold);height:100%;border-radius:999px;width:8%"></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TRANSACTION HISTORY -->
+    <div class="card">
+      <div class="chart-title">
+        <span>📋 Recent Transactions</span>
+        <a id="explorerLink" href="#" target="_blank" style="font-size:.78rem;color:var(--green-dark);font-weight:600;text-decoration:none">View on PolygonScan ↗</a>
+      </div>
+      <div id="txList">
+        <div style="text-align:center;padding:2rem;color:var(--gray-700);font-size:.88rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">📭</div>
+          No transactions found. <a href="sale.html" style="color:var(--green-dark);font-weight:600">Buy IDTC</a> to get started.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end #dashboard -->
+
+</div><!-- end .main -->
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG — update with real contract address after deploy
+// ══════════════════════════════════════════
+const CONFIG = {
+  TOKEN_NAME: 'Invest Energy-Development Coin',
+  TOKEN_SYMBOL: 'IDTC',
+  TOKEN_DECIMALS: 18,
+  TOKEN_IMAGE: 'https://idtc.online/f7d43e9e-dbbf-48ba-ae73-25af2025d6a2.jpg',
+  // 👇 Update this after contract is deployed
+  CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000000',
+  POLYGON_CHAIN_ID: '0x89',       // 137 in hex = mainnet
+  AMOY_CHAIN_ID: '0x13882',       // 80002 in hex = testnet
+  ACTIVE_CHAIN_ID: '0x13882',     // using testnet for now
+  RPC_URL: 'https://rpc-amoy.polygon.technology',
+  EXPLORER: 'https://amoy.polygonscan.com',
+  CHAIN_NAME: 'Polygon Amoy Testnet',
+  TOKEN_PRICE_USD: 0.05,
+};
+
+const ERC20_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+  "function totalSupply() view returns (uint256)",
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)"
+];
+
+let provider = null;
+let signer = null;
+let userAddress = null;
+let tokenContract = null;
+
+// ══════════════════════════════════════════
+// WALLET CONNECTION
+// ══════════════════════════════════════════
+async function connectWallet(type = 'metamask') {
+  try {
+    if (!window.ethereum) {
+      alert('MetaMask not found!\n\nPlease install MetaMask:\nhttps://metamask.io/download/');
+      return;
+    }
+
+    // Request accounts
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!accounts || accounts.length === 0) return;
+
+    userAddress = accounts[0];
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+
+    // Check network
+    const network = await provider.getNetwork();
+    const chainIdHex = '0x' + network.chainId.toString(16);
+
+    await onWalletConnected(userAddress, chainIdHex, network);
+
+    // Listen for events
+    window.ethereum.on('accountsChanged', async (accs) => {
+      if (accs.length === 0) { disconnectWallet(); return; }
+      userAddress = accs[0];
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      const net = await provider.getNetwork();
+      await onWalletConnected(userAddress, '0x' + net.chainId.toString(16), net);
+    });
+    window.ethereum.on('chainChanged', () => window.location.reload());
+
+  } catch (err) {
+    if (err.code !== 4001) alert('Connection error: ' + err.message);
+  }
+}
+
+async function onWalletConnected(address, chainId, network) {
+  // Show dashboard
+  document.getElementById('connect-prompt').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('dashboard').classList.add('fade-in');
+
+  // Update connect button
+  const btn = document.getElementById('connectBtn');
+  btn.className = 'btn-connect connected';
+  btn.innerHTML = '<div class="wallet-dot"></div>' + shortAddr(address);
+
+  // Update wallet info
+  document.getElementById('walletAddressShort').textContent = 'Connected: ' + shortAddr(address);
+  document.getElementById('walletAddressFull').textContent = address;
+  document.getElementById('networkName').textContent = CONFIG.CHAIN_NAME;
+  document.getElementById('chainId').textContent = Number(chainId);
+  document.getElementById('explorerLink').href = CONFIG.EXPLORER + '/address/' + address;
+
+  // Contract info
+  if (CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+    document.getElementById('contractShort').textContent = shortAddr(CONFIG.CONTRACT_ADDRESS);
+    document.getElementById('contractLink').href = CONFIG.EXPLORER + '/token/' + CONFIG.CONTRACT_ADDRESS;
+    tokenContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ERC20_ABI, provider);
+  } else {
+    document.getElementById('contractShort').textContent = 'Deploying soon...';
+    document.getElementById('contractLink').style.pointerEvents = 'none';
+  }
+
+  // Check network
+  const isCorrectNetwork = chainId.toLowerCase() === CONFIG.ACTIVE_CHAIN_ID.toLowerCase();
+  document.getElementById('networkWarning').style.display = isCorrectNetwork ? 'none' : 'flex';
+
+  // Load balances
+  await loadBalances(address);
+}
+
+async function loadBalances(address) {
+  try {
+    // MATIC balance
+    const maticWei = await provider.getBalance(address);
+    const maticFormatted = parseFloat(ethers.formatEther(maticWei)).toFixed(4);
+    document.getElementById('maticBalance').textContent = maticFormatted;
+    document.getElementById('maticBalanceFull').textContent = maticFormatted + ' MATIC';
+
+    // IDTC balance (if contract deployed)
+    let idtcAmount = 0;
+    if (tokenContract && CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+      try {
+        const balance = await tokenContract.balanceOf(address);
+        idtcAmount = parseFloat(ethers.formatUnits(balance, CONFIG.TOKEN_DECIMALS));
+      } catch(e) {}
+    }
+
+    const idtcFormatted = idtcAmount.toLocaleString('en-US', {maximumFractionDigits: 2});
+    document.getElementById('idtcBalance').textContent = idtcFormatted;
+    document.getElementById('idtcBalanceFull').textContent = idtcFormatted + ' IDTC';
+    document.getElementById('idtcValueUSD').textContent = '≈ $' + (idtcAmount * CONFIG.TOKEN_PRICE_USD).toFixed(2) + ' USD';
+
+    const portfolioVal = idtcAmount * CONFIG.TOKEN_PRICE_USD;
+    document.getElementById('portfolioValue').textContent = '$' + portfolioVal.toFixed(2);
+
+    // Market data
+    document.getElementById('circSupply').textContent = '40,000,000 IDTC';
+    document.getElementById('marketCap').textContent = '$5,000,000';
+
+  } catch(err) {
+    console.error('loadBalances error:', err);
+  }
+}
+
+async function switchToPolygon() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: CONFIG.ACTIVE_CHAIN_ID }]
+    });
+  } catch (err) {
+    if (err.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: CONFIG.ACTIVE_CHAIN_ID,
+          chainName: CONFIG.CHAIN_NAME,
+          rpcUrls: [CONFIG.RPC_URL],
+          nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+          blockExplorerUrls: [CONFIG.EXPLORER]
+        }]
+      });
+    }
+  }
+}
+
+async function addTokenToWallet() {
+  if (!window.ethereum) { alert('MetaMask not found!'); return; }
+  if (CONFIG.CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
+    alert('IDTC contract not deployed yet.\nCheck back soon!'); return;
+  }
+  try {
+    await window.ethereum.request({
+      method: 'wallet_watchAsset',
+      params: {
+        type: 'ERC20',
+        options: {
+          address: CONFIG.CONTRACT_ADDRESS,
+          symbol: CONFIG.TOKEN_SYMBOL,
+          decimals: CONFIG.TOKEN_DECIMALS,
+          image: CONFIG.TOKEN_IMAGE,
+        }
+      }
+    });
+  } catch(err) { console.error(err); }
+}
+
+function disconnectWallet() {
+  userAddress = null; provider = null; signer = null; tokenContract = null;
+  document.getElementById('connect-prompt').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+  const btn = document.getElementById('connectBtn');
+  btn.className = 'btn-connect disconnected';
+  btn.innerHTML = '<span>🔗</span> Connect Wallet';
+}
+
+function copyAddress() {
+  if (userAddress) {
+    navigator.clipboard.writeText(userAddress);
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  }
+}
+
+function shortAddr(addr) {
+  return addr.slice(0,6) + '...' + addr.slice(-4);
+}
+
+// ══════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════
+function generatePriceData(points, base, volatility) {
+  const data = [];
+  let price = base;
+  for (let i = 0; i < points; i++) {
+    price += (Math.random() - 0.48) * volatility;
+    price = Math.max(base * 0.8, price);
+    data.push(parseFloat(price.toFixed(6)));
+  }
+  return data;
+}
+
+function generateLabels(points, type) {
+  const labels = [];
+  const now = new Date();
+  for (let i = points - 1; i >= 0; i--) {
+    const d = new Date(now);
+    if (type === '1D') { d.setHours(now.getHours() - i); labels.push(d.getHours() + ':00'); }
+    else if (type === '7D') { d.setDate(now.getDate() - i); labels.push(d.toLocaleDateString('en',{month:'short',day:'numeric'})); }
+    else if (type === '1M') { d.setDate(now.getDate() - i*2); labels.push(d.toLocaleDateString('en',{month:'short',day:'numeric'})); }
+    else { labels.push('W' + (i+1)); }
+  }
+  return labels;
+}
+
+let priceChartInstance = null;
+function initPriceChart() {
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  const data = generatePriceData(24, 0.05, 0.001);
+  const labels = generateLabels(24, '1D');
+  const isUp = data[data.length-1] >= data[0];
+  const color = isUp ? '#22c55e' : '#ef4444';
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+  gradient.addColorStop(0, isUp ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+  priceChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: color,
+        backgroundColor: gradient,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) }
+      }},
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, callback: v => '$' + v.toFixed(4) } }
+      }
+    }
+  });
+}
+
+function updatePriceChart(period, btn) {
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const points = { '1D': 24, '7D': 7, '1M': 15, 'ALL': 20 }[period];
+  const newData = generatePriceData(points, 0.05, 0.002);
+  const newLabels = generateLabels(points, period);
+  priceChartInstance.data.labels = newLabels;
+  priceChartInstance.data.datasets[0].data = newData;
+  priceChartInstance.update('active');
+}
+
+function initDistChart() {
+  const ctx = document.getElementById('distChart').getContext('2d');
+  const labels = ['Investors', 'Ecosystem', 'Team', 'Staking', 'Marketing', 'Liquidity'];
+  const values = [35, 20, 15, 15, 10, 5];
+  const colors = ['#22c55e', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#94a3b8'];
+
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }] },
+    options: {
+      cutout: '60%', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + c.parsed + '%' } } }
+    }
+  });
+
+  const legend = document.getElementById('distLegend');
+  labels.forEach((l, i) => {
+    legend.innerHTML += `<span style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--gray-700)"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block"></span>${values[i]}% ${l}</span>`;
+  });
+}
+
+function initVolumeChart() {
+  const ctx = document.getElementById('volumeChart').getContext('2d');
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const volumes = [12000, 19500, 8400, 24000, 16000, 21000, 13500];
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: volumes, backgroundColor: 'rgba(34,197,94,.6)', borderColor: 'rgba(34,197,94,1)', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'K' } }
+      }
+    }
+  });
+}
+
+// Init charts on load
+window.addEventListener('load', () => {
+  initPriceChart();
+  initDistChart();
+  initVolumeChart();
+
+  // Auto-reconnect if previously connected
+  if (window.ethereum && window.ethereum.selectedAddress) {
+    connectWallet();
+  }
+});
+</script>
+</body>
+</html>

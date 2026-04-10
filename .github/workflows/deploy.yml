@@ -8,12 +8,31 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to idtc.online
+    name: Deploy Static Site to idtc.online
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Deploy via SSH (rsync)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            DEPLOY_PATH="/home/admin/domains/idtc.online/public_html"
+            BACKUP_DIR="/home/admin/domains/idtc.online/backups"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+            mkdir -p "$DEPLOY_PATH"
+            mkdir -p "$BACKUP_DIR"
+
+            echo "Deploy path: $DEPLOY_PATH"
+            echo "Ready for file upload."
 
       - name: Upload files via SCP
         uses: appleboy/scp-action@v1
@@ -22,8 +41,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "index.html"
+          source: "index.html,dashboard.html,sale.html,assets/"
           target: "/home/admin/domains/idtc.online/public_html"
+          strip_components: 0
 
       - name: Set permissions
         uses: appleboy/ssh-action@v1
@@ -36,7 +56,7 @@ jobs:
             DEPLOY_PATH="/home/admin/domains/idtc.online/public_html"
             find "$DEPLOY_PATH" -type f -exec chmod 644 {} \;
             find "$DEPLOY_PATH" -type d -exec chmod 755 {} \;
-            echo "Deployed successfully to $DEPLOY_PATH"
+            echo "Permissions set."
 
       - name: Health check
         run: |
@@ -46,13 +66,16 @@ jobs:
           if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
             echo "Site is live!"
           else
-            echo "Warning: HTTP $HTTP_CODE (DNS may need time)"
+            echo "Warning: Site returned HTTP $HTTP_CODE (may need DNS time to propagate)"
           fi
 
       - name: Summary
         if: always()
         run: |
-          echo "## Deployment to idtc.online" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://idtc.online" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy Path:** /home/admin/domains/idtc.online/public_html" >> $GITHUB_STEP_SUMMARY
