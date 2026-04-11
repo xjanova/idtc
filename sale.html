@@ -133,34 +133,106 @@
     padding: 2rem 1.5rem 4rem;
   }
 
-  /* ===== HERO ===== */
+  /* ===== HERO WITH SLIDESHOW ===== */
   .hero {
+    position: relative;
     text-align: center;
-    padding: 3rem 1rem 2rem;
+    padding: 5rem 1rem 3rem;
+    min-height: 480px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
   }
+
+  /* Slideshow background */
+  .hero-slides {
+    position: absolute; inset: 0; z-index: 0;
+  }
+  .hero-slide {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+  }
+  .hero-slide.active { opacity: 0.25; }
+  .hero-slides::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,15,0.7) 0%, rgba(10,10,15,0.85) 60%, var(--bg) 100%);
+    z-index: 1;
+  }
+
+  /* Firefly canvas */
+  #firefly-canvas {
+    position: absolute; inset: 0; z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero > * { position: relative; z-index: 3; }
 
   .hero-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.3);
+    background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.35);
     color: var(--gold); font-size: 0.8rem; font-weight: 600;
     padding: 6px 16px; border-radius: 100px; margin-bottom: 1.5rem;
+    backdrop-filter: blur(8px);
+    animation: fadeInUp 0.8s ease both;
   }
-  .hero-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+  .hero-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 8px var(--green); }
 
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeInScale { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 
   .hero h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 900; line-height: 1.15;
+    font-size: clamp(2.2rem, 5.5vw, 4rem);
+    font-weight: 900; line-height: 1.12;
     background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, var(--gold2) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 1rem;
+    animation: fadeInUp 0.8s ease 0.15s both;
+    text-shadow: 0 0 60px rgba(212,175,55,0.15);
   }
 
   .hero p {
-    color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 2rem;
-    line-height: 1.7;
+    color: #c0c0d0; font-size: 1.1rem; max-width: 620px; margin: 0 auto 2rem;
+    line-height: 1.75;
+    animation: fadeInUp 0.8s ease 0.3s both;
+  }
+
+  /* ===== SECTION BACKGROUNDS ===== */
+  .rounds-section {
+    position: relative;
+  }
+  .rounds-section::before {
+    content: '';
+    position: absolute; top: -60px; left: 0; right: 0; bottom: -60px;
+    background: url('assets/bk1.webp') center/cover no-repeat;
+    opacity: 0.06;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .tokenomics-section {
+    position: relative;
+  }
+  .tokenomics-section::before {
+    content: '';
+    position: absolute; top: -40px; left: 0; right: 0; bottom: -40px;
+    background: url('assets/bk2.webp') center/cover no-repeat;
+    opacity: 0.06;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ===== SCROLL REVEAL ===== */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
   }
 
   /* ===== STATS ROW ===== */
@@ -580,8 +652,14 @@
 
 <main>
 
-  <!-- Hero -->
+  <!-- Hero with Slideshow + Firefly -->
   <div class="hero">
+    <div class="hero-slides">
+      <div class="hero-slide active" style="background-image:url('assets/bk3.webp')"></div>
+      <div class="hero-slide" style="background-image:url('assets/bk4.webp')"></div>
+      <div class="hero-slide" style="background-image:url('assets/bk5.webp')"></div>
+    </div>
+    <canvas id="firefly-canvas"></canvas>
     <div class="hero-badge">
       <span class="dot"></span>
       <span class="en">PUBLIC SALE LIVE NOW</span>
@@ -594,7 +672,7 @@
   </div>
 
   <!-- Stats -->
-  <div class="stats-row">
+  <div class="stats-row reveal">
     <div class="stat-chip">
       <div class="s-val">100M</div>
       <div class="s-lbl en">Total Supply</div>
@@ -623,7 +701,7 @@
   </div>
 
   <!-- Sale Rounds -->
-  <section class="rounds-section">
+  <section class="rounds-section reveal">
     <h2 class="en">🏷️ Sale Rounds</h2>
     <h2 class="th">🏷️ รอบการขาย</h2>
 
@@ -902,7 +980,7 @@
   </section>
 
   <!-- Vesting Schedule -->
-  <section class="vesting-section">
+  <section class="vesting-section reveal">
     <h2 class="en">📅 Vesting Schedule</h2>
     <h2 class="th">📅 ตารางการปลดล็อค Vesting</h2>
     <div class="vesting-grid">
@@ -943,7 +1021,7 @@
   </section>
 
   <!-- Tokenomics -->
-  <section class="tokenomics-section">
+  <section class="tokenomics-section reveal">
     <div class="panel">
       <h3>
         🥧
@@ -1012,7 +1090,7 @@
   </section>
 
   <!-- FAQ -->
-  <section class="faq-section">
+  <section class="faq-section reveal">
     <h2 class="en">❓ Frequently Asked Questions</h2>
     <h2 class="th">❓ คำถามที่พบบ่อย</h2>
 
@@ -1570,9 +1648,85 @@ function initTokenomicsChart() {
   `).join('');
 }
 
-// ===== PARTICLES =====
+// ===== HERO SLIDESHOW =====
+function initHeroSlideshow() {
+  const slides = document.querySelectorAll('.hero-slide');
+  if (slides.length === 0) return;
+  let current = 0;
+  setInterval(() => {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+  }, 5000);
+}
+
+// ===== FIREFLY EFFECT =====
+function initFireflies() {
+  const canvas = document.getElementById('firefly-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const hero = canvas.parentElement;
+
+  function resize() {
+    canvas.width = hero.offsetWidth;
+    canvas.height = hero.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const flies = Array.from({ length: 40 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2.5 + 1,
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.01 + Math.random() * 0.02,
+    hue: Math.random() > 0.5 ? 45 : 120, // gold or green
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    flies.forEach(f => {
+      f.phase += f.speed;
+      f.x += f.vx + Math.sin(f.phase * 1.3) * 0.3;
+      f.y += f.vy + Math.cos(f.phase * 0.9) * 0.2;
+
+      // Wrap around
+      if (f.x < -10) f.x = canvas.width + 10;
+      if (f.x > canvas.width + 10) f.x = -10;
+      if (f.y < -10) f.y = canvas.height + 10;
+      if (f.y > canvas.height + 10) f.y = -10;
+
+      const glow = (Math.sin(f.phase) + 1) / 2; // 0-1 pulsing
+      const alpha = 0.15 + glow * 0.7;
+      const radius = f.r * (0.8 + glow * 0.4);
+
+      // Outer glow
+      const grad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, radius * 6);
+      grad.addColorStop(0, `hsla(${f.hue},80%,65%,${alpha * 0.4})`);
+      grad.addColorStop(0.4, `hsla(${f.hue},70%,55%,${alpha * 0.15})`);
+      grad.addColorStop(1, `hsla(${f.hue},60%,50%,0)`);
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, radius * 6, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${f.hue},90%,75%,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ===== SUBTLE PARTICLES (page background) =====
 function initParticles() {
   const canvas = document.getElementById('bg-canvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W = window.innerWidth, H = window.innerHeight;
   canvas.width = W; canvas.height = H;
@@ -1581,13 +1735,13 @@ function initParticles() {
     canvas.width = W; canvas.height = H;
   });
 
-  const particles = Array.from({ length: 60 }, () => ({
+  const particles = Array.from({ length: 35 }, () => ({
     x: Math.random() * W,
     y: Math.random() * H,
-    vx: (Math.random() - 0.5) * 0.3,
-    vy: (Math.random() - 0.5) * 0.3,
-    r: Math.random() * 2 + 0.5,
-    alpha: Math.random() * 0.5 + 0.2,
+    vx: (Math.random() - 0.5) * 0.2,
+    vy: (Math.random() - 0.5) * 0.2,
+    r: Math.random() * 1.5 + 0.3,
+    alpha: Math.random() * 0.3 + 0.1,
   }));
 
   function draw() {
@@ -1601,25 +1755,23 @@ function initParticles() {
       ctx.fillStyle = `rgba(212,175,55,${p.alpha})`;
       ctx.fill();
     });
-    // Draw faint lines between nearby particles
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 100) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(212,175,55,${0.06 * (1 - dist/100)})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-        }
-      }
-    }
     requestAnimationFrame(draw);
   }
   draw();
+}
+
+// ===== SCROLL REVEAL =====
+function initScrollReveal() {
+  const els = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(el => observer.observe(el));
 }
 
 // ===== AUTO RECONNECT =====
@@ -1728,6 +1880,9 @@ async function loadOnChainRoundData() {
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
+  initHeroSlideshow();
+  initFireflies();
+  initScrollReveal();
   initTokenomicsChart();
   autoReconnect();
   updateContractDisplay();
