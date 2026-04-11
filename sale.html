@@ -228,14 +228,7 @@
     pointer-events: none;
   }
 
-  /* ===== SCROLL REVEAL (no opacity hiding — just animate in) ===== */
-  .reveal-item {
-    opacity: 0.15; transform: translateY(20px) scale(0.97);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-  .reveal-item.visible {
-    opacity: 1; transform: translateY(0) scale(1);
-  }
+  /* ===== SCROLL REVEAL (removed — was causing invisible sections) ===== */
 
   /* ===== STATS ROW ===== */
   .stats-row {
@@ -1762,26 +1755,8 @@ function initParticles() {
   draw();
 }
 
-// ===== SCROLL REVEAL =====
-function initScrollReveal() {
-  // Apply reveal-item to individual cards (starts at 15% opacity, not hidden)
-  const selectors = '.round-card, .vest-card, .stat-chip, .faq-item, .purchase-section .panel';
-  const items = document.querySelectorAll(selectors);
-  items.forEach((el, i) => {
-    el.classList.add('reveal-item');
-    el.style.transitionDelay = (i % 5) * 0.08 + 's';
-  });
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.05 });
-  items.forEach(el => observer.observe(el));
-}
+// ===== SCROLL REVEAL (disabled — was causing invisible sections) =====
+function initScrollReveal() { /* no-op */ }
 
 // ===== AUTO RECONNECT =====
 async function autoReconnect() {

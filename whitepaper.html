@@ -181,6 +181,22 @@ footer strong{color:rgba(255,255,255,.8)}
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
+/* HERO SLIDESHOW */
+.hero-slideshow{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-slideshow img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 2s ease-in-out}
+.hero-slideshow img.active{opacity:0.18}
+
+/* FIREFLY CANVAS */
+#firefly-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+
+/* SECTION BACKGROUNDS */
+.bg-overlay-1{position:relative}
+.bg-overlay-1::before{content:'';position:absolute;inset:0;background:url('assets/bk1.webp') center/cover no-repeat;opacity:0.05;z-index:0;pointer-events:none}
+.bg-overlay-1>.container{position:relative;z-index:1}
+.bg-overlay-2{position:relative}
+.bg-overlay-2::before{content:'';position:absolute;inset:0;background:url('assets/bk2.webp') center/cover no-repeat;opacity:0.05;z-index:0;pointer-events:none}
+.bg-overlay-2>.container{position:relative;z-index:1}
+
 /* PRINT */
 @media print{
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
@@ -225,6 +241,12 @@ footer strong{color:rgba(255,255,255,.8)}
 
 <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
 <section id="hero">
+  <div class="hero-slideshow">
+    <img src="assets/bk3.webp" alt="" class="active">
+    <img src="assets/bk4.webp" alt="">
+    <img src="assets/bk5.webp" alt="">
+  </div>
+  <canvas id="firefly-canvas"></canvas>
   <canvas id="hero-canvas"></canvas>
   <div class="hero-content">
     <div class="hero-badge"><span class="en">OFFICIAL WHITEPAPER · VERSION 1.0 · APRIL 2026</span><span class="th">เอกสารไวท์เปเปอร์ฉบับทางการ · เวอร์ชัน 1.0 · เมษายน 2026</span></div>
@@ -249,7 +271,7 @@ footer strong{color:rgba(255,255,255,.8)}
 </section>
 
 <!-- ═══════════════════════════ EXECUTIVE SUMMARY ═══════════════════════════ -->
-<section id="about" style="background:var(--gray-50)">
+<section id="about" class="bg-overlay-1" style="background:var(--gray-50)">
   <div class="container">
     <div class="reveal">
       <span class="section-tag"><span class="en">Executive Summary</span><span class="th">บทสรุปผู้บริหาร</span></span>
@@ -322,7 +344,7 @@ footer strong{color:rgba(255,255,255,.8)}
 </section>
 
 <!-- ═══════════════════════════ MARKET ═══════════════════════════ -->
-<section id="market" style="background:var(--gray-50)">
+<section id="market" class="bg-overlay-2" style="background:var(--gray-50)">
   <div class="container">
     <div class="reveal">
       <span class="section-tag">Market Opportunity</span>
@@ -957,6 +979,73 @@ function setLang(lang) {
 (function(){
   const saved = localStorage.getItem('idtc-lang') || 'en';
   setLang(saved);
+})();
+
+// ══════════════ HERO SLIDESHOW ══════════════
+(function(){
+  const imgs = document.querySelectorAll('.hero-slideshow img');
+  if(imgs.length < 2) return;
+  let cur = 0;
+  setInterval(function(){
+    imgs[cur].classList.remove('active');
+    cur = (cur + 1) % imgs.length;
+    imgs[cur].classList.add('active');
+  }, 5000);
+})();
+
+// ══════════════ FIREFLY EFFECT ══════════════
+(function(){
+  const canvas = document.getElementById('firefly-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const hero = document.getElementById('hero');
+  function resize(){
+    canvas.width = hero.offsetWidth;
+    canvas.height = hero.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const flies = [];
+  for(let i = 0; i < 35; i++){
+    flies.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2.5 + 1,
+      dx: (Math.random() - 0.5) * 0.6,
+      dy: (Math.random() - 0.5) * 0.6,
+      phase: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.02 + 0.01
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(const f of flies){
+      f.phase += f.speed;
+      f.x += f.dx;
+      f.y += f.dy;
+      if(f.x < 0) f.x = canvas.width;
+      if(f.x > canvas.width) f.x = 0;
+      if(f.y < 0) f.y = canvas.height;
+      if(f.y > canvas.height) f.y = 0;
+      const alpha = 0.3 + 0.7 * Math.abs(Math.sin(f.phase));
+      const glow = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 6);
+      glow.addColorStop(0, 'rgba(34,197,94,' + alpha + ')');
+      glow.addColorStop(0.4, 'rgba(34,197,94,' + (alpha * 0.3) + ')');
+      glow.addColorStop(1, 'rgba(34,197,94,0)');
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r * 6, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(187,247,208,' + alpha + ')';
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
 })();
 </script>
 </body>
