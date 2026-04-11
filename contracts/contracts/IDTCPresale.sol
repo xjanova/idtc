@@ -8,39 +8,57 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 /**
  * @title IDTCPresale
  * @notice 3-round presale: Seed ($0.03), Private ($0.04), Public ($0.05).
- * @dev Prices expressed in MATIC wei per 1 IDTC token (18 decimals).
- *      MATIC/USD rate is set at deployment and can be updated by owner.
- *      Buyers receive IDTC immediately on purchase.
  *
- * Security notes:
- *  - ReentrancyGuard on buyTokens and withdraw
- *  - Checks-Effects-Interactions pattern throughout
- *  - Owner cannot rug-pull buyers' already-delivered tokens (tokens sent on purchase)
+ * Token allocation per round (matches whitepaper):
+ *   Seed:    10,000,000 IDTC cap
+ *   Private: 15,000,000 IDTC cap
+ *   Public:  25,000,000 IDTC cap
+ *   Total presale: 50,000,000 IDTC (50% of supply)
+ *
+ * Security:
+ *   - ReentrancyGuard on buyTokens and withdraw
+ *   - Checks-Effects-Interactions pattern
+ *   - Per-round min/max enforced on-chain
+ *   - Owner cannot rug: tokens transferred immediately to buyer on purchase
  */
 contract IDTCPresale is Ownable, ReentrancyGuard {
-    // ─── Enums & constants ───────────────────────────────────────────────────
+
+    // ─── Enums ────────────────────────────────────────────────────────────────
 
     enum Round { NONE, SEED, PRIVATE, PUBLIC }
 
-    // USD price per token in cents (fixed, 18 decimals resolution handled via maticPerUsd)
-    // Seed: $0.03 → 3 cents, Private: $0.04 → 4 cents, Public: $0.05 → 5 cents
-    uint256 public constant SEED_PRICE_USD_CENTS    = 3;   // $0.03
-    uint256 public constant PRIVATE_PRICE_USD_CENTS = 4;   // $0.04
-    uint256 public constant PUBLIC_PRICE_USD_CENTS  = 5;   // $0.05
+    // ─── Round caps (matches whitepaper tokenomics) ───────────────────────────
 
-    // Hard caps per round (IDTC tokens with 18 decimals)
-    uint256 public constant SEED_CAP    = 10_000_000 * 1e18;   // 10M
-    uint256 public constant PRIVATE_CAP = 20_000_000 * 1e18;   // 20M
-    uint256 public constant PUBLIC_CAP  = 30_000_000 * 1e18;   // 30M
+    uint256 public constant SEED_CAP    = 10_000_000 * 1e18;  // 10M IDTC
+    uint256 public constant PRIVATE_CAP = 15_000_000 * 1e18;  // 15M IDTC
+    uint256 public constant PUBLIC_CAP  = 25_000_000 * 1e18;  // 25M IDTC
 
-    // ─── State ───────────────────────────────────────────────────────────────
+    // ─── USD price per token (in cents) ───────────────────────────────────────
+
+    uint256 public constant SEED_PRICE_USD_CENTS    = 3;  // $0.03
+    uint256 public constant PRIVATE_PRICE_USD_CENTS = 4;  // $0.04
+    uint256 public constant PUBLIC_PRICE_USD_CENTS  = 5;  // $0.05
+
+    // ─── Per-round min/max purchase in IDTC (18 decimals) ────────────────────
+    // Matches whitepaper sale page specs
+
+    uint256 public constant SEED_MIN    = 1_000  * 1e18;   // 1,000 IDTC minimum
+    uint256 public constant SEED_MAX    = 500_000 * 1e18;  // 500,000 IDTC maximum
+
+    uint256 public constant PRIVATE_MIN = 500    * 1e18;   // 500 IDTC minimum
+    uint256 public constant PRIVATE_MAX = 250_000 * 1e18;  // 250,000 IDTC maximum
+
+    uint256 public constant PUBLIC_MIN  = 100    * 1e18;   // 100 IDTC minimum
+    uint256 public constant PUBLIC_MAX  = 100_000 * 1e18;  // 100,000 IDTC maximum
+
+    // ─── State ────────────────────────────────────────────────────────────────
 
     IERC20 public immutable idtcToken;
 
-    Round   public currentRound;
-    bool    public roundActive;
+    Round  public currentRound;
+    bool   public roundActive;
 
-    // MATIC per 1 USD (18 decimals). E.g. if 1 MATIC = $0.80, maticPerUsd = 1.25e18
+    /// @notice MATIC per 1 USD, 18 decimals. E.g. 1 MATIC=$0.80 → 1.25e18
     uint256 public maticPerUsd;
 
     // Tokens sold per round
@@ -48,24 +66,34 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
     uint256 public privateSold;
     uint256 public publicSold;
 
-    // Buyer balances
+    // Total IDTC purchased per address (all rounds combined)
     mapping(address => uint256) public tokensBought;
 
-    // ─── Events ──────────────────────────────────────────────────────────────
+    // Per-address per-round totals (for max enforcement)
+    mapping(address => uint256) public seedBought;
+    mapping(address => uint256) public privateBought;
+    mapping(address => uint256) public publicBought;
+
+    // ─── Events ───────────────────────────────────────────────────────────────
 
     event RoundStarted(Round indexed round);
     event RoundStopped(Round indexed round);
-    event TokensPurchased(address indexed buyer, Round indexed round, uint256 maticPaid, uint256 tokensBought);
+    event TokensPurchased(
+        address indexed buyer,
+        Round indexed round,
+        uint256 maticPaid,
+        uint256 tokenAmount
+    );
     event MaticRateUpdated(uint256 newMaticPerUsd);
     event Withdrawn(address indexed owner, uint256 amount);
 
-    // ─── Constructor ─────────────────────────────────────────────────────────
+    // ─── Constructor ──────────────────────────────────────────────────────────
 
     /**
-     * @param _idtcToken      Address of the deployed IDTC token.
-     * @param _initialOwner   Owner/admin address.
-     * @param _maticPerUsd    Initial MATIC/USD rate (18 decimals).
-     *                        Example: 1 MATIC = $0.80 → pass 1_250_000_000_000_000_000 (1.25e18)
+     * @param _idtcToken     Address of deployed IDTC ERC-20 token.
+     * @param _initialOwner  Owner/admin who controls rounds and withdrawals.
+     * @param _maticPerUsd   Initial MATIC/USD rate (18 decimals).
+     *                       Example: 1 MATIC = $0.87 → pass 1_149_425_287_356_321_839 (~1.149e18)
      */
     constructor(
         address _idtcToken,
@@ -77,24 +105,20 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
         idtcToken = IERC20(_idtcToken);
         maticPerUsd = _maticPerUsd;
         currentRound = Round.NONE;
-        roundActive = false;
+        roundActive  = false;
     }
 
-    // ─── Owner controls ──────────────────────────────────────────────────────
+    // ─── Owner controls ───────────────────────────────────────────────────────
 
-    /**
-     * @notice Start a specific round. Stops any previous round.
-     */
+    /// @notice Start a sale round. Only owner.
     function startRound(Round _round) external onlyOwner {
         require(_round != Round.NONE, "Invalid round");
         currentRound = _round;
-        roundActive = true;
+        roundActive  = true;
         emit RoundStarted(_round);
     }
 
-    /**
-     * @notice Stop the current active round.
-     */
+    /// @notice Stop the active round. Only owner.
     function stopRound() external onlyOwner {
         require(roundActive, "No active round");
         roundActive = false;
@@ -102,8 +126,8 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Update the MATIC/USD rate. Must be called to keep prices accurate.
-     * @param _maticPerUsd New rate (18 decimals). E.g. 1 MATIC = $0.80 → 1.25e18
+     * @notice Update MATIC/USD exchange rate. Call this when MATIC price changes.
+     * @param _maticPerUsd New rate with 18 decimals.
      */
     function setMaticPerUsd(uint256 _maticPerUsd) external onlyOwner {
         require(_maticPerUsd > 0, "Invalid rate");
@@ -111,31 +135,40 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
         emit MaticRateUpdated(_maticPerUsd);
     }
 
-    // ─── Public purchase ─────────────────────────────────────────────────────
+    // ─── Public purchase ──────────────────────────────────────────────────────
 
     /**
-     * @notice Buy IDTC tokens by sending MATIC.
-     * @dev Checks-Effects-Interactions: state updated before token transfer.
+     * @notice Buy IDTC by sending MATIC. Tokens transferred immediately.
+     * @dev    Formula: tokensOut = maticSent * maticPerUsd * 100 / (priceCents * 1e18)
+     *         Checks-Effects-Interactions: all state written before token transfer.
      */
     function buyTokens() external payable nonReentrant {
-        require(roundActive, "No active round");
-        require(msg.value > 0, "Send MATIC to buy");
+        require(roundActive,       "No active round");
+        require(msg.value > 0,     "Send MATIC to buy");
 
         uint256 priceCents = _currentPriceCents();
-        uint256 cap = _currentCap();
+        uint256 cap        = _currentCap();
+        uint256 minAmt     = _currentMin();
+        uint256 maxAmt     = _currentMax();
 
-        // tokensOut = (maticPaid * maticPerUsd * 100) / (priceCents * 1e18)
-        // Simplified: tokensOut = msg.value * maticPerUsd * 100 / (priceCents * 1e18)
-        // All in wei to avoid precision loss
+        // Calculate tokens out (integer arithmetic, rounds down — protects contract)
         uint256 tokensOut = (msg.value * maticPerUsd * 100) / (priceCents * 1e18);
-        require(tokensOut > 0, "Insufficient MATIC for 1 token");
+        require(tokensOut > 0, "Insufficient MATIC for min 1 token");
 
-        // Enforce round cap
+        // Enforce per-purchase min
+        require(tokensOut >= minAmt, "Below minimum purchase");
+
+        // Enforce per-address max across this round
+        uint256 alreadyBought = _addressRoundBought(msg.sender);
+        require(alreadyBought + tokensOut <= maxAmt, "Exceeds per-address maximum");
+
+        // Enforce round hard cap
         uint256 sold = _currentSold();
         require(sold + tokensOut <= cap, "Exceeds round cap");
 
-        // ── Effects ──────────────────────────────────────────────────────────
+        // ── Effects (all state before external call) ─────────────────────────
         _addSold(tokensOut);
+        _addAddressBought(msg.sender, tokensOut);
         tokensBought[msg.sender] += tokensOut;
 
         // ── Interactions ─────────────────────────────────────────────────────
@@ -147,9 +180,7 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
         emit TokensPurchased(msg.sender, currentRound, msg.value, tokensOut);
     }
 
-    /**
-     * @notice Withdraw accumulated MATIC to owner.
-     */
+    /// @notice Withdraw MATIC raised to owner wallet.
     function withdraw() external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         require(balance > 0, "Nothing to withdraw");
@@ -158,28 +189,29 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
         require(ok, "Withdraw failed");
     }
 
-    // ─── Views ───────────────────────────────────────────────────────────────
+    // ─── Views ────────────────────────────────────────────────────────────────
 
-    /**
-     * @notice Returns how many IDTC tokens you get for a given MATIC amount.
-     */
+    /// @notice How many IDTC tokens you get for a given MATIC amount in active round.
     function tokensForMatic(uint256 maticAmount) external view returns (uint256) {
         if (!roundActive || maticAmount == 0) return 0;
         uint256 priceCents = _currentPriceCents();
         return (maticAmount * maticPerUsd * 100) / (priceCents * 1e18);
     }
 
-    /**
-     * @notice Returns current round token price in MATIC wei per 1 IDTC (18 dec).
-     */
+    /// @notice Current round token price in MATIC wei per 1 IDTC.
     function currentPriceInMatic() external view returns (uint256) {
         if (!roundActive) return 0;
         uint256 priceCents = _currentPriceCents();
-        // price_matic = priceCents / (100 * maticPerUsd) → in wei: priceCents * 1e18 / (100 * maticPerUsd)
         return (priceCents * 1e18) / (100 * maticPerUsd);
     }
 
-    // ─── Internal helpers ────────────────────────────────────────────────────
+    /// @notice Tokens remaining in the current round.
+    function remainingInRound() external view returns (uint256) {
+        if (!roundActive) return 0;
+        return _currentCap() - _currentSold();
+    }
+
+    // ─── Internal helpers ─────────────────────────────────────────────────────
 
     function _currentPriceCents() internal view returns (uint256) {
         if (currentRound == Round.SEED)    return SEED_PRICE_USD_CENTS;
@@ -192,6 +224,20 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
         if (currentRound == Round.SEED)    return SEED_CAP;
         if (currentRound == Round.PRIVATE) return PRIVATE_CAP;
         if (currentRound == Round.PUBLIC)  return PUBLIC_CAP;
+        revert("No active round");
+    }
+
+    function _currentMin() internal view returns (uint256) {
+        if (currentRound == Round.SEED)    return SEED_MIN;
+        if (currentRound == Round.PRIVATE) return PRIVATE_MIN;
+        if (currentRound == Round.PUBLIC)  return PUBLIC_MIN;
+        revert("No active round");
+    }
+
+    function _currentMax() internal view returns (uint256) {
+        if (currentRound == Round.SEED)    return SEED_MAX;
+        if (currentRound == Round.PRIVATE) return PRIVATE_MAX;
+        if (currentRound == Round.PUBLIC)  return PUBLIC_MAX;
         revert("No active round");
     }
 
@@ -208,9 +254,21 @@ contract IDTCPresale is Ownable, ReentrancyGuard {
         else if (currentRound == Round.PUBLIC)  publicSold  += amount;
     }
 
-    // Accept plain MATIC transfers (fallback treated as purchase attempt)
+    function _addressRoundBought(address buyer) internal view returns (uint256) {
+        if (currentRound == Round.SEED)    return seedBought[buyer];
+        if (currentRound == Round.PRIVATE) return privateBought[buyer];
+        if (currentRound == Round.PUBLIC)  return publicBought[buyer];
+        revert("No active round");
+    }
+
+    function _addAddressBought(address buyer, uint256 amount) internal {
+        if (currentRound == Round.SEED)         seedBought[buyer]    += amount;
+        else if (currentRound == Round.PRIVATE) privateBought[buyer] += amount;
+        else if (currentRound == Round.PUBLIC)  publicBought[buyer]  += amount;
+    }
+
+    /// @dev Reject direct MATIC transfers — must use buyTokens()
     receive() external payable {
-        // Direct MATIC sends must go through buyTokens() for proper accounting
         revert("Use buyTokens()");
     }
 }
