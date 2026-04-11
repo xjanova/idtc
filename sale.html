@@ -7,9 +7,9 @@
 <meta name="description" content="Participate in the IDTC Token Sale. Buy IDTC tokens across Seed, Private, and Public rounds on Polygon.">
 
 <!-- ethers.js v6 -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js" integrity="sha384-6Zl0Pc8zjSz8KvmNeXRvUQgY4ryFb+BwDvKCmLYcBME0joAaru491tQgi9B7zsMM" crossorigin="anonymous"></script>
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" integrity="sha384-JUh163oCRItcbPme8pYnROHQMC6fNKTBWtRG3I3I0erJkzNgL7uxKlNwcrcFKeqF" crossorigin="anonymous"></script>
 
 <style>
   /* ===== RESET & BASE ===== */
@@ -1149,9 +1149,16 @@ const CONFIG = {
 };
 
 const PRESALE_ABI = [
-  'function buyTokens(uint8 round) external payable',
+  'function buyTokens() external payable',
   'function tokensForPol(uint256 polAmount) external view returns (uint256)',
-  'event TokensPurchased(address indexed buyer, uint8 round, uint256 polPaid, uint256 tokenAmount)',
+  'function currentRound() external view returns (uint8)',
+  'function roundActive() external view returns (bool)',
+  'function usdPerPol() external view returns (uint256)',
+  'function remainingInRound() external view returns (uint256)',
+  'function seedSold() external view returns (uint256)',
+  'function privateSold() external view returns (uint256)',
+  'function publicSold() external view returns (uint256)',
+  'event TokensPurchased(address indexed buyer, uint8 indexed round, uint256 polPaid, uint256 tokenAmount)',
 ];
 
 const ERC20_ABI = [
@@ -1166,7 +1173,9 @@ let signer = null;
 let walletAddress = null;
 let selectedRound = 'private';
 let isConnected = false;
+let isPurchasing = false;
 let purchaseHistory = [];
+let contractRound = null; // on-chain active round (1=Seed,2=Private,3=Public)
 
 // ===== LANGUAGE =====
 function toggleLang() {
@@ -1380,6 +1389,7 @@ function openExplorer() {
 
 // ===== PURCHASE FLOW =====
 function initiatePurchase() {
+  if (isPurchasing) return;
   if (!isConnected) {
     showToast('Please connect your wallet first', 'info');
     document.getElementById('wallet-disconnected').scrollIntoView({ behavior: 'smooth' });
@@ -1409,25 +1419,27 @@ function initiatePurchase() {
 }
 
 async function executePurchase() {
+  if (isPurchasing) return;
   if (CONFIG.PRESALE_ADDRESS === '0x0000000000000000000000000000000000000000') {
     closeModal();
     showToast('Presale contract not yet deployed. Coming soon!', 'info');
     return;
   }
   const polAmt = parseFloat(document.getElementById('pol-input').value);
-  const roundIndex = { seed: 0, private: 1, public: 2 }[selectedRound];
   const btn = document.getElementById('modal-confirm-btn');
 
   try {
+    isPurchasing = true;
     btn.innerHTML = '<span class="spinner"></span>';
     btn.disabled = true;
+    document.getElementById('buy-btn').disabled = true;
     closeModal();
 
     const presale = new ethers.Contract(CONFIG.PRESALE_ADDRESS, PRESALE_ABI, signer);
     const value = ethers.parseEther(polAmt.toFixed(18));
 
     showToast('Awaiting wallet confirmation…', 'info');
-    const tx = await presale.buyTokens(roundIndex, { value });
+    const tx = await presale.buyTokens({ value });
     showToast('Transaction submitted! Waiting for confirmation…', 'info');
     const receipt = await tx.wait();
 
@@ -1441,8 +1453,9 @@ async function executePurchase() {
       txHash: receipt.hash,
     });
 
-    showToast(`✅ Purchase successful! ${idtcAmt.toLocaleString('en',{maximumFractionDigits:2})} IDTC credited.`, 'success');
+    showToast('Purchase successful! ' + idtcAmt.toLocaleString('en',{maximumFractionDigits:2}) + ' IDTC credited.', 'success');
     await loadBalances();
+    await loadOnChainRoundData();
     document.getElementById('pol-input').value = '';
     document.getElementById('idtc-output').value = '';
   } catch(e) {
@@ -1450,25 +1463,41 @@ async function executePurchase() {
     const msg = e?.reason || e?.message || 'Transaction failed';
     showToast(msg.length > 80 ? msg.slice(0,80)+'…' : msg, 'error');
   } finally {
+    isPurchasing = false;
     btn.innerHTML = '<span class="en">Confirm Buy</span><span class="th">ยืนยันซื้อ</span>';
     btn.disabled = false;
+    document.getElementById('buy-btn').disabled = false;
   }
 }
 
 function addPurchaseToHistory(item) {
   purchaseHistory.unshift(item);
   const el = document.getElementById('purchase-history');
-  el.innerHTML = purchaseHistory.map(p => `
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:2px">
-        <span style="color:var(--gold);font-weight:700">${p.round}</span>
-        <span>${p.idtc.toLocaleString('en',{maximumFractionDigits:2})} IDTC</span>
-      </div>
-      <div style="color:var(--muted);font-size:0.75rem">${p.pol} POL ·
-        <a class="tx-link" href="${CONFIG.EXPLORER}/tx/${p.txHash}" target="_blank">${p.txHash.slice(0,12)}…</a>
-      </div>
-    </div>
-  `).join('');
+  el.textContent = '';
+  purchaseHistory.forEach(p => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px';
+    const row1 = document.createElement('div');
+    row1.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const roundSpan = document.createElement('span');
+    roundSpan.style.cssText = 'color:var(--gold);font-weight:700';
+    roundSpan.textContent = p.round;
+    const amtSpan = document.createElement('span');
+    amtSpan.textContent = p.idtc.toLocaleString('en',{maximumFractionDigits:2}) + ' IDTC';
+    row1.append(roundSpan, amtSpan);
+    const row2 = document.createElement('div');
+    row2.style.cssText = 'color:var(--muted);font-size:0.75rem';
+    row2.append(p.pol + ' POL · ');
+    const link = document.createElement('a');
+    link.className = 'tx-link';
+    link.href = CONFIG.EXPLORER + '/tx/' + p.txHash;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = p.txHash.slice(0,12) + '…';
+    row2.append(link);
+    card.append(row1, row2);
+    el.append(card);
+  });
 }
 
 function closeModal() {
@@ -1496,10 +1525,10 @@ function toggleFaq(el) {
 // ===== TOKENOMICS CHART =====
 function initTokenomicsChart() {
   const data = [
-    { label: 'Investors (Seed/Private/Public)', pct: 35, color: '#00c853' },
-    { label: 'Ecosystem Fund', pct: 20, color: '#00bcd4' },
-    { label: 'Team & Advisors', pct: 15, color: '#ff9800' },
-    { label: 'Staking Rewards', pct: 15, color: '#6c63ff' },
+    { label: 'Presale (Seed 10% + Private 15% + Public 25%)', pct: 50, color: '#00c853' },
+    { label: 'Ecosystem Fund', pct: 15, color: '#00bcd4' },
+    { label: 'Team & Advisors', pct: 10, color: '#ff9800' },
+    { label: 'Staking Rewards', pct: 10, color: '#6c63ff' },
     { label: 'Marketing & Growth', pct: 10, color: '#e91e63' },
     { label: 'Liquidity Reserve', pct: 5, color: '#9c27b0' },
   ];
@@ -1617,6 +1646,85 @@ function updateContractDisplay() {
   }
 }
 
+// ===== ON-CHAIN ROUND DATA =====
+const ROUND_NAMES = { 0: null, 1: 'seed', 2: 'private', 3: 'public' };
+const ROUND_CAPS = { seed: 10_000_000, private: 15_000_000, public: 25_000_000 };
+
+async function loadOnChainRoundData() {
+  if (CONFIG.PRESALE_ADDRESS === '0x0000000000000000000000000000000000000000') return;
+  try {
+    const rpc = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+    const presale = new ethers.Contract(CONFIG.PRESALE_ADDRESS, PRESALE_ABI, rpc);
+
+    const [roundId, active, seedSold, privateSold, publicSold, onChainUsdPerPol] = await Promise.all([
+      presale.currentRound(),
+      presale.roundActive(),
+      presale.seedSold(),
+      presale.privateSold(),
+      presale.publicSold(),
+      presale.usdPerPol(),
+    ]);
+
+    contractRound = Number(roundId);
+    const activeRoundName = ROUND_NAMES[contractRound];
+
+    // Update POL price from contract
+    const polPrice = parseFloat(ethers.formatEther(onChainUsdPerPol));
+    if (polPrice > 0) CONFIG.POL_PRICE_USD = polPrice;
+
+    // Update progress bars
+    const sold = {
+      seed: parseFloat(ethers.formatEther(seedSold)),
+      private: parseFloat(ethers.formatEther(privateSold)),
+      public: parseFloat(ethers.formatEther(publicSold)),
+    };
+
+    ['seed', 'private', 'public'].forEach(r => {
+      const cap = ROUND_CAPS[r];
+      const pct = Math.min(100, (sold[r] / cap) * 100);
+      const card = document.querySelector(`.round-card.${r === 'private' ? 'private' : r}`);
+      if (!card) return;
+      const fill = card.querySelector('.progress-bar-fill');
+      const header = card.querySelector('.progress-header');
+      if (fill) fill.style.width = pct.toFixed(1) + '%';
+      if (header) {
+        const spans = header.querySelectorAll('span');
+        const lastSpan = spans[spans.length - 1];
+        if (lastSpan) lastSpan.textContent = pct.toFixed(0) + '% · ' + sold[r].toLocaleString('en', {maximumFractionDigits:0}) + ' IDTC';
+      }
+
+      // Update round badges based on contract state
+      const badge = card.querySelector('.round-badge');
+      if (badge) {
+        if (active && activeRoundName === r) {
+          badge.className = 'round-badge badge-live';
+          badge.textContent = '● LIVE';
+          card.classList.add('active-round');
+        } else if (sold[r] > 0 && activeRoundName !== r) {
+          badge.className = 'round-badge badge-ended';
+          badge.textContent = 'ENDED';
+          card.classList.remove('active-round');
+        } else {
+          badge.className = 'round-badge badge-upcoming';
+          badge.textContent = 'UPCOMING';
+          card.classList.remove('active-round');
+        }
+      }
+    });
+
+    // Auto-select the active round
+    if (active && activeRoundName) {
+      selectRound(activeRoundName);
+    }
+
+    // Recalculate displayed tokens
+    calcTokens();
+
+  } catch(e) {
+    console.error('loadOnChainRoundData error:', e);
+  }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
@@ -1624,6 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
   autoReconnect();
   updateContractDisplay();
   selectRound('private');
+  loadOnChainRoundData();
 });
 
 // Close modal on backdrop click

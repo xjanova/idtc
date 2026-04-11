@@ -60,7 +60,7 @@ async function main() {
 
   // ── Save deployment info ───────────────────────────────────────────────────
   const deployment = {
-    network: "polygonAmoy",
+    network: "amoy",
     chainId: 80002,
     deployer: deployer.address,
     idtc: idtcAddress,
