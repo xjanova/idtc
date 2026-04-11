@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH (rsync)
+      - name: Deploy via SSH (prepare dirs)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -24,15 +24,9 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            DEPLOY_PATH="/home/admin/domains/idtc.online/public_html"
-            BACKUP_DIR="/home/admin/domains/idtc.online/backups"
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-
-            mkdir -p "$DEPLOY_PATH"
-            mkdir -p "$BACKUP_DIR"
-
-            echo "Deploy path: $DEPLOY_PATH"
-            echo "Ready for file upload."
+            mkdir -p "/home/admin/domains/idtc.online/public_html"
+            mkdir -p "/home/admin/domains/idtc.online/backups"
+            echo "Dirs ready."
 
       - name: Upload files via SCP
         uses: appleboy/scp-action@v1
@@ -41,7 +35,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "index.html,dashboard.html,sale.html,assets/"
+          source: "index.html,dashboard.html,sale.html,logo.png,logo.jpg,token-logo.png,assets/"
           target: "/home/admin/domains/idtc.online/public_html"
           strip_components: 0
 
@@ -66,16 +60,15 @@ jobs:
           if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
             echo "Site is live!"
           else
-            echo "Warning: Site returned HTTP $HTTP_CODE (may need DNS time to propagate)"
+            echo "Warning: HTTP $HTTP_CODE (DNS may need time)"
           fi
 
       - name: Summary
         if: always()
         run: |
           echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://idtc.online" >> $GITHUB_STEP_SUMMARY
-          echo "**Deploy Path:** /home/admin/domains/idtc.online/public_html" >> $GITHUB_STEP_SUMMARY
+          echo "**Logo:** https://idtc.online/logo.png" >> $GITHUB_STEP_SUMMARY

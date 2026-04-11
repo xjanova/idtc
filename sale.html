@@ -71,10 +71,12 @@
 
   .logo-mark {
     width: 38px; height: 38px;
-    background: linear-gradient(135deg, #d4af37, #f0c849);
-    border-radius: 50%;
+    border-radius: 50%; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 15px; color: #0a0a0f;
+    background: linear-gradient(135deg, #d4af37, #f0c849);
+  }
+  .logo-mark img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
   }
 
   .logo-name { font-weight: 700; font-size: 1.1rem; }
@@ -546,7 +548,7 @@
 <!-- Header -->
 <header>
   <a class="logo-area" href="index.html">
-    <div class="logo-mark">ID</div>
+    <div class="logo-mark"><img src="https://idtc.online/logo.png" alt="IDTC" onerror="this.style.display='none'"></div>
     <div>
       <span class="logo-name">IDTC</span>
       <span class="logo-sub">Energy Capital</span>
