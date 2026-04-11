@@ -688,7 +688,7 @@
   </div>
 
   <!-- Stats -->
-  <div class="stats-row reveal">
+  <div class="stats-row">
     <div class="stat-chip">
       <div class="s-val">100M</div>
       <div class="s-lbl en">Total Supply</div>
@@ -717,7 +717,7 @@
   </div>
 
   <!-- Sale Rounds -->
-  <section class="rounds-section reveal">
+  <section class="rounds-section">
     <h2 class="en">🏷️ Sale Rounds</h2>
     <h2 class="th">🏷️ รอบการขาย</h2>
 
@@ -996,7 +996,7 @@
   </section>
 
   <!-- Vesting Schedule -->
-  <section class="vesting-section reveal">
+  <section class="vesting-section">
     <h2 class="en">📅 Vesting Schedule</h2>
     <h2 class="th">📅 ตารางการปลดล็อค Vesting</h2>
     <div class="vesting-grid">
@@ -1037,7 +1037,7 @@
   </section>
 
   <!-- Tokenomics -->
-  <section class="tokenomics-section reveal">
+  <section class="tokenomics-section">
     <div class="panel">
       <h3>
         🥧
@@ -1106,7 +1106,7 @@
   </section>
 
   <!-- FAQ -->
-  <section class="faq-section reveal">
+  <section class="faq-section">
     <h2 class="en">❓ Frequently Asked Questions</h2>
     <h2 class="th">❓ คำถามที่พบบ่อย</h2>
 
@@ -1778,15 +1778,11 @@ function initParticles() {
 
 // ===== SCROLL REVEAL =====
 function initScrollReveal() {
+  // Apply reveal to individual cards, not wrapper sections
+  const selectors = '.round-card, .vest-card, .stat-chip, .faq-item, .purchase-section .panel';
+  document.querySelectorAll(selectors).forEach(el => el.classList.add('reveal'));
+
   const els = document.querySelectorAll('.reveal');
-  // Immediately reveal elements already in viewport
-  els.forEach(el => {
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 100) {
-      el.classList.add('visible');
-    }
-  });
-  // Observe remaining hidden elements
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
@@ -1794,10 +1790,8 @@ function initScrollReveal() {
         observer.unobserve(e.target);
       }
     });
-  }, { threshold: 0, rootMargin: '50px 0px 50px 0px' });
-  els.forEach(el => {
-    if (!el.classList.contains('visible')) observer.observe(el);
-  });
+  }, { threshold: 0, rootMargin: '0px 0px 80px 0px' });
+  els.forEach(el => observer.observe(el));
 }
 
 // ===== AUTO RECONNECT =====
