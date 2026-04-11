@@ -201,8 +201,8 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
       </div>
       <div class="card stat-card blue">
         <div class="stat-icon blue">🔷</div>
-        <div class="stat-label">MATIC Balance</div>
-        <div class="stat-value" id="maticBalance">—</div>
+        <div class="stat-label">POL Balance</div>
+        <div class="stat-value" id="polBalance">—</div>
         <div class="stat-sub">Gas Token</div>
       </div>
       <div class="card stat-card gold">
@@ -275,7 +275,7 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
         <table class="info-table">
           <tr><td>Network</td><td id="networkName">—</td></tr>
           <tr><td>Chain ID</td><td id="chainId">—</td></tr>
-          <tr><td>MATIC Balance</td><td id="maticBalanceFull">—</td></tr>
+          <tr><td>POL Balance</td><td id="polBalanceFull">—</td></tr>
           <tr><td>IDTC Balance</td><td id="idtcBalanceFull">—</td></tr>
           <tr><td>Portfolio Value</td><td id="portfolioValue">—</td></tr>
           <tr><td>Tokens Bought</td><td id="tokensBought">—</td></tr>
@@ -433,11 +433,11 @@ async function onWalletConnected(address, chainId, network) {
 
 async function loadBalances(address) {
   try {
-    // MATIC balance
-    const maticWei = await provider.getBalance(address);
-    const maticFormatted = parseFloat(ethers.formatEther(maticWei)).toFixed(4);
-    document.getElementById('maticBalance').textContent = maticFormatted;
-    document.getElementById('maticBalanceFull').textContent = maticFormatted + ' MATIC';
+    // POL balance
+    const polWei = await provider.getBalance(address);
+    const polFormatted = parseFloat(ethers.formatEther(polWei)).toFixed(4);
+    document.getElementById('polBalance').textContent = polFormatted;
+    document.getElementById('polBalanceFull').textContent = polFormatted + ' POL';
 
     // IDTC balance (if contract deployed)
     let idtcAmount = 0;
@@ -479,7 +479,7 @@ async function switchToPolygon() {
           chainId: CONFIG.ACTIVE_CHAIN_ID,
           chainName: CONFIG.CHAIN_NAME,
           rpcUrls: [CONFIG.RPC_URL],
-          nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
           blockExplorerUrls: [CONFIG.EXPLORER]
         }]
       });

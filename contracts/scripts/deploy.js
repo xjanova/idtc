@@ -7,10 +7,10 @@ async function main() {
   console.log("Deployer address:", deployer.address);
 
   const balance = await ethers.provider.getBalance(deployer.address);
-  console.log("Deployer balance:", ethers.formatEther(balance), "MATIC");
+  console.log("Deployer balance:", ethers.formatEther(balance), "POL");
 
   if (balance === 0n) {
-    console.error("ERROR: Deployer has 0 MATIC. Fund the address first.");
+    console.error("ERROR: Deployer has 0 POL. Fund the address first.");
     process.exit(1);
   }
 
@@ -23,16 +23,16 @@ async function main() {
   console.log("IDTC deployed to:", idtcAddress);
 
   // ── Deploy IDTCPresale ─────────────────────────────────────────────────────
-  // usdPerMatic = USD price of 1 MATIC.
-  // If 1 MATIC = $0.87, pass 0.87e18 = 870000000000000000
+  // usdPerPol = USD price of 1 POL (Polygon native token).
+  // If 1 POL = $0.25, pass 0.25e18 = 250000000000000000
   //
-  // Verification: 1 MATIC at $0.87, Private round ($0.04):
-  //   tokensOut = (1e18 * 0.87e18 * 100) / (4 * 1e18) = 21.75e18 = 21.75 IDTC ✓
-  const usdPerMatic = ethers.parseEther("0.87");
+  // Verification: 1 POL at $0.25, Private round ($0.04):
+  //   tokensOut = (1e18 * 0.25e18 * 100) / (4 * 1e18) = 6.25e18 = 6.25 IDTC ✓
+  const usdPerPol = ethers.parseEther("0.25");
   console.log("\nDeploying IDTCPresale...");
-  console.log("Initial MATIC price: $0.87 USD (usdPerMatic:", usdPerMatic.toString(), ")");
+  console.log("Initial POL price: $0.25 USD (usdPerPol:", usdPerPol.toString(), ")");
   const Presale = await ethers.getContractFactory("IDTCPresale");
-  const presale = await Presale.deploy(idtcAddress, deployer.address, usdPerMatic);
+  const presale = await Presale.deploy(idtcAddress, deployer.address, usdPerPol);
   await presale.waitForDeployment();
   const presaleAddress = await presale.getAddress();
   console.log("IDTCPresale deployed to:", presaleAddress);
@@ -45,12 +45,18 @@ async function main() {
   await approveTx.wait();
   console.log("Approval tx:", approveTx.hash);
 
+  // ── Start Private round (currently live per sale page) ─────────────────────
+  console.log("\nStarting Private round...");
+  const startTx = await presale.startRound(2); // 2 = PRIVATE
+  await startTx.wait();
+  console.log("Private round started!");
+
   // ── Verify calculation ─────────────────────────────────────────────────────
   console.log("\n── Verification ──");
-  console.log("If user sends 1 MATIC in Private round ($0.04):");
-  const testTokens = await presale.tokensForMatic(ethers.parseEther("1"));
-  console.log("  tokensForMatic(1 MATIC) =", ethers.formatEther(testTokens), "IDTC");
-  console.log("  Expected: ~21.75 IDTC");
+  console.log("If user sends 1 POL in Private round ($0.04):");
+  const testTokens = await presale.tokensForPol(ethers.parseEther("1"));
+  console.log("  tokensForPol(1 POL) =", ethers.formatEther(testTokens), "IDTC");
+  console.log("  Expected: 6.25 IDTC (at $0.25/POL)");
 
   // ── Save deployment info ───────────────────────────────────────────────────
   const deployment = {
@@ -59,7 +65,7 @@ async function main() {
     deployer: deployer.address,
     idtc: idtcAddress,
     idtcPresale: presaleAddress,
-    usdPerMatic: "0.87",
+    usdPerPol: "0.25",
     deployedAt: new Date().toISOString()
   };
 

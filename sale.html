@@ -786,14 +786,14 @@
         </a>
       </div>
 
-      <!-- MATIC input -->
+      <!-- POL input -->
       <div class="form-group">
-        <label class="form-label en">MATIC Amount to Spend</label>
-        <label class="form-label th">จำนวน MATIC ที่ต้องการใช้</label>
+        <label class="form-label en">POL Amount to Spend</label>
+        <label class="form-label th">จำนวน POL ที่ต้องการใช้</label>
         <div class="input-wrap">
-          <input type="number" id="matic-input" placeholder="0.0" step="0.01" min="0" oninput="calcTokens()">
+          <input type="number" id="pol-input" placeholder="0.0" step="0.01" min="0" oninput="calcTokens()">
           <button class="max-btn" onclick="setMax()">MAX</button>
-          <div class="input-suffix">MATIC</div>
+          <div class="input-suffix">POL</div>
         </div>
       </div>
 
@@ -811,7 +811,7 @@
       <div class="calc-result">
         <div class="calc-row">
           <span class="c-lbl en">Rate</span><span class="c-lbl th">อัตรา</span>
-          <span class="c-val" id="calc-rate">1 MATIC ≈ 0 IDTC</span>
+          <span class="c-val" id="calc-rate">1 POL ≈ 0 IDTC</span>
         </div>
         <div class="calc-row">
           <span class="c-lbl en">Price per IDTC</span><span class="c-lbl th">ราคาต่อ IDTC</span>
@@ -869,7 +869,7 @@
           <div class="wallet-icon">✅</div>
           <div class="wallet-address" id="display-address">0x0000...0000</div>
           <div class="wallet-balance">
-            <span id="display-matic">—</span> MATIC
+            <span id="display-pol">—</span> POL
           </div>
           <div class="wallet-balance" style="color:var(--gold)">
             <span id="display-idtc">—</span> IDTC
@@ -969,7 +969,7 @@
         </tr>
         <tr>
           <td style="color:var(--muted)">Blockchain</td>
-          <td>Polygon (MATIC)</td>
+          <td>Polygon (POL)</td>
         </tr>
         <tr>
           <td style="color:var(--muted)">Total Supply</td>
@@ -1023,8 +1023,8 @@
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
-        <span class="en">Connect your MetaMask or compatible wallet, make sure you're on Polygon Amoy testnet, enter the amount of MATIC you want to spend, and click Buy. IDTC will be credited to your wallet immediately.</span>
-        <span class="th">เชื่อมต่อ MetaMask หรือกระเป๋าที่รองรับ ตรวจสอบว่าอยู่บน Polygon Amoy testnet ใส่จำนวน MATIC ที่ต้องการใช้ แล้วคลิก Buy IDTC จะถูกโอนเข้ากระเป๋าของคุณทันที</span>
+        <span class="en">Connect your MetaMask or compatible wallet, make sure you're on Polygon Amoy testnet, enter the amount of POL you want to spend, and click Buy. IDTC will be credited to your wallet immediately.</span>
+        <span class="th">เชื่อมต่อ MetaMask หรือกระเป๋าที่รองรับ ตรวจสอบว่าอยู่บน Polygon Amoy testnet ใส่จำนวน POL ที่ต้องการใช้ แล้วคลิก Buy IDTC จะถูกโอนเข้ากระเป๋าของคุณทันที</span>
       </div>
     </div>
 
@@ -1059,8 +1059,8 @@
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
-        <span class="en">Yes. IDTC is currently deployed on Polygon Amoy testnet for testing and auditing purposes. The mainnet launch will be announced on official channels. Testnet MATIC is free from the Polygon faucet.</span>
-        <span class="th">ใช่ ตอนนี้ IDTC ถูก deploy บน Polygon Amoy testnet เพื่อทดสอบและตรวจสอบ การเปิดตัว mainnet จะประกาศผ่านช่องทางทางการ testnet MATIC ฟรีจาก Polygon faucet</span>
+        <span class="en">Yes. IDTC is currently deployed on Polygon Amoy testnet for testing and auditing purposes. The mainnet launch will be announced on official channels. Testnet POL is free from the Polygon faucet.</span>
+        <span class="th">ใช่ ตอนนี้ IDTC ถูก deploy บน Polygon Amoy testnet เพื่อทดสอบและตรวจสอบ การเปิดตัว mainnet จะประกาศผ่านช่องทางทางการ testnet POL ฟรีจาก Polygon faucet</span>
       </div>
     </div>
 
@@ -1093,8 +1093,8 @@
         <span class="cr-val" id="modal-round">Private</span>
       </div>
       <div class="confirm-row">
-        <span>MATIC</span>
-        <span class="cr-val" id="modal-matic">0 MATIC</span>
+        <span>POL</span>
+        <span class="cr-val" id="modal-pol">0 POL</span>
       </div>
       <div class="confirm-row">
         <span>IDTC</span>
@@ -1124,7 +1124,7 @@
     <a href="index.html">Whitepaper</a> ·
     <a href="dashboard.html">Dashboard</a> ·
     <a href="https://amoy.polygonscan.com" target="_blank">Polygonscan Amoy</a> ·
-    <a href="https://faucet.polygon.technology/" target="_blank">Get Test MATIC</a>
+    <a href="https://faucet.polygon.technology/" target="_blank">Get Test POL</a>
   </div>
   <div>© 2026 IDTC Energy Capital. <span class="en">All rights reserved. This is a testnet deployment for testing purposes.</span><span class="th">สงวนสิทธิ์ทุกประการ นี่คือ testnet สำหรับการทดสอบ</span></div>
 </footer>
@@ -1140,7 +1140,7 @@ const CONFIG = {
   ACTIVE_CHAIN_ID: '0x13882', // Amoy testnet (80002)
   RPC_URL: 'https://rpc-amoy.polygon.technology',
   EXPLORER: 'https://amoy.polygonscan.com',
-  MATIC_PRICE_USD: 0.87, // Approximate
+  POL_PRICE_USD: 0.25, // POL price in USD
   ROUNDS: {
     seed:    { price: 0.03, name: 'Seed',    min: 1000,  max: 500000  },
     private: { price: 0.04, name: 'Private', min: 500,   max: 250000  },
@@ -1150,8 +1150,8 @@ const CONFIG = {
 
 const PRESALE_ABI = [
   'function buyTokens(uint8 round) external payable',
-  'function getTokensForMatic(uint256 maticAmount, uint8 round) external view returns (uint256)',
-  'event TokensPurchased(address indexed buyer, uint8 round, uint256 maticAmount, uint256 tokenAmount)',
+  'function tokensForPol(uint256 polAmount) external view returns (uint256)',
+  'event TokensPurchased(address indexed buyer, uint8 round, uint256 polPaid, uint256 tokenAmount)',
 ];
 
 const ERC20_ABI = [
@@ -1217,21 +1217,21 @@ function selectRound(round) {
 
 // ===== CALC =====
 function calcTokens() {
-  const maticAmt = parseFloat(document.getElementById('matic-input').value) || 0;
+  const polAmt = parseFloat(document.getElementById('pol-input').value) || 0;
   const r = CONFIG.ROUNDS[selectedRound];
-  const usdValue = maticAmt * CONFIG.MATIC_PRICE_USD;
+  const usdValue = polAmt * CONFIG.POL_PRICE_USD;
   const idtcAmount = usdValue / r.price;
   document.getElementById('idtc-output').value = idtcAmount > 0 ? idtcAmount.toFixed(2) : '';
-  document.getElementById('calc-rate').textContent = `1 MATIC ≈ ${(CONFIG.MATIC_PRICE_USD / r.price).toFixed(2)} IDTC`;
+  document.getElementById('calc-rate').textContent = `1 POL ≈ ${(CONFIG.POL_PRICE_USD / r.price).toFixed(2)} IDTC`;
   document.getElementById('calc-total').textContent = idtcAmount > 0 ? idtcAmount.toLocaleString('en', {maximumFractionDigits:2}) + ' IDTC' : '0 IDTC';
 }
 
 function setMax() {
   if (!walletAddress) { showToast('Connect wallet first', 'info'); return; }
-  // Placeholder: use 90% of MATIC balance
-  const balEl = document.getElementById('display-matic');
+  // Placeholder: use 90% of POL balance
+  const balEl = document.getElementById('display-pol');
   const bal = parseFloat(balEl.textContent) || 0;
-  document.getElementById('matic-input').value = (bal * 0.9).toFixed(4);
+  document.getElementById('pol-input').value = (bal * 0.9).toFixed(4);
   calcTokens();
 }
 
@@ -1286,7 +1286,7 @@ async function switchNetwork() {
         params: [{
           chainId: CONFIG.ACTIVE_CHAIN_ID,
           chainName: 'Polygon Amoy Testnet',
-          nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
           rpcUrls: [CONFIG.RPC_URL],
           blockExplorerUrls: [CONFIG.EXPLORER],
         }],
@@ -1324,9 +1324,9 @@ async function onWalletConnected() {
 async function loadBalances() {
   if (!provider || !walletAddress) return;
   try {
-    const maticBal = await provider.getBalance(walletAddress);
-    const maticFormatted = parseFloat(ethers.formatEther(maticBal)).toFixed(4);
-    document.getElementById('display-matic').textContent = maticFormatted;
+    const polBal = await provider.getBalance(walletAddress);
+    const polFormatted = parseFloat(ethers.formatEther(polBal)).toFixed(4);
+    document.getElementById('display-pol').textContent = polFormatted;
 
     if (CONFIG.IDTC_ADDRESS !== '0x0000000000000000000000000000000000000000') {
       const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, provider);
@@ -1385,13 +1385,13 @@ function initiatePurchase() {
     document.getElementById('wallet-disconnected').scrollIntoView({ behavior: 'smooth' });
     return;
   }
-  const maticAmt = parseFloat(document.getElementById('matic-input').value);
-  if (!maticAmt || maticAmt <= 0) {
-    showToast('Enter a valid MATIC amount', 'error');
+  const polAmt = parseFloat(document.getElementById('pol-input').value);
+  if (!polAmt || polAmt <= 0) {
+    showToast('Enter a valid POL amount', 'error');
     return;
   }
   const r = CONFIG.ROUNDS[selectedRound];
-  const idtcAmt = (maticAmt * CONFIG.MATIC_PRICE_USD) / r.price;
+  const idtcAmt = (polAmt * CONFIG.POL_PRICE_USD) / r.price;
   if (idtcAmt < r.min) {
     showToast(`Minimum purchase is ${r.min.toLocaleString()} IDTC`, 'error');
     return;
@@ -1402,7 +1402,7 @@ function initiatePurchase() {
   }
   // Show confirm modal
   document.getElementById('modal-round').textContent = r.name + ' Round';
-  document.getElementById('modal-matic').textContent = maticAmt.toFixed(4) + ' MATIC';
+  document.getElementById('modal-pol').textContent = polAmt.toFixed(4) + ' POL';
   document.getElementById('modal-idtc').textContent = idtcAmt.toLocaleString('en', {maximumFractionDigits:2}) + ' IDTC';
   document.getElementById('modal-price').textContent = '$' + r.price.toFixed(2) + ' / IDTC';
   document.getElementById('confirm-modal').classList.add('open');
@@ -1414,7 +1414,7 @@ async function executePurchase() {
     showToast('Presale contract not yet deployed. Coming soon!', 'info');
     return;
   }
-  const maticAmt = parseFloat(document.getElementById('matic-input').value);
+  const polAmt = parseFloat(document.getElementById('pol-input').value);
   const roundIndex = { seed: 0, private: 1, public: 2 }[selectedRound];
   const btn = document.getElementById('modal-confirm-btn');
 
@@ -1424,7 +1424,7 @@ async function executePurchase() {
     closeModal();
 
     const presale = new ethers.Contract(CONFIG.PRESALE_ADDRESS, PRESALE_ABI, signer);
-    const value = ethers.parseEther(maticAmt.toFixed(18));
+    const value = ethers.parseEther(polAmt.toFixed(18));
 
     showToast('Awaiting wallet confirmation…', 'info');
     const tx = await presale.buyTokens(roundIndex, { value });
@@ -1432,18 +1432,18 @@ async function executePurchase() {
     const receipt = await tx.wait();
 
     const r = CONFIG.ROUNDS[selectedRound];
-    const idtcAmt = (maticAmt * CONFIG.MATIC_PRICE_USD) / r.price;
+    const idtcAmt = (polAmt * CONFIG.POL_PRICE_USD) / r.price;
 
     addPurchaseToHistory({
       round: r.name,
-      matic: maticAmt,
+      pol: polAmt,
       idtc: idtcAmt,
       txHash: receipt.hash,
     });
 
     showToast(`✅ Purchase successful! ${idtcAmt.toLocaleString('en',{maximumFractionDigits:2})} IDTC credited.`, 'success');
     await loadBalances();
-    document.getElementById('matic-input').value = '';
+    document.getElementById('pol-input').value = '';
     document.getElementById('idtc-output').value = '';
   } catch(e) {
     console.error(e);
@@ -1464,7 +1464,7 @@ function addPurchaseToHistory(item) {
         <span style="color:var(--gold);font-weight:700">${p.round}</span>
         <span>${p.idtc.toLocaleString('en',{maximumFractionDigits:2})} IDTC</span>
       </div>
-      <div style="color:var(--muted);font-size:0.75rem">${p.matic} MATIC ·
+      <div style="color:var(--muted);font-size:0.75rem">${p.pol} POL ·
         <a class="tx-link" href="${CONFIG.EXPLORER}/tx/${p.txHash}" target="_blank">${p.txHash.slice(0,12)}…</a>
       </div>
     </div>
