@@ -23,11 +23,16 @@ async function main() {
   console.log("IDTC deployed to:", idtcAddress);
 
   // ── Deploy IDTCPresale ─────────────────────────────────────────────────────
-  // Initial rate: 1 MATIC = $0.87 → maticPerUsd = 1/0.87 ≈ 1.1494e18
-  const maticPerUsd = ethers.parseEther("1.1494");
+  // usdPerMatic = USD price of 1 MATIC.
+  // If 1 MATIC = $0.87, pass 0.87e18 = 870000000000000000
+  //
+  // Verification: 1 MATIC at $0.87, Private round ($0.04):
+  //   tokensOut = (1e18 * 0.87e18 * 100) / (4 * 1e18) = 21.75e18 = 21.75 IDTC ✓
+  const usdPerMatic = ethers.parseEther("0.87");
   console.log("\nDeploying IDTCPresale...");
+  console.log("Initial MATIC price: $0.87 USD (usdPerMatic:", usdPerMatic.toString(), ")");
   const Presale = await ethers.getContractFactory("IDTCPresale");
-  const presale = await Presale.deploy(idtcAddress, deployer.address, maticPerUsd);
+  const presale = await Presale.deploy(idtcAddress, deployer.address, usdPerMatic);
   await presale.waitForDeployment();
   const presaleAddress = await presale.getAddress();
   console.log("IDTCPresale deployed to:", presaleAddress);
@@ -40,6 +45,13 @@ async function main() {
   await approveTx.wait();
   console.log("Approval tx:", approveTx.hash);
 
+  // ── Verify calculation ─────────────────────────────────────────────────────
+  console.log("\n── Verification ──");
+  console.log("If user sends 1 MATIC in Private round ($0.04):");
+  const testTokens = await presale.tokensForMatic(ethers.parseEther("1"));
+  console.log("  tokensForMatic(1 MATIC) =", ethers.formatEther(testTokens), "IDTC");
+  console.log("  Expected: ~21.75 IDTC");
+
   // ── Save deployment info ───────────────────────────────────────────────────
   const deployment = {
     network: "polygonAmoy",
@@ -47,6 +59,7 @@ async function main() {
     deployer: deployer.address,
     idtc: idtcAddress,
     idtcPresale: presaleAddress,
+    usdPerMatic: "0.87",
     deployedAt: new Date().toISOString()
   };
 

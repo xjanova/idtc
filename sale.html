@@ -658,11 +658,11 @@
           </div>
           <div class="detail-item">
             <div class="d-lbl en">Vesting</div><div class="d-lbl th">ระยะ Vesting</div>
-            <div class="d-val">6 months cliff</div>
+            <div class="d-val">12-mo cliff + 12-mo linear</div>
           </div>
           <div class="detail-item">
             <div class="d-lbl en">Listing Gain</div><div class="d-lbl th">กำไรตอนเปิดตัว</div>
-            <div class="d-val" style="color:var(--green)">+67%</div>
+            <div class="d-val" style="color:var(--green)">+133%</div>
           </div>
         </div>
         <button class="btn-buy btn-buy-outline" disabled>
@@ -700,11 +700,11 @@
           </div>
           <div class="detail-item">
             <div class="d-lbl en">Vesting</div><div class="d-lbl th">ระยะ Vesting</div>
-            <div class="d-val">3 months cliff</div>
+            <div class="d-val">6-mo cliff + 12-mo linear</div>
           </div>
           <div class="detail-item">
             <div class="d-lbl en">Listing Gain</div><div class="d-lbl th">กำไรตอนเปิดตัว</div>
-            <div class="d-val" style="color:var(--green)">+25%</div>
+            <div class="d-val" style="color:var(--green)">+75%</div>
           </div>
         </div>
         <button class="btn-buy btn-buy-gold" onclick="selectRound('private'); document.getElementById('buy-panel').scrollIntoView({behavior:'smooth'})">
@@ -742,11 +742,11 @@
           </div>
           <div class="detail-item">
             <div class="d-lbl en">Vesting</div><div class="d-lbl th">ระยะ Vesting</div>
-            <div class="d-val">No lockup</div>
+            <div class="d-val">10% TGE + 6-mo linear</div>
           </div>
           <div class="detail-item">
             <div class="d-lbl en">Listing Gain</div><div class="d-lbl th">กำไรตอนเปิดตัว</div>
-            <div class="d-val" style="color:var(--gold)">At price</div>
+            <div class="d-val" style="color:var(--green)">+40%</div>
           </div>
         </div>
         <button class="btn-buy btn-buy-green" onclick="selectRound('public'); document.getElementById('buy-panel').scrollIntoView({behavior:'smooth'})">
@@ -911,10 +911,10 @@
         <h4 class="th">🌱 รอบ Seed</h4>
         <table class="vest-table">
           <tr><th>Month</th><th>Unlock %</th><th>Tokens</th></tr>
-          <tr><td>M1-M6</td><td>0%</td><td>0 (cliff)</td></tr>
-          <tr><td>M7</td><td class="highlight">10%</td><td>350,000</td></tr>
-          <tr><td>M8-M18</td><td>~9%/mo</td><td>~315,000</td></tr>
-          <tr><td>M18</td><td class="highlight">100%</td><td>3,500,000</td></tr>
+          <tr><td>M1-M12</td><td>0%</td><td>0 (12-mo cliff)</td></tr>
+          <tr><td>M13</td><td class="highlight">~8.3%</td><td>~833,000</td></tr>
+          <tr><td>M13-M24</td><td>~8.3%/mo</td><td>~833,000/mo</td></tr>
+          <tr><td>M24</td><td class="highlight">100%</td><td>10,000,000</td></tr>
         </table>
       </div>
       <div class="vest-card">
@@ -922,10 +922,10 @@
         <h4 class="th">🔐 รอบ Private</h4>
         <table class="vest-table">
           <tr><th>Month</th><th>Unlock %</th><th>Tokens</th></tr>
-          <tr><td>M1-M3</td><td>0%</td><td>0 (cliff)</td></tr>
-          <tr><td>M4</td><td class="highlight">15%</td><td>405,000</td></tr>
-          <tr><td>M5-M12</td><td>~12%/mo</td><td>~324,000</td></tr>
-          <tr><td>M12</td><td class="highlight">100%</td><td>2,700,000</td></tr>
+          <tr><td>M1-M6</td><td>0%</td><td>0 (6-mo cliff)</td></tr>
+          <tr><td>M7</td><td class="highlight">~8.3%</td><td>~1,250,000</td></tr>
+          <tr><td>M7-M18</td><td>~8.3%/mo</td><td>~1,250,000/mo</td></tr>
+          <tr><td>M18</td><td class="highlight">100%</td><td>15,000,000</td></tr>
         </table>
       </div>
       <div class="vest-card">
@@ -933,9 +933,10 @@
         <h4 class="th">🌐 รอบ Public</h4>
         <table class="vest-table">
           <tr><th>Month</th><th>Unlock %</th><th>Tokens</th></tr>
-          <tr><td>TGE</td><td class="highlight">100%</td><td>Instant</td></tr>
-          <tr><td>—</td><td>No lock</td><td>Transferable</td></tr>
-          <tr><td colspan="3" style="color:var(--muted);font-size:0.75rem;padding-top:8px">Free to trade immediately after purchase</td></tr>
+          <tr><td>TGE</td><td class="highlight">10%</td><td>2,500,000</td></tr>
+          <tr><td>M1-M6</td><td>~15%/mo</td><td>~3,750,000/mo</td></tr>
+          <tr><td>M6</td><td class="highlight">100%</td><td>25,000,000</td></tr>
+          <tr><td colspan="3" style="color:var(--muted);font-size:0.75rem;padding-top:8px">10% unlocked at TGE, remaining over 6 months</td></tr>
         </table>
       </div>
     </div>
@@ -1004,7 +1005,7 @@
         </tr>
         <tr>
           <td style="color:var(--muted)">Listing Price</td>
-          <td class="highlight">$0.05</td>
+          <td class="highlight">$0.07 (QuickSwap V3)</td>
         </tr>
       </table>
     </div>
@@ -1046,8 +1047,8 @@
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
-        <span class="en">Vesting means tokens are released over time instead of all at once. Seed investors have a 6-month cliff (no tokens) then 12-month linear unlock. Private has 3-month cliff then 9-month unlock. Public round has no vesting — tokens are yours immediately.</span>
-        <span class="th">Vesting คือการปล่อยโทเคนทีละน้อยตามเวลา แทนที่จะได้รับทั้งหมดทันที Seed มี cliff 6 เดือนแล้วปลดล็อค 12 เดือน Private มี cliff 3 เดือนแล้วปลดล็อค 9 เดือน Public ไม่มี vesting — ได้รับทันที</span>
+        <span class="en">Vesting means tokens are released gradually instead of all at once. Seed investors have a 12-month cliff followed by 12-month linear unlock (fully vested at month 24). Private has a 6-month cliff then 12-month linear unlock (fully vested at month 18). Public gets 10% at TGE, with the remaining 90% released linearly over 6 months.</span>
+        <span class="th">Vesting คือการปล่อยโทเคนทีละน้อยตามเวลา แทนที่จะได้รับทั้งหมดทันที Seed มี cliff 12 เดือน แล้วปลดล็อค linear 12 เดือน (ครบ 100% ที่เดือน 24) Private มี cliff 6 เดือน แล้วปลดล็อค linear 12 เดือน (ครบ 100% ที่เดือน 18) Public ได้ 10% ที่ TGE ส่วนที่เหลือ 90% ปลดล็อค linear ภายใน 6 เดือน</span>
       </div>
     </div>
 
@@ -1495,13 +1496,12 @@ function toggleFaq(el) {
 // ===== TOKENOMICS CHART =====
 function initTokenomicsChart() {
   const data = [
-    { label: 'Public Sale', pct: 25, color: '#00c853' },
-    { label: 'Private Sale', pct: 15, color: '#d4af37' },
-    { label: 'Seed Round', pct: 10, color: '#6c63ff' },
-    { label: 'Ecosystem', pct: 20, color: '#00bcd4' },
+    { label: 'Investors (Seed/Private/Public)', pct: 35, color: '#00c853' },
+    { label: 'Ecosystem Fund', pct: 20, color: '#00bcd4' },
     { label: 'Team & Advisors', pct: 15, color: '#ff9800' },
-    { label: 'Reserve', pct: 10, color: '#e91e63' },
-    { label: 'Liquidity', pct: 5, color: '#9c27b0' },
+    { label: 'Staking Rewards', pct: 15, color: '#6c63ff' },
+    { label: 'Marketing & Growth', pct: 10, color: '#e91e63' },
+    { label: 'Liquidity Reserve', pct: 5, color: '#9c27b0' },
   ];
 
   const ctx = document.getElementById('tokenomics-chart').getContext('2d');
