@@ -55,14 +55,16 @@
 
   /* ===== HEADER ===== */
   header {
-    position: sticky; top: 0; z-index: 100;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     background: rgba(10,10,15,0.92);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     padding: 0 2rem;
     height: 64px;
     display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.3s;
   }
+  body { padding-top: 64px; }
 
   .logo-area {
     display: flex; align-items: center; gap: 12px;
@@ -228,12 +230,26 @@
 
   /* ===== SCROLL REVEAL ===== */
   .reveal {
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
+    opacity: 0; transform: translateY(25px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
   }
   .reveal.visible {
     opacity: 1; transform: translateY(0);
   }
+
+  /* Stagger children */
+  .reveal.visible .round-card,
+  .reveal.visible .stat-chip,
+  .reveal.visible .vest-card,
+  .reveal.visible .panel,
+  .reveal.visible .faq-item {
+    animation: fadeInScale 0.5s ease both;
+  }
+  .reveal.visible :nth-child(1) { animation-delay: 0s; }
+  .reveal.visible :nth-child(2) { animation-delay: 0.1s; }
+  .reveal.visible :nth-child(3) { animation-delay: 0.2s; }
+  .reveal.visible :nth-child(4) { animation-delay: 0.3s; }
+  .reveal.visible :nth-child(5) { animation-delay: 0.4s; }
 
   /* ===== STATS ROW ===== */
   .stats-row {
@@ -1770,7 +1786,7 @@ function initScrollReveal() {
         observer.unobserve(e.target);
       }
     });
-  }, { threshold: 0.1 });
+  }, { threshold: 0.01, rootMargin: '0px 0px -30px 0px' });
   els.forEach(el => observer.observe(el));
 }
 
