@@ -338,6 +338,8 @@ const CONFIG = {
   EXPLORER: 'https://polygonscan.com',
   CHAIN_NAME: 'Polygon Mainnet',
   TOKEN_PRICE_USD: 0.05,
+  ETHERSCAN_API_KEY: '8JNXSM6PY5BPCXWS9Q12J5XBU6RSBCRGE7',
+  ETHERSCAN_V2: 'https://api.etherscan.io/v2/api?chainid=137',
 };
 
 const ERC20_ABI = [
@@ -445,32 +447,54 @@ async function onWalletConnected(address, chainId, network) {
   }
 }
 
+// Etherscan V2 API helper
+async function etherscanFetch(params) {
+  const qs = new URLSearchParams({ ...params, apikey: CONFIG.ETHERSCAN_API_KEY }).toString();
+  const url = CONFIG.ETHERSCAN_V2 + '&' + qs;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (data.status === '1' || data.message === 'OK') return data.result;
+  console.warn('Etherscan API:', data.message, data.result);
+  return null;
+}
+
 async function loadBalances(address) {
   try {
-    // POL balance
-    const polWei = await provider.getBalance(address);
-    const polFormatted = parseFloat(ethers.formatEther(polWei)).toFixed(4);
+    // ── POL balance via Etherscan API ──
+    let polFormatted = '0.0000';
+    try {
+      const polResult = await etherscanFetch({
+        module: 'account', action: 'balance', address: address, tag: 'latest'
+      });
+      if (polResult) {
+        polFormatted = parseFloat(ethers.formatEther(BigInt(polResult))).toFixed(4);
+      }
+    } catch(e) {
+      console.error('POL balance API failed, trying RPC:', e);
+      const polWei = await provider.getBalance(address);
+      polFormatted = parseFloat(ethers.formatEther(polWei)).toFixed(4);
+    }
     document.getElementById('polBalance').textContent = polFormatted;
     document.getElementById('polBalanceFull').textContent = polFormatted + ' POL';
 
-    // IDTC balance (if contract deployed)
+    // ── IDTC balance via Etherscan API ──
     let idtcAmount = 0;
-    if (tokenContract && CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+    if (CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
       try {
-        const balance = await tokenContract.balanceOf(address);
-        idtcAmount = parseFloat(ethers.formatUnits(balance, CONFIG.TOKEN_DECIMALS));
-        console.log('IDTC balance raw:', balance.toString(), 'formatted:', idtcAmount);
+        const idtcResult = await etherscanFetch({
+          module: 'account', action: 'tokenbalance',
+          contractaddress: CONFIG.CONTRACT_ADDRESS,
+          address: address, tag: 'latest'
+        });
+        if (idtcResult) {
+          idtcAmount = parseFloat(ethers.formatUnits(BigInt(idtcResult), CONFIG.TOKEN_DECIMALS));
+          console.log('IDTC balance (API):', idtcResult, '→', idtcAmount);
+        }
       } catch(e) {
-        console.error('balanceOf failed:', e);
-        // Fallback: try direct RPC call
-        try {
-          const fallbackProvider = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
-          const fallbackContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ERC20_ABI, fallbackProvider);
-          const balance = await fallbackContract.balanceOf(address);
+        console.error('IDTC balance API failed, trying RPC:', e);
+        if (tokenContract) {
+          const balance = await tokenContract.balanceOf(address);
           idtcAmount = parseFloat(ethers.formatUnits(balance, CONFIG.TOKEN_DECIMALS));
-          console.log('IDTC balance (fallback):', idtcAmount);
-        } catch(e2) {
-          console.error('balanceOf fallback also failed:', e2);
         }
       }
     }
@@ -483,21 +507,68 @@ async function loadBalances(address) {
     const portfolioVal = idtcAmount * CONFIG.TOKEN_PRICE_USD;
     document.getElementById('portfolioValue').textContent = '$' + portfolioVal.toFixed(2);
 
-    // Fetch real totalSupply from contract
+    // ── Total Supply via Etherscan API ──
     let totalSupply = 100000000;
-    if (tokenContract) {
-      try {
-        const supply = await tokenContract.totalSupply();
-        totalSupply = parseFloat(ethers.formatUnits(supply, CONFIG.TOKEN_DECIMALS));
-      } catch(e) { console.error('totalSupply error:', e); }
+    try {
+      const supplyResult = await etherscanFetch({
+        module: 'stats', action: 'tokensupply',
+        contractaddress: CONFIG.CONTRACT_ADDRESS
+      });
+      if (supplyResult) {
+        totalSupply = parseFloat(ethers.formatUnits(BigInt(supplyResult), CONFIG.TOKEN_DECIMALS));
+      }
+    } catch(e) {
+      console.error('totalSupply API failed:', e);
     }
     const totalSupplyFmt = totalSupply.toLocaleString('en-US', {maximumFractionDigits: 0});
     document.getElementById('circSupply').textContent = totalSupplyFmt + ' IDTC';
     const mcap = totalSupply * CONFIG.TOKEN_PRICE_USD;
     document.getElementById('marketCap').textContent = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
 
+    // ── Recent IDTC Transactions via API ──
+    await loadTransactions(address);
+
   } catch(err) {
     console.error('loadBalances error:', err);
+  }
+}
+
+async function loadTransactions(address) {
+  try {
+    const txResult = await etherscanFetch({
+      module: 'account', action: 'tokentx',
+      contractaddress: CONFIG.CONTRACT_ADDRESS,
+      address: address, page: '1', offset: '10', sort: 'desc'
+    });
+    const txList = document.getElementById('txList');
+    if (!txResult || txResult.length === 0) {
+      txList.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray-700);font-size:.88rem"><div style="font-size:2rem;margin-bottom:.5rem">📭</div>No IDTC transactions found. <a href="sale.html" style="color:var(--green-dark);font-weight:600">Buy IDTC</a> to get started.</div>';
+      document.getElementById('tokensBought').textContent = '0 IDTC';
+      return;
+    }
+    let totalBought = 0;
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:.82rem">';
+    html += '<tr style="border-bottom:1px solid var(--gray-200);color:var(--gray-700)"><td style="padding:.5rem">Type</td><td>Amount</td><td>From/To</td><td style="text-align:right">TX</td></tr>';
+    txResult.forEach(tx => {
+      const isIn = tx.to.toLowerCase() === address.toLowerCase();
+      const amt = parseFloat(ethers.formatUnits(BigInt(tx.value), parseInt(tx.tokenDecimal)));
+      if (isIn) totalBought += amt;
+      const amtFmt = amt.toLocaleString('en-US', {maximumFractionDigits: 2});
+      const other = isIn ? tx.from : tx.to;
+      const shortOther = other.slice(0, 6) + '...' + other.slice(-4);
+      const typeLabel = isIn ? '<span style="color:var(--green);font-weight:600">IN</span>' : '<span style="color:var(--red);font-weight:600">OUT</span>';
+      html += '<tr style="border-bottom:1px solid var(--gray-100)">';
+      html += '<td style="padding:.5rem">' + typeLabel + '</td>';
+      html += '<td>' + amtFmt + ' IDTC</td>';
+      html += '<td style="font-family:monospace;font-size:.75rem">' + shortOther + '</td>';
+      html += '<td style="text-align:right"><a href="' + CONFIG.EXPLORER + '/tx/' + tx.hash + '" target="_blank" style="color:var(--green-dark);font-size:.75rem">View ↗</a></td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+    txList.innerHTML = html;
+    document.getElementById('tokensBought').textContent = totalBought.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' IDTC';
+  } catch(e) {
+    console.error('loadTransactions error:', e);
   }
 }
 
