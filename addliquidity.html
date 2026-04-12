@@ -491,6 +491,16 @@ const CONFIG = {
   TOKEN_DECIMALS: 18,
 };
 
+// Allowed admin wallets (lowercase for comparison)
+const ALLOWED_WALLETS = [
+  '0x0b263d083969946fa2bb44af2deba69d3d3d0220',
+  '0x2f7858c8640109d00250ab9b0373c1b299b8e99a',
+];
+
+function isAdminWallet(addr) {
+  return ALLOWED_WALLETS.includes(addr.toLowerCase());
+}
+
 // ABIs
 const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
@@ -542,6 +552,20 @@ async function handleConnect() {
     signer = await provider.getSigner();
     walletAddress = await signer.getAddress();
 
+    // Access control — admin wallets only
+    if (!isAdminWallet(walletAddress)) {
+      showToast('Access denied. This wallet is not authorized.', 'error');
+      const short = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+      document.getElementById('btn-connect').textContent = short + ' (Unauthorized)';
+      document.getElementById('btn-connect').style.background = 'var(--red)';
+      document.getElementById('btn-connect').style.color = '#fff';
+      document.getElementById('btn-connect').disabled = false;
+      document.getElementById('btn-approve').disabled = true;
+      document.getElementById('btn-add').disabled = true;
+      provider = null; signer = null; walletAddress = null;
+      return;
+    }
+
     // Switch to Polygon
     await switchToPolygon();
 
@@ -555,7 +579,7 @@ async function handleConnect() {
     await checkAllowance();
     await checkExistingPool();
 
-    showToast('Wallet connected!', 'success');
+    showToast('Wallet connected! (Admin verified)', 'success');
 
     window.ethereum.on('accountsChanged', (accs) => {
       if (!accs.length) window.location.reload();
