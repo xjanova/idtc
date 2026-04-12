@@ -147,13 +147,20 @@
     .trade-grid { grid-template-columns: 1fr; }
   }
 
+  /* ===== CHART + TRADES COLUMN ===== */
+  .chart-trades-col {
+    display: flex; flex-direction: column;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+
   /* ===== CHART AREA ===== */
   .chart-card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     overflow: hidden;
-    min-height: 520px;
+    min-height: 480px;
     display: flex; flex-direction: column;
   }
   .chart-tabs {
@@ -177,17 +184,40 @@
   }
   .chart-body iframe {
     width: 100%; height: 100%;
-    min-height: 460px;
+    min-height: 420px;
     border: none;
   }
-  .chart-placeholder {
-    text-align: center; padding: 3rem;
-    color: var(--muted);
+
+  /* ===== INLINE TRADE HISTORY (connected below chart) ===== */
+  .chart-trades-col .trade-history-inline {
+    border-top: 1px solid var(--border);
+    max-height: 320px;
+    overflow-y: auto;
   }
-  .chart-placeholder .cp-icon {
-    font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;
+  .chart-trades-col .trade-history-inline::-webkit-scrollbar { width: 5px; }
+  .chart-trades-col .trade-history-inline::-webkit-scrollbar-track { background: transparent; }
+  .chart-trades-col .trade-history-inline::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 4px; }
+  .trade-history-tab-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
   }
-  .chart-placeholder p { max-width: 360px; margin: 0 auto; font-size: 0.9rem; line-height: 1.6; }
+  .trade-history-tab-bar h4 {
+    font-size: 0.85rem; font-weight: 700; margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .trade-history-tab-bar .live-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.68rem; font-weight: 600;
+    color: #00e676; background: rgba(0,230,118,0.08);
+    padding: 2px 8px; border-radius: 100px;
+  }
+  .trade-history-tab-bar .live-badge .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #00e676; display: inline-block;
+    animation: pulse-dot 1.5s infinite;
+  }
 
   /* ===== SWAP PANEL ===== */
   .swap-panel {
@@ -263,79 +293,6 @@
     transform: rotate(180deg);
   }
 
-  /* DEX buttons */
-  .dex-buttons {
-    display: flex; flex-direction: column; gap: 8px;
-    margin-top: 1rem;
-  }
-
-  .dex-btn {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 18px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 700; font-size: 0.92rem;
-    transition: all .2s;
-    border: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
-  }
-  .dex-btn::after {
-    content: '';
-    position: absolute; right: 16px;
-    font-size: 1rem; opacity: 0.5;
-  }
-
-  .dex-btn-quickswap {
-    background: linear-gradient(135deg, rgba(69,104,220,0.15), rgba(69,104,220,0.05));
-    color: #7b93db;
-  }
-  .dex-btn-quickswap:hover {
-    background: linear-gradient(135deg, rgba(69,104,220,0.3), rgba(69,104,220,0.1));
-    border-color: #7b93db;
-    transform: translateY(-1px);
-  }
-
-  .dex-btn-uniswap {
-    background: linear-gradient(135deg, rgba(255,0,122,0.15), rgba(255,0,122,0.05));
-    color: #ff6da8;
-  }
-  .dex-btn-uniswap:hover {
-    background: linear-gradient(135deg, rgba(255,0,122,0.3), rgba(255,0,122,0.1));
-    border-color: #ff6da8;
-    transform: translateY(-1px);
-  }
-
-  .dex-btn-pancake {
-    background: linear-gradient(135deg, rgba(31,199,212,0.15), rgba(31,199,212,0.05));
-    color: #1fc7d4;
-  }
-  .dex-btn-pancake:hover {
-    background: linear-gradient(135deg, rgba(31,199,212,0.3), rgba(31,199,212,0.1));
-    border-color: #1fc7d4;
-    transform: translateY(-1px);
-  }
-
-  .dex-btn .dex-icon {
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem; flex-shrink: 0;
-  }
-  .dex-btn .dex-info { flex: 1; }
-  .dex-btn .dex-name { display: block; }
-  .dex-btn .dex-desc { display: block; font-size: 0.72rem; font-weight: 400; opacity: 0.7; margin-top: 1px; }
-  .dex-btn .dex-arrow { font-size: 1.1rem; opacity: 0.5; }
-
-  .dex-btn-cmc {
-    background: linear-gradient(135deg, rgba(23,99,207,0.15), rgba(23,99,207,0.05));
-    color: #4da3ff;
-  }
-  .dex-btn-cmc:hover {
-    background: linear-gradient(135deg, rgba(23,99,207,0.3), rgba(23,99,207,0.1));
-    border-color: #4da3ff;
-    transform: translateY(-1px);
-  }
-
   /* Swap Execute Button */
   .btn-swap-exec {
     width: 100%;
@@ -389,16 +346,6 @@
     border-color: var(--gold); color: var(--gold);
   }
 
-  .swap-note {
-    margin-top: 1rem;
-    padding: 10px 14px;
-    background: rgba(212,175,55,0.08);
-    border: 1px solid rgba(212,175,55,0.15);
-    border-radius: 10px;
-    font-size: 0.78rem;
-    color: var(--muted);
-    line-height: 1.5;
-  }
 
   /* ===== USD PRICE BLOCK ===== */
   .price-usd-block {
@@ -476,21 +423,6 @@
   }
   .info-chip .ic-copy:hover { color: var(--gold); }
 
-  /* ===== ADD TOKEN BUTTON ===== */
-  .add-token-section {
-    margin-top: 1.5rem;
-    text-align: center;
-  }
-  .btn-add-token {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: linear-gradient(135deg, var(--gold), var(--gold2));
-    color: #0a0a0f; font-weight: 700;
-    border: none; padding: 14px 32px;
-    border-radius: 12px; cursor: pointer;
-    font-size: 0.95rem; transition: all .2s;
-  }
-  .btn-add-token:hover { opacity: 0.85; transform: translateY(-1px); }
-  .btn-add-token img { width: 24px; height: 24px; border-radius: 50%; }
 
   /* ===== WALLET CONNECT MODAL ===== */
   .wallet-modal-overlay {
@@ -554,54 +486,115 @@
   footer a:hover { text-decoration: underline; }
 
   /* ===== RESPONSIVE ===== */
-  /* ===== TRADE HISTORY ===== */
-  .trade-history {
-    margin-top: 1.5rem;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .trade-history-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .trade-history-header h3 { font-size: 1rem; margin: 0; }
-  .trade-history-header .live-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #00e676; display: inline-block;
-    animation: pulse-dot 1.5s infinite;
-  }
   @keyframes pulse-dot {
     0%,100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
   .trade-table {
     width: 100%; border-collapse: collapse;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
   .trade-table th {
-    padding: 8px 12px; text-align: left;
+    padding: 7px 12px; text-align: left;
     color: var(--muted); font-weight: 600;
-    font-size: 0.72rem; text-transform: uppercase;
+    font-size: 0.7rem; text-transform: uppercase;
     border-bottom: 1px solid var(--border);
     background: rgba(255,255,255,0.02);
+    position: sticky; top: 0; z-index: 1;
   }
   .trade-table td {
-    padding: 8px 12px;
+    padding: 6px 12px;
     border-bottom: 1px solid rgba(255,255,255,0.03);
   }
   .trade-table tr:hover { background: rgba(212,175,55,0.04); }
-  .trade-table .buy { color: #00e676; }
-  .trade-table .sell { color: #ff6b6b; }
-  .trade-table .time { color: var(--muted); font-size: 0.72rem; }
-  .trade-table .txlink { color: var(--gold); text-decoration: none; font-size: 0.7rem; }
+  .trade-table .buy { color: #00e676; font-weight: 600; }
+  .trade-table .sell { color: #ff6b6b; font-weight: 600; }
+  .trade-table .time { color: var(--muted); font-size: 0.7rem; }
+  .trade-table .txlink { color: var(--gold); text-decoration: none; font-size: 0.68rem; }
   .trade-table .txlink:hover { text-decoration: underline; }
   .trade-history-empty {
     padding: 2rem; text-align: center;
     color: var(--muted); font-size: 0.85rem;
   }
+
+  /* ===== BOTTOM ACTIONS SECTION ===== */
+  .bottom-actions {
+    margin-top: 1.5rem;
+  }
+  .bottom-actions-title {
+    font-size: 0.82rem; color: var(--muted);
+    margin-bottom: .75rem; text-align: center;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+  }
+  .dex-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .75rem;
+  }
+  .dex-card {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 8px;
+    padding: 1.1rem .75rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    text-decoration: none;
+    transition: all .2s;
+    text-align: center;
+  }
+  .dex-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .dex-card .dc-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; flex-shrink: 0;
+  }
+  .dex-card .dc-name {
+    font-weight: 700; font-size: 0.82rem; color: var(--text);
+  }
+  .dex-card .dc-desc {
+    font-size: 0.68rem; color: var(--muted); line-height: 1.3;
+  }
+  .dex-card .dc-arrow {
+    font-size: 0.7rem; color: var(--muted);
+    background: rgba(255,255,255,0.05); padding: 3px 10px;
+    border-radius: 100px; margin-top: 2px;
+  }
+  .dc-quickswap .dc-icon { background: rgba(69,104,220,0.15); color: #7b93db; }
+  .dc-quickswap:hover { border-color: #7b93db; }
+  .dc-uniswap .dc-icon { background: rgba(255,0,122,0.15); color: #ff6da8; }
+  .dc-uniswap:hover { border-color: #ff6da8; }
+  .dc-pancake .dc-icon { background: rgba(31,199,212,0.15); color: #1fc7d4; }
+  .dc-pancake:hover { border-color: #1fc7d4; }
+  .dc-cmc .dc-icon { background: rgba(23,99,207,0.15); color: #4da3ff; }
+  .dc-cmc:hover { border-color: #4da3ff; }
+
+  .bottom-wallet-row {
+    display: flex; gap: .75rem; margin-top: .75rem;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .btn-bottom {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px; border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text); font-weight: 600; font-size: 0.85rem;
+    text-decoration: none; cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-bottom:hover {
+    border-color: var(--gold); transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  }
+  .btn-bottom.primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f; border-color: transparent;
+  }
+  .btn-bottom.primary:hover { opacity: 0.9; }
+  .btn-bottom img { width: 20px; height: 20px; border-radius: 50%; }
 
   /* ===== HAMBURGER MENU ===== */
   .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
@@ -615,6 +608,10 @@
   .mobile-nav a:hover { color: var(--gold); }
   .mobile-nav .close-nav { position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; color: #fff; background: none; border: none; cursor: pointer; }
 
+  @media (max-width: 900px) {
+    .dex-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
   @media (max-width: 768px) {
     nav a:not(.active) { display: none; }
     .hamburger { display: block; }
@@ -627,20 +624,30 @@
     main { padding: 1rem; }
     .page-header h1 { font-size: 1.2rem; }
     .swap-panel { border-radius: 12px; }
-    .chart-card { min-height: 300px; }
-    .chart-body iframe { min-height: 260px; }
+    .chart-trades-col { border-radius: 12px; }
+    .chart-card { min-height: 280px; }
+    .chart-body iframe { min-height: 240px; }
+    .chart-trades-col .trade-history-inline { max-height: 220px; }
     nav { gap: 0.6rem; }
     nav a { font-size: 0.78rem; }
     .info-strip { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
     .info-chip { padding: .75rem; }
     .info-chip .ic-val { font-size: .95rem; }
-    .trade-table th, .trade-table td { padding: 6px 8px; font-size: 0.72rem; }
+    .trade-table th, .trade-table td { padding: 5px 8px; font-size: 0.7rem; }
     .trade-table .hide-mobile { display: none; }
+    .dex-grid { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+    .dex-card { padding: .85rem .6rem; }
+    .dex-card .dc-icon { width: 34px; height: 34px; font-size: 1.1rem; }
+    .dex-card .dc-name { font-size: 0.78rem; }
+    .bottom-wallet-row { flex-direction: column; align-items: stretch; }
+    .btn-bottom { justify-content: center; }
   }
 
   @media (max-width: 400px) {
     .info-strip { grid-template-columns: 1fr 1fr; gap: .5rem; }
     .page-header { flex-direction: column; align-items: flex-start; gap: .5rem; }
+    .dex-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .dex-card .dc-desc { display: none; }
   }
 </style>
 </head>
@@ -722,20 +729,32 @@
 
   <!-- TRADE GRID -->
   <div class="trade-grid">
-    <!-- LEFT: CHART -->
-    <div class="chart-card">
-      <div class="chart-tabs">
-        <button class="chart-tab active" onclick="switchChart('dexscreener', this)">DexScreener</button>
-        <button class="chart-tab" onclick="switchChart('geckoterminal', this)">GeckoTerminal</button>
-        <a class="chart-tab" href="https://dex.coinmarketcap.com/token/polygon/0x0162847f552ea0ccc4e9ee2b39f36ecd45253815/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">CoinMarketCap &#8599;</a>
+    <!-- LEFT: CHART + TRADE HISTORY (connected) -->
+    <div class="chart-trades-col">
+      <div class="chart-card">
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchChart('dexscreener', this)">DexScreener</button>
+          <button class="chart-tab" onclick="switchChart('geckoterminal', this)">GeckoTerminal</button>
+          <a class="chart-tab" href="https://dex.coinmarketcap.com/token/polygon/0x0162847f552ea0ccc4e9ee2b39f36ecd45253815/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">CoinMarketCap &#8599;</a>
+        </div>
+        <div class="chart-body" id="chart-body">
+          <iframe id="chart-iframe"
+            src="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815?embed=1&theme=dark&trades=0&info=0"
+            loading="lazy"
+            allow="clipboard-write"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+          ></iframe>
+        </div>
       </div>
-      <div class="chart-body" id="chart-body">
-        <iframe id="chart-iframe"
-          src="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815?embed=1&theme=dark&trades=0&info=0"
-          loading="lazy"
-          allow="clipboard-write"
-          sandbox="allow-scripts allow-same-origin allow-popups"
-        ></iframe>
+      <!-- TRADE HISTORY (attached to chart) -->
+      <div class="trade-history-inline">
+        <div class="trade-history-tab-bar">
+          <h4><span class="en">Recent Trades</span><span class="th">ประวัติเทรดล่าสุด</span></h4>
+          <span class="live-badge"><span class="live-dot"></span> Live</span>
+        </div>
+        <div id="trade-history-body">
+          <div class="trade-history-empty"><span class="en">Loading trades...</span><span class="th">กำลังโหลดประวัติ...</span></div>
+        </div>
       </div>
     </div>
 
@@ -805,55 +824,6 @@
         <button class="btn-swap-exec disabled" id="btn-swap" onclick="executeSwap()">
           <span class="en">Connect Wallet to Swap</span><span class="th">เชื่อมกระเป๋าเพื่อแลกเปลี่ยน</span>
         </button>
-
-        <!-- OR external DEX -->
-        <div style="margin-top:1.2rem;text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:.5rem">
-          <span class="en">Or trade on external DEX</span><span class="th">หรือเทรดที่ DEX ภายนอก</span>
-        </div>
-
-        <!-- DEX BUTTONS -->
-        <div class="dex-buttons">
-          <a class="dex-btn dex-btn-quickswap" id="link-quickswap" href="#" target="_blank" rel="noopener">
-            <div class="dex-icon">&#9889;</div>
-            <div class="dex-info">
-              <span class="dex-name">QuickSwap</span>
-              <span class="dex-desc"><span class="en">Polygon's #1 DEX</span><span class="th">DEX อันดับ 1 บน Polygon</span></span>
-            </div>
-            <span class="dex-arrow">&#8599;</span>
-          </a>
-
-          <a class="dex-btn dex-btn-uniswap" id="link-uniswap" href="#" target="_blank" rel="noopener">
-            <div class="dex-icon">&#129412;</div>
-            <div class="dex-info">
-              <span class="dex-name">Uniswap V3</span>
-              <span class="dex-desc"><span class="en">World's largest DEX</span><span class="th">DEX ที่ใหญ่ที่สุดในโลก</span></span>
-            </div>
-            <span class="dex-arrow">&#8599;</span>
-          </a>
-
-          <a class="dex-btn dex-btn-pancake" id="link-pancake" href="#" target="_blank" rel="noopener">
-            <div class="dex-icon">&#129374;</div>
-            <div class="dex-info">
-              <span class="dex-name">PancakeSwap</span>
-              <span class="dex-desc"><span class="en">Multi-chain DEX</span><span class="th">DEX หลายเชน</span></span>
-            </div>
-            <span class="dex-arrow">&#8599;</span>
-          </a>
-
-          <a class="dex-btn dex-btn-cmc" id="link-cmc" href="#" target="_blank" rel="noopener">
-            <div class="dex-icon">&#128200;</div>
-            <div class="dex-info">
-              <span class="dex-name">CoinMarketCap</span>
-              <span class="dex-desc"><span class="en">CMC DEX Trading</span><span class="th">เทรดบน CMC DEX</span></span>
-            </div>
-            <span class="dex-arrow">&#8599;</span>
-          </a>
-        </div>
-
-        <div class="swap-note">
-          <span class="en">Select a DEX above to swap your tokens. IDTC is on Polygon Mainnet. Make sure your wallet is connected to Polygon before swapping.</span>
-          <span class="th">เลือก DEX ด้านบนเพื่อแลกเปลี่ยนโทเคน IDTC อยู่บน Polygon Mainnet ตรวจสอบว่ากระเป๋าเชื่อมต่อ Polygon ก่อนแลกเปลี่ยน</span>
-        </div>
       </div>
     </div>
   </div>
@@ -913,24 +883,50 @@
     </div>
   </div>
 
-  <!-- TRADE HISTORY -->
-  <div class="trade-history">
-    <div class="trade-history-header">
-      <h3><span class="en">Recent Trades</span><span class="th">ประวัติเทรดล่าสุด</span></h3>
-      <span><span class="live-dot"></span> <span style="font-size:.72rem;color:var(--muted)">Live</span></span>
+  <!-- BOTTOM ACTIONS: DEX links + useful buttons -->
+  <div class="bottom-actions">
+    <div class="bottom-actions-title">
+      <span class="en">Trade on External DEX</span><span class="th">เทรดที่ DEX ภายนอก</span>
     </div>
-    <div id="trade-history-body">
-      <div class="trade-history-empty"><span class="en">Loading trades...</span><span class="th">กำลังโหลดประวัติ...</span></div>
+    <div class="dex-grid">
+      <a class="dex-card dc-quickswap" id="link-quickswap" href="#" target="_blank" rel="noopener">
+        <div class="dc-icon">&#9889;</div>
+        <div class="dc-name">QuickSwap</div>
+        <div class="dc-desc"><span class="en">Polygon's #1 DEX</span><span class="th">DEX อันดับ 1</span></div>
+        <span class="dc-arrow"><span class="en">Trade</span><span class="th">เทรด</span> &#8599;</span>
+      </a>
+      <a class="dex-card dc-uniswap" id="link-uniswap" href="#" target="_blank" rel="noopener">
+        <div class="dc-icon">&#129412;</div>
+        <div class="dc-name">Uniswap V3</div>
+        <div class="dc-desc"><span class="en">Largest DEX</span><span class="th">DEX ใหญ่สุด</span></div>
+        <span class="dc-arrow"><span class="en">Trade</span><span class="th">เทรด</span> &#8599;</span>
+      </a>
+      <a class="dex-card dc-pancake" id="link-pancake" href="#" target="_blank" rel="noopener">
+        <div class="dc-icon">&#129374;</div>
+        <div class="dc-name">PancakeSwap</div>
+        <div class="dc-desc"><span class="en">Multi-chain DEX</span><span class="th">DEX หลายเชน</span></div>
+        <span class="dc-arrow"><span class="en">Trade</span><span class="th">เทรด</span> &#8599;</span>
+      </a>
+      <a class="dex-card dc-cmc" id="link-cmc" href="#" target="_blank" rel="noopener">
+        <div class="dc-icon">&#128200;</div>
+        <div class="dc-name">CoinMarketCap</div>
+        <div class="dc-desc"><span class="en">CMC DEX</span><span class="th">เทรดบน CMC</span></div>
+        <span class="dc-arrow"><span class="en">Trade</span><span class="th">เทรด</span> &#8599;</span>
+      </a>
     </div>
-  </div>
-
-  <!-- ADD TOKEN BUTTON -->
-  <div class="add-token-section">
-    <button class="btn-add-token" onclick="addTokenToWallet()">
-      <img src="logotoken.png" alt="IDTC">
-      <span class="en">Add IDTC to MetaMask</span>
-      <span class="th">เพิ่ม IDTC ใน MetaMask</span>
-    </button>
+    <div class="bottom-wallet-row">
+      <button class="btn-bottom primary" onclick="addTokenToWallet()">
+        <img src="logotoken.png" alt="IDTC">
+        <span class="en">Add IDTC to MetaMask</span>
+        <span class="th">เพิ่ม IDTC ใน MetaMask</span>
+      </button>
+      <a class="btn-bottom" href="https://polygonscan.com/token/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815" target="_blank" rel="noopener">
+        &#128270; <span class="en">View on PolygonScan</span><span class="th">ดูบน PolygonScan</span>
+      </a>
+      <button class="btn-bottom" onclick="copyContract()">
+        &#128203; <span class="en">Copy Contract</span><span class="th">คัดลอกสัญญา</span>
+      </button>
+    </div>
   </div>
 </main>
 
