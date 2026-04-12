@@ -13,8 +13,8 @@
 ```
 
 ## IDTCPresale
-- **Address:** 0x99448C18b1031c0eD5fc3512CBE8dD1C2E0B1C2F
-- **URL:** https://polygonscan.com/address/0x99448C18b1031c0eD5fc3512CBE8dD1C2E0B1C2F#code
+- **Address:** 0x99448C18B1031C0eD5FC3512cbEBDD1C2E0B1c2f
+- **URL:** https://polygonscan.com/address/0x99448C18B1031C0eD5FC3512cbEBDD1C2E0B1c2f#code
 - **Compiler:** Solidity 0.8.24
 - **Optimization:** No
 - **License:** MIT
