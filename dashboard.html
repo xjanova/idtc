@@ -334,7 +334,7 @@ const CONFIG = {
   // 👇 Update this after contract is deployed
   CONTRACT_ADDRESS: '0x0162847F552EA0cCc4E9eE2b39F36EcD45253815',
   ACTIVE_CHAIN_ID: '0x89',        // 137 in hex = Polygon Mainnet
-  RPC_URL: 'https://polygon-rpc.com',
+  RPC_URL: 'https://polygon-bor-rpc.publicnode.com',
   EXPLORER: 'https://polygonscan.com',
   CHAIN_NAME: 'Polygon Mainnet',
   TOKEN_PRICE_USD: 0.05,
@@ -459,7 +459,20 @@ async function loadBalances(address) {
       try {
         const balance = await tokenContract.balanceOf(address);
         idtcAmount = parseFloat(ethers.formatUnits(balance, CONFIG.TOKEN_DECIMALS));
-      } catch(e) {}
+        console.log('IDTC balance raw:', balance.toString(), 'formatted:', idtcAmount);
+      } catch(e) {
+        console.error('balanceOf failed:', e);
+        // Fallback: try direct RPC call
+        try {
+          const fallbackProvider = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+          const fallbackContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ERC20_ABI, fallbackProvider);
+          const balance = await fallbackContract.balanceOf(address);
+          idtcAmount = parseFloat(ethers.formatUnits(balance, CONFIG.TOKEN_DECIMALS));
+          console.log('IDTC balance (fallback):', idtcAmount);
+        } catch(e2) {
+          console.error('balanceOf fallback also failed:', e2);
+        }
+      }
     }
 
     const idtcFormatted = idtcAmount.toLocaleString('en-US', {maximumFractionDigits: 2});
@@ -470,9 +483,18 @@ async function loadBalances(address) {
     const portfolioVal = idtcAmount * CONFIG.TOKEN_PRICE_USD;
     document.getElementById('portfolioValue').textContent = '$' + portfolioVal.toFixed(2);
 
-    // Market data
-    document.getElementById('circSupply').textContent = '40,000,000 IDTC';
-    document.getElementById('marketCap').textContent = '$5,000,000';
+    // Fetch real totalSupply from contract
+    let totalSupply = 100000000;
+    if (tokenContract) {
+      try {
+        const supply = await tokenContract.totalSupply();
+        totalSupply = parseFloat(ethers.formatUnits(supply, CONFIG.TOKEN_DECIMALS));
+      } catch(e) { console.error('totalSupply error:', e); }
+    }
+    const totalSupplyFmt = totalSupply.toLocaleString('en-US', {maximumFractionDigits: 0});
+    document.getElementById('circSupply').textContent = totalSupplyFmt + ' IDTC';
+    const mcap = totalSupply * CONFIG.TOKEN_PRICE_USD;
+    document.getElementById('marketCap').textContent = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
 
   } catch(err) {
     console.error('loadBalances error:', err);
