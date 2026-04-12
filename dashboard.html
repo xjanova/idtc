@@ -472,11 +472,6 @@ async function onWalletConnected(address, chainId, network) {
 
   // Load balances
   await loadBalances(address);
-
-  // Auto-add IDTC token to wallet (only if not added before)
-  if (CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000' && !localStorage.getItem('idtc_token_added')) {
-    await addTokenToWallet();
-  }
 }
 
 // Etherscan V2 API helper
