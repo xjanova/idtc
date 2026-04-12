@@ -257,7 +257,7 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
           <tr><td>Total Supply</td><td>100,000,000</td></tr>
           <tr><td>Circulating</td><td id="circSupply">—</td></tr>
           <tr><td>Market Cap</td><td id="marketCap">—</td></tr>
-          <tr><td>Contract</td><td><a id="contractLink" href="#" target="_blank" style="color:var(--green-dark);font-size:.75rem;font-family:monospace" id="contractShort">—</a></td></tr>
+          <tr><td>Contract</td><td><a id="contractLink" href="#" target="_blank" style="color:var(--green-dark);font-size:.75rem;font-family:monospace"><span id="contractShort">—</span></a></td></tr>
           <tr><td>Decimals</td><td>18</td></tr>
           <tr><td>Standard</td><td><span class="badge-pill badge-blue">ERC-20</span></td></tr>
         </table>
@@ -498,12 +498,15 @@ async function switchToPolygon() {
 }
 
 async function addTokenToWallet() {
-  if (!window.ethereum) { alert('MetaMask not found!'); return; }
+  if (!window.ethereum) { alert('MetaMask not found!\n\nPlease install MetaMask:\nhttps://metamask.io/download/'); return; }
   if (CONFIG.CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
     alert('IDTC contract not deployed yet.\nCheck back soon!'); return;
   }
   try {
-    await window.ethereum.request({
+    // Switch to Polygon first
+    await switchToPolygon();
+    // Then add token
+    const added = await window.ethereum.request({
       method: 'wallet_watchAsset',
       params: {
         type: 'ERC20',
@@ -515,7 +518,8 @@ async function addTokenToWallet() {
         }
       }
     });
-  } catch(err) { console.error(err); }
+    if (added) { alert('IDTC added to MetaMask!'); }
+  } catch(err) { console.error('addToken error:', err); }
 }
 
 function disconnectWallet() {
