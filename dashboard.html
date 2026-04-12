@@ -460,15 +460,9 @@ async function onWalletConnected(address, chainId, network) {
     document.getElementById('contractLink').style.pointerEvents = 'none';
   }
 
-  // Check network — auto-switch if wrong
+  // Check network — show warning if wrong (user clicks "Switch Now" manually)
   const isCorrectNetwork = chainId.toLowerCase() === CONFIG.ACTIVE_CHAIN_ID.toLowerCase();
-  if (!isCorrectNetwork) {
-    document.getElementById('networkWarning').style.display = 'flex';
-    await switchToPolygon();
-    document.getElementById('networkWarning').style.display = 'none';
-  } else {
-    document.getElementById('networkWarning').style.display = 'none';
-  }
+  document.getElementById('networkWarning').style.display = isCorrectNetwork ? 'none' : 'flex';
 
   // Load balances
   await loadBalances(address);
@@ -698,14 +692,15 @@ async function loadMarketDataOnPageLoad() {
 }
 
 async function autoReconnect() {
-  // Try to reconnect without popup if user previously approved this site
+  // Try to reconnect silently — NO popups
   if (!window.ethereum) return;
   try {
     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
     if (accounts && accounts.length > 0) {
       userAddress = accounts[0];
       provider = new ethers.BrowserProvider(window.ethereum);
-      signer = await provider.getSigner();
+      // NOTE: skip getSigner() — it triggers MetaMask popup via eth_requestAccounts
+      // Dashboard is read-only, signer is not needed
       const network = await provider.getNetwork();
       const chainIdHex = '0x' + network.chainId.toString(16);
       await onWalletConnected(userAddress, chainIdHex, network);
@@ -714,7 +709,6 @@ async function autoReconnect() {
         if (accs.length === 0) { disconnectWallet(); return; }
         userAddress = accs[0];
         provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
         const net = await provider.getNetwork();
         await onWalletConnected(userAddress, '0x' + net.chainId.toString(16), net);
       });
