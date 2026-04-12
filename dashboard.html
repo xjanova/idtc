@@ -435,8 +435,8 @@ async function onWalletConnected(address, chainId, network) {
   // Load balances
   await loadBalances(address);
 
-  // Auto-add IDTC token to wallet
-  if (CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+  // Auto-add IDTC token to wallet (only if not added before)
+  if (CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000' && !localStorage.getItem('idtc_token_added')) {
     await addTokenToWallet();
   }
 }
@@ -518,7 +518,10 @@ async function addTokenToWallet() {
         }
       }
     });
-    if (added) { alert('IDTC added to MetaMask!'); }
+    if (added) {
+      localStorage.setItem('idtc_token_added', '1');
+      alert('IDTC added to MetaMask!');
+    }
   } catch(err) { console.error('addToken error:', err); }
 }
 

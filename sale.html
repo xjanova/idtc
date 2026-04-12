@@ -1390,8 +1390,8 @@ async function onWalletConnected() {
   await loadBalances();
   showToast('Wallet connected!', 'success');
 
-  // Auto-add token
-  if (CONFIG.IDTC_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+  // Auto-add token (only if not added before)
+  if (CONFIG.IDTC_ADDRESS !== '0x0000000000000000000000000000000000000000' && !localStorage.getItem('idtc_token_added')) {
     await addTokenToWallet();
   }
 
@@ -1440,6 +1440,7 @@ async function addTokenToWallet() {
         },
       },
     });
+    localStorage.setItem('idtc_token_added', '1');
     showToast('IDTC added to wallet!', 'success');
   } catch(e) { showToast(e.message, 'error'); }
 }

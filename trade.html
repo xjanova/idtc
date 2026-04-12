@@ -786,8 +786,10 @@ async function connectWallet(type = 'metamask') {
 
     showToast('Wallet connected!', 'success');
 
-    // Auto-add IDTC token
-    await addTokenToWallet();
+    // Auto-add IDTC token (only if not added before)
+    if (!localStorage.getItem('idtc_token_added')) {
+      await addTokenToWallet();
+    }
 
     // Watch changes
     window.ethereum.on('accountsChanged', (accs) => {
@@ -840,6 +842,7 @@ async function addTokenToWallet() {
         },
       },
     });
+    localStorage.setItem('idtc_token_added', '1');
     showToast('IDTC added to wallet!', 'success');
   } catch (e) { console.error(e); }
 }
