@@ -15,7 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # Job 1: Deploy to GitHub Pages
+  deploy-pages:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -35,3 +36,35 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Job 2: Deploy to idtc.online via SCP
+  deploy-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare target directory
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
+            mkdir -p "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html"
+            mkdir -p "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html/assets"
+            echo "Dirs ready."
+
+      - name: Upload files via SCP
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "index.html,dashboard.html,sale.html,trade.html,whitepaper.html,logo.png,logo.jpg,logotoken.png,token-logo.png,bk1.png,bk2.png,bk3.png,bk4.png,bk5.png,assets/"
+          target: "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html"
+          strip_components: 0
+          overwrite: true
