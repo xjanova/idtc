@@ -518,6 +518,7 @@
       <div class="chart-tabs">
         <button class="chart-tab active" onclick="switchChart('dexscreener', this)">DexScreener</button>
         <button class="chart-tab" onclick="switchChart('geckoterminal', this)">GeckoTerminal</button>
+        <button class="chart-tab" onclick="switchChart('coinmarketcap', this)">CoinMarketCap</button>
       </div>
       <div class="chart-body" id="chart-body">
         <iframe id="chart-iframe"
@@ -724,6 +725,7 @@ const DEX_URLS = {
 const CHART_URLS = {
   dexscreener: 'https://dexscreener.com/polygon/' + CONFIG.IDTC_ADDRESS + '?embed=1&theme=dark&trades=0&info=0',
   geckoterminal: 'https://www.geckoterminal.com/polygon_pos/tokens/' + CONFIG.IDTC_ADDRESS + '?embed=1&info=0&swaps=0',
+  coinmarketcap: 'https://dex.coinmarketcap.com/token/polygon/' + CONFIG.IDTC_ADDRESS + '/',
 };
 
 // Set DEX links
