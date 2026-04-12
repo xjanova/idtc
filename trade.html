@@ -863,31 +863,42 @@ function estimateSwap() {
 }
 
 function flipTokens() {
+  // Save current amounts BEFORE flipping
+  const fromInput = document.getElementById('swap-from-amount');
+  const toInput = document.getElementById('swap-to-amount');
+  const prevTo = toInput.value;
+
+  // Flip state
   isFlipped = !isFlipped;
+
+  // Swap icons & symbols
   const fromIcon = document.getElementById('from-icon');
   const fromSym = document.getElementById('from-symbol');
   const toIcon = document.getElementById('to-icon');
   const toSym = document.getElementById('to-symbol');
+  const fromBal = document.getElementById('from-balance');
+  const toBal = document.getElementById('to-balance');
+  const polLogo = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png';
 
   if (isFlipped) {
-    fromIcon.src = 'logotoken.png';
-    fromSym.textContent = 'IDTC';
-    toIcon.src = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png';
-    toSym.textContent = 'POL';
+    fromIcon.src = 'logotoken.png';  fromSym.textContent = 'IDTC';
+    toIcon.src = polLogo;            toSym.textContent = 'POL';
   } else {
-    fromIcon.src = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png';
-    fromSym.textContent = 'POL';
-    toIcon.src = 'logotoken.png';
-    toSym.textContent = 'IDTC';
+    fromIcon.src = polLogo;          fromSym.textContent = 'POL';
+    toIcon.src = 'logotoken.png';    toSym.textContent = 'IDTC';
   }
 
-  // Swap amounts: "You Receive" becomes new "You Pay", then recalculate
-  const fromInput = document.getElementById('swap-from-amount');
-  const toInput = document.getElementById('swap-to-amount');
-  const oldTo = toInput.value;
+  // Swap balance labels
+  const tmpBal = fromBal.textContent;
+  fromBal.textContent = toBal.textContent;
+  toBal.textContent = tmpBal;
+
+  // Move "You Receive" → "You Pay", then recalculate
+  fromInput.value = prevTo ? parseFloat(prevTo) : '';
   toInput.value = '';
-  fromInput.value = oldTo;
-  estimateSwap();
+  if (fromInput.value) {
+    estimateSwap();
+  }
 }
 
 // ===== WALLET =====
@@ -1000,14 +1011,20 @@ async function loadBalances() {
   if (!provider || !walletAddress) return;
   try {
     const polBal = await provider.getBalance(walletAddress);
-    const polFormatted = parseFloat(ethers.formatEther(polBal)).toFixed(4);
-    document.getElementById('from-balance').textContent = polFormatted + ' POL';
+    const polFormatted = parseFloat(ethers.formatEther(polBal)).toFixed(4) + ' POL';
 
-    const erc20Abi = ['function balanceOf(address) view returns (uint256)'];
-    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, erc20Abi, provider);
+    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, provider);
     const idtcBal = await token.balanceOf(walletAddress);
-    const idtcFormatted = parseFloat(ethers.formatUnits(idtcBal, 18)).toLocaleString('en-US', { maximumFractionDigits: 2 });
-    document.getElementById('to-balance').textContent = idtcFormatted + ' IDTC';
+    const idtcFormatted = parseFloat(ethers.formatUnits(idtcBal, 18)).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' IDTC';
+
+    // Show balance in correct position based on flip state
+    if (!isFlipped) {
+      document.getElementById('from-balance').textContent = polFormatted;
+      document.getElementById('to-balance').textContent = idtcFormatted;
+    } else {
+      document.getElementById('from-balance').textContent = idtcFormatted;
+      document.getElementById('to-balance').textContent = polFormatted;
+    }
   } catch (e) {
     console.error('Balance error:', e);
   }
