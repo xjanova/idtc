@@ -880,8 +880,14 @@ function flipTokens() {
     toIcon.src = 'logotoken.png';
     toSym.textContent = 'IDTC';
   }
-  document.getElementById('swap-from-amount').value = '';
-  document.getElementById('swap-to-amount').value = '';
+
+  // Swap amounts: "You Receive" becomes new "You Pay", then recalculate
+  const fromInput = document.getElementById('swap-from-amount');
+  const toInput = document.getElementById('swap-to-amount');
+  const oldTo = toInput.value;
+  toInput.value = '';
+  fromInput.value = oldTo;
+  estimateSwap();
 }
 
 // ===== WALLET =====
