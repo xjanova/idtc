@@ -609,32 +609,32 @@
     </div>
   </div>
 
-  <!-- TOKEN INFO -->
+  <!-- TOKEN INFO (real-time from pool) -->
   <div class="info-strip">
     <div class="info-chip">
-      <div class="ic-val">IDTC</div>
-      <div class="ic-lbl"><span class="en">Symbol</span><span class="th">สัญลักษณ์</span></div>
+      <div class="ic-val" id="pool-status"><span style="color:#888">Loading...</span></div>
+      <div class="ic-lbl"><span class="en">Pool Status</span><span class="th">สถานะ Pool</span></div>
     </div>
     <div class="info-chip">
-      <div class="ic-val">Polygon</div>
-      <div class="ic-lbl"><span class="en">Network</span><span class="th">เครือข่าย</span></div>
+      <div class="ic-val" id="pool-price">--</div>
+      <div class="ic-lbl"><span class="en">Price (1 IDTC)</span><span class="th">ราคา (1 IDTC)</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val" id="pool-reserves">--</div>
+      <div class="ic-lbl"><span class="en">Pool Reserves</span><span class="th">สภาพคล่องใน Pool</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val" id="info-supply">100M</div>
+      <div class="ic-lbl"><span class="en">Total Supply</span><span class="th">จำนวนทั้งหมด</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val" id="info-price">--</div>
+      <div class="ic-lbl"><span class="en">Market Price</span><span class="th">ราคาตลาด</span></div>
     </div>
     <div class="info-chip">
       <div class="ic-val" style="font-size:0.7rem;">0x0162...3815</div>
       <div class="ic-lbl"><span class="en">Contract</span><span class="th">สัญญา</span></div>
       <button class="ic-copy" onclick="copyContract()">Copy</button>
-    </div>
-    <div class="info-chip">
-      <div class="ic-val">100M</div>
-      <div class="ic-lbl"><span class="en">Total Supply</span><span class="th">จำนวนทั้งหมด</span></div>
-    </div>
-    <div class="info-chip">
-      <div class="ic-val">18</div>
-      <div class="ic-lbl"><span class="en">Decimals</span><span class="th">ทศนิยม</span></div>
-    </div>
-    <div class="info-chip">
-      <div class="ic-val">$0.05</div>
-      <div class="ic-lbl"><span class="en">Sale Price</span><span class="th">ราคาขาย</span></div>
     </div>
   </div>
 
@@ -690,7 +690,28 @@ const CONFIG = {
   CHAIN_NAME: 'Polygon Mainnet',
   TOKEN_IMAGE: 'https://idtc.online/logotoken.png',
   SALE_PRICE: 0.05,
+  // QuickSwap V2
+  FACTORY_V2: '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32',
+  WMATIC: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+  // Etherscan V2 API
+  ETHERSCAN_API_KEY: '8JNXSM6PY5BPCXWS9Q12J5XBU6RSBCRGE7',
+  ETHERSCAN_V2: 'https://api.etherscan.io/v2/api?chainid=137',
 };
+
+// ABIs for pool reading
+const FACTORY_ABI = ['function getPair(address,address) view returns (address)'];
+const PAIR_ABI = [
+  'function getReserves() view returns (uint112,uint112,uint32)',
+  'function token0() view returns (address)',
+  'function token1() view returns (address)',
+];
+const ERC20_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function totalSupply() view returns (uint256)',
+];
+
+// Pool state (updated on load)
+let poolData = { exists: false, pricePolPerIdtc: 0, priceIdtcPerPol: 0, reserveIDTC: 0, reservePOL: 0, pairAddress: null };
 
 // DEX URLs
 const DEX_URLS = {
@@ -732,18 +753,111 @@ function switchChart(source, btn) {
   iframe.src = CHART_URLS[source] || CHART_URLS.dexscreener;
 }
 
-// ===== SWAP ESTIMATE (cosmetic) =====
+// ===== LOAD POOL DATA FROM QUICKSWAP V2 =====
+async function loadPoolData() {
+  try {
+    const rpc = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+    const factory = new ethers.Contract(CONFIG.FACTORY_V2, FACTORY_ABI, rpc);
+    const pairAddr = await factory.getPair(CONFIG.IDTC_ADDRESS, CONFIG.WMATIC);
+
+    if (!pairAddr || pairAddr === '0x0000000000000000000000000000000000000000') {
+      poolData.exists = false;
+      updatePoolUI();
+      return;
+    }
+
+    poolData.pairAddress = pairAddr;
+    const pair = new ethers.Contract(pairAddr, PAIR_ABI, rpc);
+    const [reserves, token0] = await Promise.all([
+      pair.getReserves(),
+      pair.token0()
+    ]);
+
+    const isIdtcToken0 = token0.toLowerCase() === CONFIG.IDTC_ADDRESS.toLowerCase();
+    const resIDTC = parseFloat(ethers.formatEther(isIdtcToken0 ? reserves[0] : reserves[1]));
+    const resPOL  = parseFloat(ethers.formatEther(isIdtcToken0 ? reserves[1] : reserves[0]));
+
+    if (resIDTC > 0 && resPOL > 0) {
+      poolData.exists = true;
+      poolData.reserveIDTC = resIDTC;
+      poolData.reservePOL = resPOL;
+      poolData.pricePolPerIdtc = resPOL / resIDTC;   // 1 IDTC = ? POL
+      poolData.priceIdtcPerPol = resIDTC / resPOL;   // 1 POL = ? IDTC
+    } else {
+      poolData.exists = false;
+    }
+
+    // Also fetch total supply
+    const idtcToken = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, rpc);
+    const supply = await idtcToken.totalSupply();
+    poolData.totalSupply = parseFloat(ethers.formatEther(supply));
+
+    updatePoolUI();
+  } catch(e) {
+    console.error('loadPoolData error:', e);
+    poolData.exists = false;
+    updatePoolUI();
+  }
+}
+
+function updatePoolUI() {
+  const priceEl = document.getElementById('pool-price');
+  const reserveEl = document.getElementById('pool-reserves');
+  const statusEl = document.getElementById('pool-status');
+  const supplyEl = document.getElementById('info-supply');
+  const priceInfoEl = document.getElementById('info-price');
+
+  if (poolData.totalSupply) {
+    supplyEl.textContent = formatNum(poolData.totalSupply);
+  }
+
+  if (!poolData.exists) {
+    if (priceEl) priceEl.textContent = '--';
+    if (reserveEl) reserveEl.textContent = '--';
+    if (statusEl) {
+      statusEl.innerHTML = '<span style="color:#ff6b6b">No Pool</span>';
+    }
+    if (priceInfoEl) priceInfoEl.textContent = '$0.05 (presale)';
+    return;
+  }
+
+  // Pool exists — show real data
+  if (priceEl) priceEl.textContent = poolData.pricePolPerIdtc.toFixed(8) + ' POL';
+  if (reserveEl) reserveEl.textContent = formatNum(poolData.reserveIDTC) + ' IDTC / ' + formatNum(poolData.reservePOL) + ' POL';
+  if (statusEl) statusEl.innerHTML = '<span style="color:#00e676">Active</span>';
+  if (priceInfoEl) priceInfoEl.textContent = poolData.pricePolPerIdtc.toFixed(8) + ' POL';
+}
+
+function formatNum(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  return n.toFixed(2);
+}
+
+// ===== SWAP ESTIMATE (real pool price) =====
 function estimateSwap() {
   const fromVal = parseFloat(document.getElementById('swap-from-amount').value) || 0;
-  // Rough estimate based on sale price and POL ~ $0.25
-  const polUsd = 0.25;
   let tokensOut = 0;
-  if (!isFlipped) {
-    tokensOut = (fromVal * polUsd) / CONFIG.SALE_PRICE;
+
+  if (poolData.exists) {
+    // Use real AMM formula: amountOut = (amountIn * reserveOut) / (reserveIn + amountIn) * 0.997 (0.3% fee)
+    if (!isFlipped) {
+      // POL → IDTC
+      tokensOut = (fromVal * poolData.reserveIDTC * 0.997) / (poolData.reservePOL + fromVal);
+    } else {
+      // IDTC → POL
+      tokensOut = (fromVal * poolData.reservePOL * 0.997) / (poolData.reserveIDTC + fromVal);
+    }
   } else {
-    tokensOut = (fromVal * CONFIG.SALE_PRICE) / polUsd;
+    // No pool — fallback to presale price estimate
+    const polUsd = 0.25;
+    if (!isFlipped) {
+      tokensOut = (fromVal * polUsd) / CONFIG.SALE_PRICE;
+    } else {
+      tokensOut = (fromVal * CONFIG.SALE_PRICE) / polUsd;
+    }
   }
-  document.getElementById('swap-to-amount').value = tokensOut > 0 ? tokensOut.toFixed(2) : '';
+  document.getElementById('swap-to-amount').value = tokensOut > 0 ? tokensOut.toFixed(4) : '';
 }
 
 function flipTokens() {
@@ -945,6 +1059,12 @@ function showToast(msg, type = 'info') {
     }
   } catch(e) { console.error('autoReconnect:', e); }
 })();
+
+// Load pool data on page load (no wallet needed)
+loadPoolData();
+
+// Refresh pool data every 30 seconds
+setInterval(loadPoolData, 30000);
 
 // ===== BG CANVAS =====
 (function() {
