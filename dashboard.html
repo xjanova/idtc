@@ -140,13 +140,14 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
 <!-- NAV -->
 <nav>
   <a href="index.html" class="nav-logo">
-    <img src="https://idtc.online/logo.png" alt="IDTC" onerror="this.style.display='none'">
+    <img src="logotoken.png" alt="IDTC" onerror="this.style.display='none'">
     <span>IDTC</span>
   </a>
   <div class="nav-links">
     <a href="index.html">Whitepaper</a>
     <a href="dashboard.html" class="active">Dashboard</a>
     <a href="sale.html">Token Sale</a>
+    <a href="trade.html">Trade</a>
   </div>
   <button class="btn-connect disconnected" id="connectBtn" onclick="connectWallet()">
     <span>🔗</span> Connect Wallet
@@ -421,12 +422,23 @@ async function onWalletConnected(address, chainId, network) {
     document.getElementById('contractLink').style.pointerEvents = 'none';
   }
 
-  // Check network
+  // Check network — auto-switch if wrong
   const isCorrectNetwork = chainId.toLowerCase() === CONFIG.ACTIVE_CHAIN_ID.toLowerCase();
-  document.getElementById('networkWarning').style.display = isCorrectNetwork ? 'none' : 'flex';
+  if (!isCorrectNetwork) {
+    document.getElementById('networkWarning').style.display = 'flex';
+    await switchToPolygon();
+    document.getElementById('networkWarning').style.display = 'none';
+  } else {
+    document.getElementById('networkWarning').style.display = 'none';
+  }
 
   // Load balances
   await loadBalances(address);
+
+  // Auto-add IDTC token to wallet
+  if (CONFIG.CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+    await addTokenToWallet();
+  }
 }
 
 async function loadBalances(address) {

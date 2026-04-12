@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDTC Trade — Swap & Exchange</title>
+<meta name="description" content="Trade IDTC tokens on decentralized exchanges. Swap POL/USDT for IDTC on Polygon Mainnet.">
+
+<!-- ethers.js v6 -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js" integrity="sha384-6Zl0Pc8zjSz8KvmNeXRvUQgY4ryFb+BwDvKCmLYcBME0joAaru491tQgi9B7zsMM" crossorigin="anonymous"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #d4af37;
+    --gold2: #f0c849;
+    --green: #00c853;
+    --red: #ff5252;
+    --bg: #0a0a0f;
+    --bg2: #11111a;
+    --bg3: #191926;
+    --card: #13131f;
+    --border: rgba(212,175,55,0.18);
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --radius: 16px;
+    --glow: 0 0 30px rgba(212,175,55,0.15);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-top: 64px;
+  }
+
+  /* ===== BG CANVAS ===== */
+  #bg-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+    opacity: 0.35;
+  }
+
+  /* ===== LANGUAGE ===== */
+  .lang-en .th { display: none; }
+  .lang-th .en { display: none; }
+
+  /* ===== HEADER ===== */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo-area {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: var(--text);
+  }
+  .logo-mark {
+    width: 38px; height: 38px;
+    border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #d4af37, #f0c849);
+  }
+  .logo-mark img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .logo-name { font-weight: 700; font-size: 1.1rem; }
+  .logo-sub { font-size: 0.7rem; color: var(--muted); display: block; }
+
+  nav { display: flex; align-items: center; gap: 1rem; }
+  nav a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.875rem; transition: color .2s;
+  }
+  nav a:hover, nav a.active { color: var(--gold); }
+
+  .btn-lang {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 4px 12px;
+    border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+  }
+  .btn-lang:hover { border-color: var(--gold); color: var(--gold); }
+
+  #header-wallet {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f; font-weight: 700;
+    border: none; padding: 8px 18px;
+    border-radius: 10px; cursor: pointer;
+    font-size: 0.85rem; transition: opacity .2s;
+  }
+  #header-wallet:hover { opacity: 0.85; }
+
+  /* ===== MAIN ===== */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1400px; margin: 0 auto;
+    padding: 1.5rem 1.5rem 4rem;
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header h1 {
+    font-size: 1.6rem; font-weight: 800;
+    background: linear-gradient(135deg, #fff, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .token-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 100px; padding: 6px 18px 6px 6px;
+  }
+  .token-badge img { width: 28px; height: 28px; border-radius: 50%; }
+  .token-badge .tb-name { font-weight: 700; font-size: 0.95rem; }
+  .token-badge .tb-chain { font-size: 0.72rem; color: var(--muted); }
+
+  /* ===== TRADE LAYOUT ===== */
+  .trade-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .trade-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== CHART AREA ===== */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 520px;
+    display: flex; flex-direction: column;
+  }
+  .chart-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+  }
+  .chart-tab {
+    padding: 10px 20px; font-size: 0.82rem;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .chart-tab:hover { color: var(--text); }
+  .chart-tab.active {
+    color: var(--gold); border-bottom-color: var(--gold);
+    font-weight: 600;
+  }
+  .chart-body {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chart-body iframe {
+    width: 100%; height: 100%;
+    min-height: 460px;
+    border: none;
+  }
+  .chart-placeholder {
+    text-align: center; padding: 3rem;
+    color: var(--muted);
+  }
+  .chart-placeholder .cp-icon {
+    font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;
+  }
+  .chart-placeholder p { max-width: 360px; margin: 0 auto; font-size: 0.9rem; line-height: 1.6; }
+
+  /* ===== SWAP PANEL ===== */
+  .swap-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .swap-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .swap-header h3 {
+    font-size: 1rem; font-weight: 700;
+  }
+  .swap-header .net-badge {
+    font-size: 0.72rem; padding: 3px 10px;
+    background: rgba(0,200,83,0.12); color: var(--green);
+    border-radius: 100px; font-weight: 600;
+  }
+
+  .swap-body { padding: 1.25rem; }
+
+  /* Swap input */
+  .swap-input-group {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: border-color .2s;
+  }
+  .swap-input-group:focus-within { border-color: var(--gold); }
+  .swap-input-label {
+    display: flex; justify-content: space-between;
+    font-size: 0.75rem; color: var(--muted); margin-bottom: 6px;
+  }
+  .swap-input-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .swap-input-row input {
+    flex: 1; background: none; border: none;
+    color: var(--text); font-size: 1.4rem; font-weight: 700;
+    outline: none; min-width: 0;
+  }
+  .swap-input-row input::placeholder { color: rgba(136,136,170,0.4); }
+  .swap-token-select {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid var(--border);
+    border-radius: 100px; padding: 4px 12px 4px 4px;
+    font-weight: 600; font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .swap-token-select img { width: 22px; height: 22px; border-radius: 50%; }
+
+  .swap-arrow {
+    display: flex; justify-content: center; margin: -4px 0;
+    position: relative; z-index: 2;
+  }
+  .swap-arrow button {
+    width: 36px; height: 36px;
+    background: var(--bg3); border: 2px solid var(--border);
+    border-radius: 50%; cursor: pointer;
+    color: var(--gold); font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .swap-arrow button:hover {
+    background: rgba(212,175,55,0.15);
+    border-color: var(--gold);
+    transform: rotate(180deg);
+  }
+
+  /* DEX buttons */
+  .dex-buttons {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 1rem;
+  }
+
+  .dex-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700; font-size: 0.92rem;
+    transition: all .2s;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .dex-btn::after {
+    content: '';
+    position: absolute; right: 16px;
+    font-size: 1rem; opacity: 0.5;
+  }
+
+  .dex-btn-quickswap {
+    background: linear-gradient(135deg, rgba(69,104,220,0.15), rgba(69,104,220,0.05));
+    color: #7b93db;
+  }
+  .dex-btn-quickswap:hover {
+    background: linear-gradient(135deg, rgba(69,104,220,0.3), rgba(69,104,220,0.1));
+    border-color: #7b93db;
+    transform: translateY(-1px);
+  }
+
+  .dex-btn-uniswap {
+    background: linear-gradient(135deg, rgba(255,0,122,0.15), rgba(255,0,122,0.05));
+    color: #ff6da8;
+  }
+  .dex-btn-uniswap:hover {
+    background: linear-gradient(135deg, rgba(255,0,122,0.3), rgba(255,0,122,0.1));
+    border-color: #ff6da8;
+    transform: translateY(-1px);
+  }
+
+  .dex-btn-pancake {
+    background: linear-gradient(135deg, rgba(31,199,212,0.15), rgba(31,199,212,0.05));
+    color: #1fc7d4;
+  }
+  .dex-btn-pancake:hover {
+    background: linear-gradient(135deg, rgba(31,199,212,0.3), rgba(31,199,212,0.1));
+    border-color: #1fc7d4;
+    transform: translateY(-1px);
+  }
+
+  .dex-btn .dex-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .dex-btn .dex-info { flex: 1; }
+  .dex-btn .dex-name { display: block; }
+  .dex-btn .dex-desc { display: block; font-size: 0.72rem; font-weight: 400; opacity: 0.7; margin-top: 1px; }
+  .dex-btn .dex-arrow { font-size: 1.1rem; opacity: 0.5; }
+
+  .swap-note {
+    margin-top: 1rem;
+    padding: 10px 14px;
+    background: rgba(212,175,55,0.08);
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ===== TOKEN INFO STRIP ===== */
+  .info-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .info-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .info-chip .ic-val {
+    font-size: 1.15rem; font-weight: 800; color: var(--gold);
+    word-break: break-all;
+  }
+  .info-chip .ic-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .info-chip .ic-copy {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 0.72rem; margin-top: 4px; transition: color .2s;
+  }
+  .info-chip .ic-copy:hover { color: var(--gold); }
+
+  /* ===== ADD TOKEN BUTTON ===== */
+  .add-token-section {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+  .btn-add-token {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f; font-weight: 700;
+    border: none; padding: 14px 32px;
+    border-radius: 12px; cursor: pointer;
+    font-size: 0.95rem; transition: all .2s;
+  }
+  .btn-add-token:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-add-token img { width: 24px; height: 24px; border-radius: 50%; }
+
+  /* ===== WALLET CONNECT MODAL ===== */
+  .wallet-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .wallet-modal-overlay.show { display: flex; }
+  .wallet-modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    width: 380px; max-width: 92vw;
+    text-align: center;
+  }
+  .wallet-modal h3 { font-size: 1.1rem; margin-bottom: 1rem; }
+  .wallet-option {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    cursor: pointer; margin-bottom: 8px;
+    transition: all .2s; font-weight: 600;
+  }
+  .wallet-option:hover { border-color: var(--gold); background: rgba(212,175,55,0.08); }
+  .wallet-option .wo-icon { font-size: 1.4rem; }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed; top: 80px; right: 20px;
+    z-index: 300; display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem; font-weight: 500;
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 3.7s forwards;
+    max-width: 360px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .toast.success { background: rgba(0,200,83,0.15); border: 1px solid rgba(0,200,83,0.3); color: var(--green); }
+  .toast.error { background: rgba(255,82,82,0.15); border: 1px solid rgba(255,82,82,0.3); color: var(--red); }
+  .toast.info { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); }
+
+  @keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes fadeOut { to { opacity:0; transform:translateX(40px); } }
+
+  /* ===== FOOTER ===== */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  footer a { color: var(--gold); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 600px) {
+    header { padding: 0 1rem; }
+    main { padding: 1rem; }
+    .page-header h1 { font-size: 1.2rem; }
+    .swap-panel { border-radius: 12px; }
+    .chart-card { min-height: 360px; }
+    .chart-body iframe { min-height: 320px; }
+    nav { gap: 0.6rem; }
+    nav a { font-size: 0.78rem; }
+  }
+</style>
+</head>
+
+<body class="lang-en">
+<canvas id="bg-canvas"></canvas>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- HEADER -->
+<header>
+  <a href="index.html" class="logo-area">
+    <div class="logo-mark"><img src="logotoken.png" alt="IDTC"></div>
+    <div>
+      <div class="logo-name">IDTC</div>
+      <span class="logo-sub">Energy Capital</span>
+    </div>
+  </a>
+  <nav>
+    <a href="index.html"><span class="en">Whitepaper</span><span class="th">ไวท์เปเปอร์</span></a>
+    <a href="sale.html"><span class="en">Buy IDTC</span><span class="th">ซื้อ IDTC</span></a>
+    <a href="dashboard.html"><span class="en">Dashboard</span><span class="th">แดชบอร์ด</span></a>
+    <a href="trade.html" class="active"><span class="en">Trade</span><span class="th">แลกเปลี่ยน</span></a>
+    <button class="btn-lang" onclick="toggleLang()">TH/EN</button>
+    <button id="header-wallet" onclick="openWalletModal()">
+      <span class="en">Connect Wallet</span><span class="th">เชื่อมกระเป๋า</span>
+    </button>
+  </nav>
+</header>
+
+<!-- WALLET MODAL -->
+<div class="wallet-modal-overlay" id="wallet-modal" onclick="if(event.target===this)closeWalletModal()">
+  <div class="wallet-modal">
+    <h3><span class="en">Connect Wallet</span><span class="th">เชื่อมต่อกระเป๋า</span></h3>
+    <div class="wallet-option" onclick="connectWallet('metamask')">
+      <span class="wo-icon">&#129418;</span>
+      <span>MetaMask</span>
+    </div>
+    <div class="wallet-option" onclick="connectWallet('trust')">
+      <span class="wo-icon">&#128274;</span>
+      <span>Trust Wallet</span>
+    </div>
+    <div class="wallet-option" onclick="connectWallet('coinbase')">
+      <span class="wo-icon">&#128176;</span>
+      <span>Coinbase Wallet</span>
+    </div>
+    <div class="wallet-option" onclick="connectWallet('walletconnect')">
+      <span class="wo-icon">&#128279;</span>
+      <span>WalletConnect</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <h1><span class="en">Trade IDTC</span><span class="th">แลกเปลี่ยน IDTC</span></h1>
+    <div class="token-badge">
+      <img src="logotoken.png" alt="IDTC">
+      <div>
+        <span class="tb-name">IDTC</span>
+        <span class="tb-chain">Polygon Mainnet</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE GRID -->
+  <div class="trade-grid">
+    <!-- LEFT: CHART -->
+    <div class="chart-card">
+      <div class="chart-tabs">
+        <button class="chart-tab active" onclick="switchChart('dexscreener', this)">DexScreener</button>
+        <button class="chart-tab" onclick="switchChart('geckoterminal', this)">GeckoTerminal</button>
+      </div>
+      <div class="chart-body" id="chart-body">
+        <iframe id="chart-iframe"
+          src="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815?embed=1&theme=dark&trades=0&info=0"
+          loading="lazy"
+          allow="clipboard-write"
+          sandbox="allow-scripts allow-same-origin allow-popups"
+        ></iframe>
+      </div>
+    </div>
+
+    <!-- RIGHT: SWAP PANEL -->
+    <div class="swap-panel">
+      <div class="swap-header">
+        <h3><span class="en">Swap</span><span class="th">แลกเปลี่ยน</span></h3>
+        <span class="net-badge">Polygon</span>
+      </div>
+      <div class="swap-body">
+        <!-- FROM -->
+        <div class="swap-input-group">
+          <div class="swap-input-label">
+            <span><span class="en">You Pay</span><span class="th">จ่าย</span></span>
+            <span id="from-balance">--</span>
+          </div>
+          <div class="swap-input-row">
+            <input type="number" id="swap-from-amount" placeholder="0.0" oninput="estimateSwap()">
+            <div class="swap-token-select" id="from-token" onclick="toggleFromToken()">
+              <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png" alt="POL" id="from-icon">
+              <span id="from-symbol">POL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ARROW -->
+        <div class="swap-arrow">
+          <button onclick="flipTokens()" title="Switch">&#8645;</button>
+        </div>
+
+        <!-- TO -->
+        <div class="swap-input-group">
+          <div class="swap-input-label">
+            <span><span class="en">You Receive</span><span class="th">รับ</span></span>
+            <span id="to-balance">--</span>
+          </div>
+          <div class="swap-input-row">
+            <input type="number" id="swap-to-amount" placeholder="0.0" readonly>
+            <div class="swap-token-select">
+              <img src="logotoken.png" alt="IDTC" id="to-icon">
+              <span id="to-symbol">IDTC</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEX BUTTONS -->
+        <div class="dex-buttons">
+          <a class="dex-btn dex-btn-quickswap" id="link-quickswap" href="#" target="_blank" rel="noopener">
+            <div class="dex-icon">&#9889;</div>
+            <div class="dex-info">
+              <span class="dex-name">QuickSwap</span>
+              <span class="dex-desc"><span class="en">Polygon's #1 DEX</span><span class="th">DEX อันดับ 1 บน Polygon</span></span>
+            </div>
+            <span class="dex-arrow">&#8599;</span>
+          </a>
+
+          <a class="dex-btn dex-btn-uniswap" id="link-uniswap" href="#" target="_blank" rel="noopener">
+            <div class="dex-icon">&#129412;</div>
+            <div class="dex-info">
+              <span class="dex-name">Uniswap V3</span>
+              <span class="dex-desc"><span class="en">World's largest DEX</span><span class="th">DEX ที่ใหญ่ที่สุดในโลก</span></span>
+            </div>
+            <span class="dex-arrow">&#8599;</span>
+          </a>
+
+          <a class="dex-btn dex-btn-pancake" id="link-pancake" href="#" target="_blank" rel="noopener">
+            <div class="dex-icon">&#129374;</div>
+            <div class="dex-info">
+              <span class="dex-name">PancakeSwap</span>
+              <span class="dex-desc"><span class="en">Multi-chain DEX</span><span class="th">DEX หลายเชน</span></span>
+            </div>
+            <span class="dex-arrow">&#8599;</span>
+          </a>
+        </div>
+
+        <div class="swap-note">
+          <span class="en">Select a DEX above to swap your tokens. IDTC is on Polygon Mainnet. Make sure your wallet is connected to Polygon before swapping.</span>
+          <span class="th">เลือก DEX ด้านบนเพื่อแลกเปลี่ยนโทเคน IDTC อยู่บน Polygon Mainnet ตรวจสอบว่ากระเป๋าเชื่อมต่อ Polygon ก่อนแลกเปลี่ยน</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOKEN INFO -->
+  <div class="info-strip">
+    <div class="info-chip">
+      <div class="ic-val">IDTC</div>
+      <div class="ic-lbl"><span class="en">Symbol</span><span class="th">สัญลักษณ์</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val">Polygon</div>
+      <div class="ic-lbl"><span class="en">Network</span><span class="th">เครือข่าย</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val" style="font-size:0.7rem;">0x0162...3815</div>
+      <div class="ic-lbl"><span class="en">Contract</span><span class="th">สัญญา</span></div>
+      <button class="ic-copy" onclick="copyContract()">Copy</button>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val">100M</div>
+      <div class="ic-lbl"><span class="en">Total Supply</span><span class="th">จำนวนทั้งหมด</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val">18</div>
+      <div class="ic-lbl"><span class="en">Decimals</span><span class="th">ทศนิยม</span></div>
+    </div>
+    <div class="info-chip">
+      <div class="ic-val">$0.05</div>
+      <div class="ic-lbl"><span class="en">Sale Price</span><span class="th">ราคาขาย</span></div>
+    </div>
+  </div>
+
+  <!-- ADD TOKEN BUTTON -->
+  <div class="add-token-section">
+    <button class="btn-add-token" onclick="addTokenToWallet()">
+      <img src="logotoken.png" alt="IDTC">
+      <span class="en">Add IDTC to MetaMask</span>
+      <span class="th">เพิ่ม IDTC ใน MetaMask</span>
+    </button>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  &copy; 2026 IDTC — Invest Energy-Development Coin |
+  <a href="index.html"><span class="en">Whitepaper</span><span class="th">ไวท์เปเปอร์</span></a> |
+  <a href="sale.html"><span class="en">Token Sale</span><span class="th">ขายโทเคน</span></a> |
+  <a href="dashboard.html"><span class="en">Dashboard</span><span class="th">แดชบอร์ด</span></a>
+</footer>
+
+<script>
+// ===== CONFIG =====
+const CONFIG = {
+  TOKEN_SYMBOL: 'IDTC',
+  TOKEN_DECIMALS: 18,
+  IDTC_ADDRESS: '0x0162847f552EA0cCc4E9eE2b39F36EcD45253815',
+  ACTIVE_CHAIN_ID: '0x89',
+  RPC_URL: 'https://polygon-rpc.com',
+  EXPLORER: 'https://polygonscan.com',
+  CHAIN_NAME: 'Polygon Mainnet',
+  TOKEN_IMAGE: 'https://idtc.online/logotoken.png',
+  SALE_PRICE: 0.05,
+};
+
+// DEX URLs
+const DEX_URLS = {
+  quickswap: 'https://quickswap.exchange/#/swap?outputCurrency=' + CONFIG.IDTC_ADDRESS,
+  uniswap: 'https://app.uniswap.org/swap?outputCurrency=' + CONFIG.IDTC_ADDRESS + '&chain=polygon',
+  pancake: 'https://pancakeswap.finance/swap?outputCurrency=' + CONFIG.IDTC_ADDRESS + '&chain=polygon',
+};
+
+// Chart URLs
+const CHART_URLS = {
+  dexscreener: 'https://dexscreener.com/polygon/' + CONFIG.IDTC_ADDRESS + '?embed=1&theme=dark&trades=0&info=0',
+  geckoterminal: 'https://www.geckoterminal.com/polygon_pos/tokens/' + CONFIG.IDTC_ADDRESS + '?embed=1&info=0&swaps=0',
+};
+
+// Set DEX links
+document.getElementById('link-quickswap').href = DEX_URLS.quickswap;
+document.getElementById('link-uniswap').href = DEX_URLS.uniswap;
+document.getElementById('link-pancake').href = DEX_URLS.pancake;
+
+// ===== STATE =====
+let provider = null;
+let signer = null;
+let walletAddress = null;
+let isConnected = false;
+let currentLang = 'en';
+let isFlipped = false;
+
+// ===== LANGUAGE =====
+function toggleLang() {
+  currentLang = currentLang === 'en' ? 'th' : 'en';
+  document.body.className = 'lang-' + currentLang;
+}
+
+// ===== CHART SWITCH =====
+function switchChart(source, btn) {
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const iframe = document.getElementById('chart-iframe');
+  iframe.src = CHART_URLS[source] || CHART_URLS.dexscreener;
+}
+
+// ===== SWAP ESTIMATE (cosmetic) =====
+function estimateSwap() {
+  const fromVal = parseFloat(document.getElementById('swap-from-amount').value) || 0;
+  // Rough estimate based on sale price and POL ~ $0.25
+  const polUsd = 0.25;
+  let tokensOut = 0;
+  if (!isFlipped) {
+    tokensOut = (fromVal * polUsd) / CONFIG.SALE_PRICE;
+  } else {
+    tokensOut = (fromVal * CONFIG.SALE_PRICE) / polUsd;
+  }
+  document.getElementById('swap-to-amount').value = tokensOut > 0 ? tokensOut.toFixed(2) : '';
+}
+
+function flipTokens() {
+  isFlipped = !isFlipped;
+  const fromIcon = document.getElementById('from-icon');
+  const fromSym = document.getElementById('from-symbol');
+  const toIcon = document.getElementById('to-icon');
+  const toSym = document.getElementById('to-symbol');
+
+  if (isFlipped) {
+    fromIcon.src = 'logotoken.png';
+    fromSym.textContent = 'IDTC';
+    toIcon.src = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png';
+    toSym.textContent = 'POL';
+  } else {
+    fromIcon.src = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png';
+    fromSym.textContent = 'POL';
+    toIcon.src = 'logotoken.png';
+    toSym.textContent = 'IDTC';
+  }
+  document.getElementById('swap-from-amount').value = '';
+  document.getElementById('swap-to-amount').value = '';
+}
+
+// ===== WALLET =====
+function openWalletModal() {
+  if (isConnected) {
+    disconnectWallet();
+    return;
+  }
+  document.getElementById('wallet-modal').classList.add('show');
+}
+function closeWalletModal() {
+  document.getElementById('wallet-modal').classList.remove('show');
+}
+
+async function connectWallet(type = 'metamask') {
+  closeWalletModal();
+  try {
+    if (!window.ethereum) {
+      showToast('MetaMask not found. Install MetaMask to continue.', 'error');
+      window.open('https://metamask.io/download/', '_blank');
+      return;
+    }
+    showToast('Connecting wallet...', 'info');
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send('eth_requestAccounts', []);
+    if (!accounts || accounts.length === 0) throw new Error('No accounts');
+    signer = await provider.getSigner();
+    walletAddress = await signer.getAddress();
+
+    // Auto-switch to Polygon
+    await switchToPolygon();
+
+    // Mark connected
+    isConnected = true;
+    const short = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+    document.getElementById('header-wallet').textContent = short;
+
+    // Load balances
+    await loadBalances();
+
+    showToast('Wallet connected!', 'success');
+
+    // Auto-add IDTC token
+    await addTokenToWallet();
+
+    // Watch changes
+    window.ethereum.on('accountsChanged', (accs) => {
+      if (!accs.length) disconnectWallet();
+      else { walletAddress = accs[0]; loadBalances(); }
+    });
+    window.ethereum.on('chainChanged', () => window.location.reload());
+
+  } catch (e) {
+    console.error(e);
+    if (e.code !== 4001) showToast(e.message || 'Connection failed', 'error');
+  }
+}
+
+async function switchToPolygon() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: CONFIG.ACTIVE_CHAIN_ID }],
+    });
+  } catch (e) {
+    if (e.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: CONFIG.ACTIVE_CHAIN_ID,
+          chainName: CONFIG.CHAIN_NAME,
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+          rpcUrls: [CONFIG.RPC_URL],
+          blockExplorerUrls: [CONFIG.EXPLORER],
+        }],
+      });
+    } else if (e.code !== 4001) { throw e; }
+  }
+}
+
+async function addTokenToWallet() {
+  if (!window.ethereum) return;
+  if (CONFIG.IDTC_ADDRESS === '0x0000000000000000000000000000000000000000') return;
+  try {
+    await window.ethereum.request({
+      method: 'wallet_watchAsset',
+      params: {
+        type: 'ERC20',
+        options: {
+          address: CONFIG.IDTC_ADDRESS,
+          symbol: CONFIG.TOKEN_SYMBOL,
+          decimals: CONFIG.TOKEN_DECIMALS,
+          image: CONFIG.TOKEN_IMAGE,
+        },
+      },
+    });
+    showToast('IDTC added to wallet!', 'success');
+  } catch (e) { console.error(e); }
+}
+
+async function loadBalances() {
+  if (!provider || !walletAddress) return;
+  try {
+    const polBal = await provider.getBalance(walletAddress);
+    const polFormatted = parseFloat(ethers.formatEther(polBal)).toFixed(4);
+    document.getElementById('from-balance').textContent = polFormatted + ' POL';
+
+    const erc20Abi = ['function balanceOf(address) view returns (uint256)'];
+    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, erc20Abi, provider);
+    const idtcBal = await token.balanceOf(walletAddress);
+    const idtcFormatted = parseFloat(ethers.formatUnits(idtcBal, 18)).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    document.getElementById('to-balance').textContent = idtcFormatted + ' IDTC';
+  } catch (e) {
+    console.error('Balance error:', e);
+  }
+}
+
+function disconnectWallet() {
+  isConnected = false;
+  walletAddress = null;
+  provider = null;
+  signer = null;
+  const walletBtn = document.getElementById('header-wallet');
+  walletBtn.innerHTML = '<span class="en">Connect Wallet</span><span class="th">\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32</span>';
+  document.getElementById('from-balance').textContent = '--';
+  document.getElementById('to-balance').textContent = '--';
+  showToast('Wallet disconnected', 'info');
+}
+
+// ===== COPY =====
+function copyContract() {
+  navigator.clipboard.writeText(CONFIG.IDTC_ADDRESS).then(() => {
+    showToast('Contract address copied!', 'success');
+  });
+}
+
+// ===== TOAST =====
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ===== BG CANVAS =====
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = Array.from({ length: 50 }, () => ({
+    x: Math.random() * w, y: Math.random() * h,
+    vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2 + 0.5,
+    a: Math.random() * 0.3 + 0.1,
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(212,175,55,' + p.a + ')';
+      ctx.fill();
+    });
+    // Lines
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = 'rgba(212,175,55,' + (0.08 * (1 - dist / 150)) + ')';
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
