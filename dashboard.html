@@ -848,11 +848,7 @@ window.addEventListener('load', () => {
   initPriceChart();
   initDistChart();
   initVolumeChart();
-
-  // Auto-reconnect if previously connected
-  if (window.ethereum && window.ethereum.selectedAddress) {
-    connectWallet();
-  }
+  // Auto-reconnect is handled by autoReconnect() above — no popup
 });
 </script>
 </body>
