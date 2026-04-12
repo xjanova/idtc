@@ -64,7 +64,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: "index.html,dashboard.html,sale.html,trade.html,addliquidity.html,whitepaper.html,logo.png,logo.jpg,logotoken.png,token-logo.png,bk1.png,bk2.png,bk3.png,bk4.png,bk5.png,assets/"
+          source: "index.html,dashboard.html,sale.html,trade.html,addliquidity.html,whitepaper.html,logo.png,logo.jpg,logotoken.png,token-logo.png,bk1.png,bk2.png,bk3.png,bk4.png,bk5.png,assets/,manifest.json,sw.js"
           target: "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html"
           strip_components: 0
           overwrite: true

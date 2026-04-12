@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IDTC Trade — Swap & Exchange</title>
 <meta name="description" content="Trade IDTC tokens on decentralized exchanges. Swap POL/USDT for IDTC on Polygon Mainnet.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d4af37">
+<link rel="apple-touch-icon" href="logotoken.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IDTC">
 
 <!-- ethers.js v6 -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js" integrity="sha384-6Zl0Pc8zjSz8KvmNeXRvUQgY4ryFb+BwDvKCmLYcBME0joAaru491tQgi9B7zsMM" crossorigin="anonymous"></script>
@@ -394,6 +400,57 @@
     line-height: 1.5;
   }
 
+  /* ===== USD PRICE BLOCK ===== */
+  .price-usd-block {
+    margin-top: 1.5rem;
+    background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .price-usd-main {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .price-usd-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #d4af37, #f0c849);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .price-usd-icon img { width: 36px; height: 36px; border-radius: 50%; }
+  .price-usd-label { font-size: 0.75rem; color: var(--muted); }
+  .price-usd-value {
+    font-size: 1.6rem; font-weight: 800;
+    background: linear-gradient(135deg, #fff, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  .price-usd-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .price-usd-extras {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .price-usd-item {
+    text-align: center;
+  }
+  .price-usd-item .pu-val {
+    font-size: 1rem; font-weight: 700; color: var(--text);
+  }
+  .price-usd-item .pu-lbl {
+    font-size: 0.68rem; color: var(--muted); margin-top: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .price-usd-block { padding: 1rem; flex-direction: column; align-items: flex-start; }
+    .price-usd-value { font-size: 1.3rem; }
+    .price-usd-extras { gap: 1rem; }
+  }
+
   /* ===== TOKEN INFO STRIP ===== */
   .info-strip {
     display: grid;
@@ -497,15 +554,93 @@
   footer a:hover { text-decoration: underline; }
 
   /* ===== RESPONSIVE ===== */
+  /* ===== TRADE HISTORY ===== */
+  .trade-history {
+    margin-top: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .trade-history-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .trade-history-header h3 { font-size: 1rem; margin: 0; }
+  .trade-history-header .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #00e676; display: inline-block;
+    animation: pulse-dot 1.5s infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .trade-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+  .trade-table th {
+    padding: 8px 12px; text-align: left;
+    color: var(--muted); font-weight: 600;
+    font-size: 0.72rem; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .trade-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .trade-table tr:hover { background: rgba(212,175,55,0.04); }
+  .trade-table .buy { color: #00e676; }
+  .trade-table .sell { color: #ff6b6b; }
+  .trade-table .time { color: var(--muted); font-size: 0.72rem; }
+  .trade-table .txlink { color: var(--gold); text-decoration: none; font-size: 0.7rem; }
+  .trade-table .txlink:hover { text-decoration: underline; }
+  .trade-history-empty {
+    padding: 2rem; text-align: center;
+    color: var(--muted); font-size: 0.85rem;
+  }
+
+  /* ===== HAMBURGER MENU ===== */
+  .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
+  .mobile-nav {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem;
+  }
+  .mobile-nav.show { display: flex; }
+  .mobile-nav a { color: #fff; font-size: 1.2rem; text-decoration: none; }
+  .mobile-nav a:hover { color: var(--gold); }
+  .mobile-nav .close-nav { position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; color: #fff; background: none; border: none; cursor: pointer; }
+
+  @media (max-width: 768px) {
+    nav a:not(.active) { display: none; }
+    .hamburger { display: block; }
+    .info-strip { grid-template-columns: repeat(2, 1fr); }
+    .toast-container { right: 10px; left: 10px; }
+  }
+
   @media (max-width: 600px) {
     header { padding: 0 1rem; }
     main { padding: 1rem; }
     .page-header h1 { font-size: 1.2rem; }
     .swap-panel { border-radius: 12px; }
-    .chart-card { min-height: 360px; }
-    .chart-body iframe { min-height: 320px; }
+    .chart-card { min-height: 300px; }
+    .chart-body iframe { min-height: 260px; }
     nav { gap: 0.6rem; }
     nav a { font-size: 0.78rem; }
+    .info-strip { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+    .info-chip { padding: .75rem; }
+    .info-chip .ic-val { font-size: .95rem; }
+    .trade-table th, .trade-table td { padding: 6px 8px; font-size: 0.72rem; }
+    .trade-table .hide-mobile { display: none; }
+  }
+
+  @media (max-width: 400px) {
+    .info-strip { grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: .5rem; }
   }
 </style>
 </head>
@@ -534,8 +669,19 @@
     <button id="header-wallet" onclick="openWalletModal()">
       <span class="en">Connect Wallet</span><span class="th">เชื่อมกระเป๋า</span>
     </button>
+    <button class="hamburger" onclick="document.getElementById('mobile-nav').classList.add('show')">&#9776;</button>
   </nav>
 </header>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobile-nav">
+  <button class="close-nav" onclick="this.parentElement.classList.remove('show')">&times;</button>
+  <a href="index.html" onclick="this.parentElement.classList.remove('show')">Whitepaper</a>
+  <a href="sale.html" onclick="this.parentElement.classList.remove('show')">Buy IDTC</a>
+  <a href="dashboard.html" onclick="this.parentElement.classList.remove('show')">Dashboard</a>
+  <a href="trade.html" onclick="this.parentElement.classList.remove('show')">Trade</a>
+  <button style="background:var(--gold);color:#1a1a2e;border:none;padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem" onclick="toggleLang();document.getElementById('mobile-nav').classList.remove('show')">TH/EN</button>
+</div>
 
 <!-- WALLET MODAL -->
 <div class="wallet-modal-overlay" id="wallet-modal" onclick="if(event.target===this)closeWalletModal()">
@@ -652,6 +798,7 @@
           <div class="swap-detail-row"><span><span class="en">Min. Received</span><span class="th">ได้รับขั้นต่ำ</span></span><span class="val" id="swap-min">--</span></div>
           <div class="swap-detail-row"><span><span class="en">Price Impact</span><span class="th">ผลกระทบราคา</span></span><span class="val" id="swap-impact">--</span></div>
           <div class="swap-detail-row"><span>Fee</span><span class="val">0.3%</span></div>
+          <div class="swap-detail-row"><span><span class="en">USD Value</span><span class="th">มูลค่า USD</span></span><span class="val" id="swap-usd-val">--</span></div>
         </div>
 
         <!-- SWAP BUTTON -->
@@ -711,6 +858,32 @@
     </div>
   </div>
 
+  <!-- USD PRICE BLOCK -->
+  <div class="price-usd-block">
+    <div class="price-usd-main">
+      <div class="price-usd-icon"><img src="logotoken.png" alt="IDTC"></div>
+      <div>
+        <div class="price-usd-label">IDTC / USD</div>
+        <div class="price-usd-value" id="idtc-usd-price">$--</div>
+        <div class="price-usd-sub" id="idtc-pol-equiv">-- POL</div>
+      </div>
+    </div>
+    <div class="price-usd-extras">
+      <div class="price-usd-item">
+        <div class="pu-val" id="pol-usd-price">$--</div>
+        <div class="pu-lbl">POL / USD</div>
+      </div>
+      <div class="price-usd-item">
+        <div class="pu-val" id="idtc-mcap">$--</div>
+        <div class="pu-lbl"><span class="en">Market Cap</span><span class="th">มูลค่าตลาด</span></div>
+      </div>
+      <div class="price-usd-item">
+        <div class="pu-val" id="pool-tvl">$--</div>
+        <div class="pu-lbl">TVL</div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOKEN INFO (real-time from pool) -->
   <div class="info-strip">
     <div class="info-chip">
@@ -737,6 +910,17 @@
       <div class="ic-val" style="font-size:0.7rem;">0x0162...3815</div>
       <div class="ic-lbl"><span class="en">Contract</span><span class="th">สัญญา</span></div>
       <button class="ic-copy" onclick="copyContract()">Copy</button>
+    </div>
+  </div>
+
+  <!-- TRADE HISTORY -->
+  <div class="trade-history">
+    <div class="trade-history-header">
+      <h3><span class="en">Recent Trades</span><span class="th">ประวัติเทรดล่าสุด</span></h3>
+      <span><span class="live-dot"></span> <span style="font-size:.72rem;color:var(--muted)">Live</span></span>
+    </div>
+    <div id="trade-history-body">
+      <div class="trade-history-empty"><span class="en">Loading trades...</span><span class="th">กำลังโหลดประวัติ...</span></div>
     </div>
   </div>
 
@@ -940,9 +1124,86 @@ function updatePoolUI() {
   if (reserveEl) reserveEl.textContent = formatNum(poolData.reserveIDTC) + ' IDTC / ' + formatNum(poolData.reservePOL) + ' POL';
   if (statusEl) statusEl.innerHTML = '<span style="color:#00e676">Active</span>';
   if (priceInfoEl) priceInfoEl.textContent = poolData.pricePolPerIdtc.toFixed(8) + ' POL';
+
+  // Update USD prices whenever pool data changes
+  updateUsdPriceUI();
 }
 
 function formatNum(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  return n.toFixed(2);
+}
+
+// ===== USD PRICE FETCHER =====
+let polUsdPrice = 0;
+
+async function fetchPolUsdPrice() {
+  try {
+    // Use CoinGecko free API for POL (MATIC) price
+    const resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd');
+    const data = await resp.json();
+    if (data['matic-network'] && data['matic-network'].usd) {
+      polUsdPrice = data['matic-network'].usd;
+    }
+  } catch(e) {
+    // Fallback: try alternative endpoint
+    try {
+      const resp2 = await fetch('https://min-api.cryptocompare.com/data/price?fsym=MATIC&tsyms=USD');
+      const data2 = await resp2.json();
+      if (data2.USD) polUsdPrice = data2.USD;
+    } catch(e2) {
+      console.error('Price fetch error:', e2);
+    }
+  }
+  updateUsdPriceUI();
+}
+
+function updateUsdPriceUI() {
+  const idtcUsdEl = document.getElementById('idtc-usd-price');
+  const idtcPolEl = document.getElementById('idtc-pol-equiv');
+  const polUsdEl = document.getElementById('pol-usd-price');
+  const mcapEl = document.getElementById('idtc-mcap');
+  const tvlEl = document.getElementById('pool-tvl');
+
+  // POL/USD
+  if (polUsdPrice > 0) {
+    polUsdEl.textContent = '$' + polUsdPrice.toFixed(4);
+  }
+
+  if (poolData.exists && polUsdPrice > 0) {
+    // IDTC price in USD = IDTC price in POL * POL/USD
+    const idtcUsd = poolData.pricePolPerIdtc * polUsdPrice;
+    idtcUsdEl.textContent = '$' + formatUsdPrice(idtcUsd);
+    idtcPolEl.textContent = poolData.pricePolPerIdtc.toFixed(6) + ' POL';
+
+    // Market Cap = price * total supply
+    const supply = poolData.totalSupply || 100000000;
+    const mcap = idtcUsd * supply;
+    mcapEl.textContent = '$' + formatUsdCompact(mcap);
+
+    // TVL = pool reserves in USD
+    const tvl = (poolData.reservePOL * polUsdPrice * 2); // both sides
+    tvlEl.textContent = '$' + formatUsdCompact(tvl);
+  } else if (!poolData.exists) {
+    // Show presale price
+    const presaleUsd = CONFIG.SALE_PRICE;
+    idtcUsdEl.textContent = '$' + presaleUsd.toFixed(4);
+    idtcPolEl.textContent = 'Presale Price';
+    mcapEl.textContent = '--';
+    tvlEl.textContent = '--';
+  }
+}
+
+function formatUsdPrice(n) {
+  if (n >= 1) return n.toFixed(2);
+  if (n >= 0.01) return n.toFixed(4);
+  if (n >= 0.0001) return n.toFixed(6);
+  return n.toFixed(8);
+}
+
+function formatUsdCompact(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
   if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
   return n.toFixed(2);
@@ -989,6 +1250,20 @@ function estimateSwap() {
     const impactEl = document.getElementById('swap-impact');
     impactEl.textContent = impact.toFixed(2) + '%';
     impactEl.style.color = impact > 5 ? '#ff6b6b' : impact > 1 ? '#ffb74d' : '#00e676';
+
+    // USD value of input
+    if (polUsdPrice > 0) {
+      let inputUsd;
+      if (!isFlipped) {
+        inputUsd = fromVal * polUsdPrice; // POL input
+      } else {
+        inputUsd = fromVal * poolData.pricePolPerIdtc * polUsdPrice; // IDTC input
+      }
+      document.getElementById('swap-usd-val').textContent = '~$' + formatUsdCompact(inputUsd);
+    } else {
+      document.getElementById('swap-usd-val').textContent = '--';
+    }
+
     detailsEl.style.display = 'block';
   } else {
     const polUsd = 0.25;
@@ -1337,9 +1612,102 @@ function showToast(msg, type = 'info') {
 
 // Load pool data on page load (no wallet needed)
 loadPoolData();
+loadTradeHistory();
+fetchPolUsdPrice();
 
-// Refresh pool data every 30 seconds
+// Refresh pool data every 30 seconds, trades every 20 seconds, USD price every 60 seconds
 setInterval(loadPoolData, 30000);
+setInterval(loadTradeHistory, 20000);
+setInterval(fetchPolUsdPrice, 60000);
+
+// ===== TRADE HISTORY (real-time from Etherscan) =====
+async function loadTradeHistory() {
+  if (!poolData.pairAddress && poolData.exists === false) {
+    // Try to get pair address
+    try {
+      const rpc = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+      const factory = new ethers.Contract(CONFIG.FACTORY_V2, FACTORY_ABI, rpc);
+      const pairAddr = await factory.getPair(CONFIG.IDTC_ADDRESS, CONFIG.WMATIC);
+      if (pairAddr && pairAddr !== '0x0000000000000000000000000000000000000000') {
+        poolData.pairAddress = pairAddr;
+      } else {
+        document.getElementById('trade-history-body').innerHTML =
+          '<div class="trade-history-empty"><span class="en">No pool yet — no trades to show</span><span class="th">ยังไม่มี Pool — ไม่มีประวัติเทรด</span></div>';
+        return;
+      }
+    } catch(e) { return; }
+  }
+  if (!poolData.pairAddress) return;
+
+  try {
+    const qs = new URLSearchParams({
+      module: 'account', action: 'tokentx',
+      contractaddress: CONFIG.IDTC_ADDRESS,
+      address: poolData.pairAddress,
+      page: '1', offset: '20', sort: 'desc',
+      apikey: CONFIG.ETHERSCAN_API_KEY
+    }).toString();
+    const resp = await fetch(CONFIG.ETHERSCAN_V2 + '&' + qs);
+    const data = await resp.json();
+
+    if (data.status !== '1' || !data.result || !data.result.length) {
+      document.getElementById('trade-history-body').innerHTML =
+        '<div class="trade-history-empty"><span class="en">No trades yet</span><span class="th">ยังไม่มีการเทรด</span></div>';
+      return;
+    }
+
+    let html = '<table class="trade-table"><thead><tr>' +
+      '<th><span class="en">Type</span><span class="th">ประเภท</span></th>' +
+      '<th><span class="en">Amount</span><span class="th">จำนวน</span></th>' +
+      '<th class="hide-mobile"><span class="en">From/To</span><span class="th">จาก/ถึง</span></th>' +
+      '<th><span class="en">Time</span><span class="th">เวลา</span></th>' +
+      '<th>Tx</th>' +
+      '</tr></thead><tbody>';
+
+    data.result.forEach(tx => {
+      const amount = parseFloat(ethers.formatUnits(tx.value, 18));
+      if (amount === 0) return;
+      const isBuy = tx.to.toLowerCase() !== poolData.pairAddress.toLowerCase();
+      const type = isBuy ? 'buy' : 'sell';
+      const typeLabel = isBuy ? 'Buy' : 'Sell';
+      const counterparty = isBuy ? tx.to : tx.from;
+      const short = counterparty.slice(0,6) + '...' + counterparty.slice(-4);
+      const timeAgo = getTimeAgo(tx.timeStamp);
+      const txShort = tx.hash.slice(0,6) + '...';
+
+      html += '<tr>' +
+        '<td class="' + type + '">' + typeLabel + '</td>' +
+        '<td>' + formatTradeAmount(amount) + ' IDTC</td>' +
+        '<td class="hide-mobile">' + short + '</td>' +
+        '<td class="time">' + timeAgo + '</td>' +
+        '<td><a class="txlink" href="' + CONFIG.EXPLORER + '/tx/' + tx.hash + '" target="_blank">' + txShort + '</a></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('trade-history-body').innerHTML = html;
+  } catch(e) {
+    console.error('loadTradeHistory error:', e);
+  }
+}
+
+function formatTradeAmount(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(2) + 'K';
+  return n.toFixed(2);
+}
+
+function getTimeAgo(ts) {
+  const diff = Math.floor(Date.now()/1000) - parseInt(ts);
+  if (diff < 60) return diff + 's';
+  if (diff < 3600) return Math.floor(diff/60) + 'm';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h';
+  return Math.floor(diff/86400) + 'd';
+}
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 
 // ===== BG CANVAS =====
 (function() {

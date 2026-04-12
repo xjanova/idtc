@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IDTC Dashboard — Wallet & Token Analytics</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d4af37">
+<link rel="apple-touch-icon" href="logotoken.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IDTC">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js" integrity="sha384-ro/pNP1sfmhdbpq60NKzKAYve9JahlgCklXcKvudVEd/osRAYz2RlPG5TvB7Q04t" crossorigin="anonymous"></script>
@@ -127,11 +133,30 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .fade-in{animation:fadeIn .4s ease both}
 
+/* HAMBURGER */
+.hamburger{display:none;background:none;border:none;font-size:1.5rem;cursor:pointer;padding:4px 8px;color:var(--gray-900)}
+.mobile-nav{display:none;position:fixed;inset:0;z-index:300;background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
+.mobile-nav.show{display:flex}
+.mobile-nav a{color:var(--gray-900);font-size:1.2rem;text-decoration:none;font-weight:600}
+.mobile-nav a:hover{color:var(--green-dark)}
+.mobile-nav .close-nav{position:absolute;top:1rem;right:1.5rem;font-size:2rem;color:var(--gray-900);background:none;border:none;cursor:pointer}
+
 /* RESPONSIVE */
 @media(max-width:768px){
   .main{padding:1rem}
   nav{padding:0 1rem}
   .nav-links{display:none}
+  .hamburger{display:block}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .stat-value{font-size:1.2rem}
+  .chart-container{height:220px}
+}
+@media(max-width:480px){
+  .grid-4{grid-template-columns:1fr}
+  .stat-value{font-size:1.1rem;word-break:break-all}
+  #connect-prompt{padding:1.5rem}
+  #connect-prompt h2{font-size:1.1rem}
 }
 </style>
 </head>
@@ -152,7 +177,15 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
   <button class="btn-connect disconnected" id="connectBtn" onclick="connectWallet()">
     <span>🔗</span> Connect Wallet
   </button>
+  <button class="hamburger" onclick="document.getElementById('mobile-nav').classList.add('show')">&#9776;</button>
 </nav>
+<div class="mobile-nav" id="mobile-nav">
+  <button class="close-nav" onclick="this.parentElement.classList.remove('show')">&times;</button>
+  <a href="index.html" onclick="this.parentElement.classList.remove('show')">Whitepaper</a>
+  <a href="dashboard.html" onclick="this.parentElement.classList.remove('show')">Dashboard</a>
+  <a href="sale.html" onclick="this.parentElement.classList.remove('show')">Token Sale</a>
+  <a href="trade.html" onclick="this.parentElement.classList.remove('show')">Trade</a>
+</div>
 
 <div class="main">
 
@@ -850,6 +883,11 @@ window.addEventListener('load', () => {
   initVolumeChart();
   // Auto-reconnect is handled by autoReconnect() above — no popup
 });
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>
