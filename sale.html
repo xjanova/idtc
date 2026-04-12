@@ -689,9 +689,9 @@
       <div class="s-lbl th">ผู้ร่วมลงทุน</div>
     </div>
     <div class="stat-chip">
-      <div class="s-val">Amoy</div>
-      <div class="s-lbl en">Testnet Active</div>
-      <div class="s-lbl th">Testnet ใช้งาน</div>
+      <div class="s-val">Polygon</div>
+      <div class="s-lbl en">Network</div>
+      <div class="s-lbl th">เครือข่าย</div>
     </div>
   </div>
 
@@ -853,7 +853,7 @@
       </div>
 
       <div id="network-warn" class="network-warn">
-        ⚠️ <span class="en">Please switch to Polygon Amoy testnet</span><span class="th">กรุณาเปลี่ยนไป Polygon Amoy testnet</span>
+        ⚠️ <span class="en">Please switch to Polygon Mainnet</span><span class="th">กรุณาเปลี่ยนไป Polygon Mainnet</span>
         <a href="#" onclick="switchNetwork();return false;" style="color:var(--gold);margin-left:6px;font-weight:700">
           <span class="en">Switch Now</span><span class="th">เปลี่ยนเลย</span>
         </a>
@@ -947,8 +947,8 @@
           <div class="wallet-balance" style="color:var(--gold)">
             <span id="display-idtc">—</span> IDTC
           </div>
-          <div class="wallet-matic en">Polygon Amoy Testnet</div>
-          <div class="wallet-matic th">Polygon Amoy Testnet</div>
+          <div class="wallet-matic en">Polygon Mainnet</div>
+          <div class="wallet-matic th">Polygon Mainnet</div>
         </div>
 
         <button class="btn-buy btn-buy-outline" style="margin-bottom:8px" onclick="addTokenToWallet()">
@@ -1058,11 +1058,11 @@
         </tr>
         <tr>
           <td style="color:var(--muted)">Contract</td>
-          <td id="contract-addr-display"><span style="color:var(--muted);font-size:0.75rem">Testnet deployment pending…</span></td>
+          <td id="contract-addr-display"><span style="color:var(--muted);font-size:0.75rem">Deployment pending…</span></td>
         </tr>
         <tr>
           <td style="color:var(--muted)">Network</td>
-          <td id="network-display">Polygon Amoy (Testnet)</td>
+          <td id="network-display">Polygon Mainnet</td>
         </tr>
         <tr>
           <td style="color:var(--muted)">Seed Price</td>
@@ -1096,8 +1096,8 @@
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
-        <span class="en">Connect your MetaMask or compatible wallet, make sure you're on Polygon Amoy testnet, enter the amount of POL you want to spend, and click Buy. IDTC will be credited to your wallet immediately.</span>
-        <span class="th">เชื่อมต่อ MetaMask หรือกระเป๋าที่รองรับ ตรวจสอบว่าอยู่บน Polygon Amoy testnet ใส่จำนวน POL ที่ต้องการใช้ แล้วคลิก Buy IDTC จะถูกโอนเข้ากระเป๋าของคุณทันที</span>
+        <span class="en">Connect your MetaMask or compatible wallet, make sure you're on Polygon Mainnet, enter the amount of POL you want to spend, and click Buy. IDTC will be credited to your wallet immediately.</span>
+        <span class="th">เชื่อมต่อ MetaMask หรือกระเป๋าที่รองรับ ตรวจสอบว่าอยู่บน Polygon Mainnet ใส่จำนวน POL ที่ต้องการใช้ แล้วคลิก Buy IDTC จะถูกโอนเข้ากระเป๋าของคุณทันที</span>
       </div>
     </div>
 
@@ -1127,13 +1127,13 @@
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">
-        <span class="en">Is this currently on testnet?</span>
-        <span class="th">ตอนนี้อยู่บน testnet ใช่ไหม?</span>
+        <span class="en">Which network is IDTC on?</span>
+        <span class="th">IDTC อยู่บนเครือข่ายไหน?</span>
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
-        <span class="en">Yes. IDTC is currently deployed on Polygon Amoy testnet for testing and auditing purposes. The mainnet launch will be announced on official channels. Testnet POL is free from the Polygon faucet.</span>
-        <span class="th">ใช่ ตอนนี้ IDTC ถูก deploy บน Polygon Amoy testnet เพื่อทดสอบและตรวจสอบ การเปิดตัว mainnet จะประกาศผ่านช่องทางทางการ testnet POL ฟรีจาก Polygon faucet</span>
+        <span class="en">IDTC is deployed on Polygon Mainnet. You need real POL in your wallet to purchase tokens. You can buy POL on any major exchange and transfer it to your MetaMask wallet.</span>
+        <span class="th">IDTC ถูก deploy บน Polygon Mainnet คุณต้องมี POL จริงในกระเป๋าเพื่อซื้อเหรียญ สามารถซื้อ POL จากกระดานซื้อขายหลักแล้วโอนเข้ากระเป๋า MetaMask ของคุณ</span>
       </div>
     </div>
 
@@ -1196,10 +1196,9 @@
   <div style="margin-bottom:0.5rem">
     <a href="index.html">Whitepaper</a> ·
     <a href="dashboard.html">Dashboard</a> ·
-    <a href="https://amoy.polygonscan.com" target="_blank">Polygonscan Amoy</a> ·
-    <a href="https://faucet.polygon.technology/" target="_blank">Get Test POL</a>
+    <a href="https://polygonscan.com" target="_blank">Polygonscan</a>
   </div>
-  <div>© 2026 IDTC Energy Capital. <span class="en">All rights reserved. This is a testnet deployment for testing purposes.</span><span class="th">สงวนสิทธิ์ทุกประการ นี่คือ testnet สำหรับการทดสอบ</span></div>
+  <div>© 2026 IDTC Energy Capital. <span class="en">All rights reserved.</span><span class="th">สงวนสิทธิ์ทุกประการ</span></div>
 </footer>
 
 <script>
@@ -1208,11 +1207,11 @@ const CONFIG = {
   TOKEN_SYMBOL: 'IDTC',
   TOKEN_DECIMALS: 18,
   // UPDATE THIS after contract deployment
-  IDTC_ADDRESS: '0x0000000000000000000000000000000000000000',
-  PRESALE_ADDRESS: '0x0000000000000000000000000000000000000000',
-  ACTIVE_CHAIN_ID: '0x13882', // Amoy testnet (80002)
-  RPC_URL: 'https://rpc-amoy.polygon.technology',
-  EXPLORER: 'https://amoy.polygonscan.com',
+  IDTC_ADDRESS: '0x0162847F552EA0cCc4E9eE2b39F36EcD45253815',
+  PRESALE_ADDRESS: '0x99448C18B1031C0eD5FC3512cbE8DD1C2E0B1c2f',
+  ACTIVE_CHAIN_ID: '0x89', // Polygon Mainnet (137)
+  RPC_URL: 'https://polygon-rpc.com',
+  EXPLORER: 'https://polygonscan.com',
   POL_PRICE_USD: 0.25, // POL price in USD
   ROUNDS: {
     seed:    { price: 0.03, name: 'Seed',    min: 1000,  max: 500000  },
@@ -1367,7 +1366,7 @@ async function switchNetwork() {
         method: 'wallet_addEthereumChain',
         params: [{
           chainId: CONFIG.ACTIVE_CHAIN_ID,
-          chainName: 'Polygon Amoy Testnet',
+          chainName: 'Polygon Mainnet',
           nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
           rpcUrls: [CONFIG.RPC_URL],
           blockExplorerUrls: [CONFIG.EXPLORER],

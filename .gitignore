@@ -1,0 +1,17 @@
+contracts/node_modules/
+contracts/artifacts/
+contracts/cache/
+contracts/.env
+contracts/idtc_abi.json
+contracts/idtc_bytecode.txt
+contracts/presale_abi.json
+contracts/presale_bytecode.txt
+contracts/deployment.json
+unpacked/
+WHITEPAPER.docx
+WHITEPAPER_temp.zip
+whitepaper_text.txt
+logo_b64.txt
+deploy.html
+*.jpg
+.claude/
