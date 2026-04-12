@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDTC — Add Liquidity (QuickSwap V2)</title>
+
+<!-- ethers.js v6 -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js" integrity="sha384-6Zl0Pc8zjSz8KvmNeXRvUQgY4ryFb+BwDvKCmLYcBME0joAaru491tQgi9B7zsMM" crossorigin="anonymous"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #d4af37;
+    --gold2: #f0c849;
+    --green: #00c853;
+    --red: #ff5252;
+    --bg: #0a0a0f;
+    --bg2: #11111a;
+    --bg3: #191926;
+    --card: #13131f;
+    --border: rgba(212,175,55,0.18);
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --radius: 16px;
+    --glow: 0 0 30px rgba(212,175,55,0.15);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-top: 64px;
+  }
+
+  /* ===== BG CANVAS ===== */
+  #bg-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+    opacity: 0.35;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo-area {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: var(--text);
+  }
+  .logo-mark {
+    width: 38px; height: 38px;
+    border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #d4af37, #f0c849);
+  }
+  .logo-mark img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .logo-name { font-weight: 700; font-size: 1.1rem; }
+  .logo-sub { font-size: 0.7rem; color: var(--muted); display: block; }
+
+  nav { display: flex; align-items: center; gap: 1rem; }
+  nav a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.875rem; transition: color .2s;
+  }
+  nav a:hover, nav a.active { color: var(--gold); }
+
+  #header-wallet {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f; font-weight: 700;
+    border: none; padding: 8px 18px;
+    border-radius: 10px; cursor: pointer;
+    font-size: 0.85rem; transition: opacity .2s;
+  }
+  #header-wallet:hover { opacity: 0.85; }
+
+  /* ===== MAIN ===== */
+  main {
+    position: relative; z-index: 1;
+    max-width: 640px; margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .page-title h1 {
+    font-size: 1.6rem; font-weight: 800;
+    background: linear-gradient(135deg, #fff, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+  .page-title p {
+    color: var(--muted); font-size: 0.9rem;
+  }
+
+  /* ===== CARD ===== */
+  .liq-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--glow);
+  }
+  .liq-card h3 {
+    font-size: 1rem; font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f; font-weight: 800; font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  /* ===== BALANCE ROW ===== */
+  .balance-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  .balance-row .label {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600;
+  }
+  .balance-row .label img {
+    width: 24px; height: 24px; border-radius: 50%;
+  }
+  .balance-row .value {
+    font-weight: 700; color: var(--gold);
+  }
+
+  /* ===== INPUT GROUP ===== */
+  .input-group {
+    margin-bottom: 12px;
+  }
+  .input-group label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.85rem; color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .input-group label .max-btn {
+    background: none; border: none; color: var(--gold);
+    cursor: pointer; font-size: 0.8rem; font-weight: 600;
+  }
+  .input-group label .max-btn:hover { text-decoration: underline; }
+  .input-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    transition: border-color .2s;
+  }
+  .input-row:focus-within { border-color: var(--gold); }
+  .input-row input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-size: 1.1rem; font-weight: 600;
+    min-width: 0;
+  }
+  .input-row input::placeholder { color: var(--muted); }
+  .input-row .token-tag {
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 700; font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .input-row .token-tag img {
+    width: 22px; height: 22px; border-radius: 50%;
+  }
+
+  /* ===== PRICE DISPLAY ===== */
+  .price-info {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  .price-info .price-val {
+    color: var(--gold); font-weight: 700; font-size: 1rem;
+  }
+
+  /* ===== SLIPPAGE ===== */
+  .slippage-row {
+    display: flex; align-items: center; gap: 10px;
+    margin: 12px 0;
+    font-size: 0.85rem;
+  }
+  .slippage-row label { color: var(--muted); white-space: nowrap; }
+  .slippage-btns { display: flex; gap: 6px; }
+  .slippage-btns button {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 4px 12px;
+    border-radius: 8px; cursor: pointer;
+    font-size: 0.8rem; transition: all .2s;
+  }
+  .slippage-btns button:hover, .slippage-btns button.active {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(212,175,55,0.08);
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-action {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    margin-top: 10px;
+  }
+  .btn-action:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-action:disabled {
+    opacity: 0.4; cursor: not-allowed; transform: none;
+  }
+  .btn-approve {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff;
+  }
+  .btn-liquidity {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f;
+  }
+  .btn-connect {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0a0f;
+  }
+
+  /* ===== STATUS ===== */
+  .status-box {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    display: none;
+  }
+  .status-box.show { display: block; }
+  .status-box .status-title {
+    font-weight: 700; margin-bottom: 4px;
+  }
+  .status-box a {
+    color: var(--gold); text-decoration: none;
+  }
+  .status-box a:hover { text-decoration: underline; }
+  .status-box.success { border-color: rgba(0,200,83,0.3); }
+  .status-box.error { border-color: rgba(255,82,82,0.3); }
+  .status-box.pending { border-color: rgba(212,175,55,0.3); }
+
+  .allowance-info {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .allowance-info .ok { color: var(--green); }
+
+  /* ===== WARNING ===== */
+  .warning-box {
+    background: rgba(255,200,0,0.08);
+    border: 1px solid rgba(255,200,0,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #ffcc00;
+    line-height: 1.5;
+  }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed; top: 80px; right: 20px;
+    z-index: 300; display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem; font-weight: 500;
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 3.7s forwards;
+    max-width: 360px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .toast.success { background: rgba(0,200,83,0.15); border: 1px solid rgba(0,200,83,0.3); color: var(--green); }
+  .toast.error { background: rgba(255,82,82,0.15); border: 1px solid rgba(255,82,82,0.3); color: var(--red); }
+  .toast.info { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); }
+
+  @keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes fadeOut { to { opacity:0; transform:translateX(40px); } }
+
+  /* ===== FOOTER ===== */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  footer a { color: var(--gold); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 600px) {
+    header { padding: 0 1rem; }
+    main { padding: 1rem; }
+    .page-title h1 { font-size: 1.3rem; }
+    nav { gap: 0.6rem; }
+    nav a { font-size: 0.78rem; }
+  }
+</style>
+</head>
+
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- HEADER -->
+<header>
+  <a href="index.html" class="logo-area">
+    <div class="logo-mark"><img src="logotoken.png" alt="IDTC"></div>
+    <div>
+      <div class="logo-name">IDTC</div>
+      <span class="logo-sub">Energy Capital</span>
+    </div>
+  </a>
+  <nav>
+    <a href="index.html">Whitepaper</a>
+    <a href="sale.html">Buy IDTC</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="trade.html">Trade</a>
+    <button id="header-wallet" onclick="handleConnect()">Connect Wallet</button>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<main>
+  <div class="page-title">
+    <h1>Add Liquidity (QuickSwap V2)</h1>
+    <p>Create IDTC/POL trading pair on QuickSwap V2 Router</p>
+  </div>
+
+  <div class="warning-box">
+    <strong>Admin Tool</strong> — This page creates a new liquidity pool on QuickSwap V2.
+    The ratio of IDTC to POL you provide determines the initial trading price.
+    This is irreversible — once liquidity is added, the pool is live and anyone can trade.
+  </div>
+
+  <!-- STEP 0: CONNECT WALLET -->
+  <div class="liq-card" id="card-connect">
+    <h3><span class="step-num">0</span> Connect Wallet</h3>
+    <div class="balance-row">
+      <div class="label">
+        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png" alt="POL">
+        <span>POL Balance</span>
+      </div>
+      <div class="value" id="pol-balance">—</div>
+    </div>
+    <div class="balance-row">
+      <div class="label">
+        <img src="logotoken.png" alt="IDTC">
+        <span>IDTC Balance</span>
+      </div>
+      <div class="value" id="idtc-balance">—</div>
+    </div>
+    <button class="btn-action btn-connect" id="btn-connect" onclick="handleConnect()">
+      Connect MetaMask
+    </button>
+  </div>
+
+  <!-- STEP 1: SET AMOUNTS -->
+  <div class="liq-card" id="card-amounts">
+    <h3><span class="step-num">1</span> Set Amounts</h3>
+
+    <div class="input-group">
+      <label>
+        <span>IDTC Amount</span>
+        <button class="max-btn" onclick="setMaxIDTC()">MAX</button>
+      </label>
+      <div class="input-row">
+        <input type="number" id="input-idtc" placeholder="0.0" oninput="updatePrice()">
+        <div class="token-tag">
+          <img src="logotoken.png" alt="IDTC">
+          IDTC
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>
+        <span>POL Amount</span>
+        <button class="max-btn" onclick="setMaxPOL()">MAX</button>
+      </label>
+      <div class="input-row">
+        <input type="number" id="input-pol" placeholder="0.0" oninput="updatePrice()">
+        <div class="token-tag">
+          <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png" alt="POL">
+          POL
+        </div>
+      </div>
+    </div>
+
+    <div class="price-info" id="price-info">
+      Initial Price: <span class="price-val" id="price-display">—</span> POL per IDTC
+    </div>
+
+    <div class="slippage-row">
+      <label>Slippage:</label>
+      <div class="slippage-btns">
+        <button onclick="setSlippage(1, this)">1%</button>
+        <button onclick="setSlippage(3, this)">3%</button>
+        <button class="active" onclick="setSlippage(5, this)">5%</button>
+        <button onclick="setSlippage(10, this)">10%</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: APPROVE -->
+  <div class="liq-card" id="card-approve">
+    <h3><span class="step-num">2</span> Approve IDTC</h3>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;">
+      Allow QuickSwap V2 Router to spend your IDTC tokens.
+    </p>
+    <div class="allowance-info" id="allowance-info">Current allowance: —</div>
+    <button class="btn-action btn-approve" id="btn-approve" onclick="approveIDTC()" disabled>
+      Approve IDTC
+    </button>
+    <div class="status-box" id="status-approve"></div>
+  </div>
+
+  <!-- STEP 3: ADD LIQUIDITY -->
+  <div class="liq-card" id="card-add">
+    <h3><span class="step-num">3</span> Add Liquidity</h3>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;">
+      Send tokens to QuickSwap V2 Router to create the IDTC/POL pool.
+    </p>
+    <button class="btn-action btn-liquidity" id="btn-add" onclick="addLiquidity()" disabled>
+      Add Liquidity
+    </button>
+    <div class="status-box" id="status-add"></div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  &copy; 2026 IDTC — Invest Energy-Development Coin |
+  <a href="index.html">Whitepaper</a> |
+  <a href="trade.html">Trade</a> |
+  <a href="dashboard.html">Dashboard</a>
+</footer>
+
+<script>
+// ===== CONFIG =====
+const CONFIG = {
+  IDTC_ADDRESS: '0x0162847f552EA0cCc4E9eE2b39F36EcD45253815',
+  QUICKSWAP_V2_ROUTER: '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
+  QUICKSWAP_V2_FACTORY: '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32',
+  WMATIC: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+  ACTIVE_CHAIN_ID: '0x89',
+  RPC_URL: 'https://polygon-rpc.com',
+  CHAIN_NAME: 'Polygon Mainnet',
+  EXPLORER: 'https://polygonscan.com',
+  TOKEN_DECIMALS: 18,
+};
+
+// ABIs
+const ERC20_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+];
+
+const ROUTER_ABI = [
+  'function addLiquidityETH(address token, uint amountTokenDesired, uint amountTokenMin, uint amountETHMin, address to, uint deadline) payable returns (uint amountToken, uint amountETH, uint liquidity)',
+  'function factory() view returns (address)',
+  'function WETH() view returns (address)',
+];
+
+const FACTORY_ABI = [
+  'function getPair(address tokenA, address tokenB) view returns (address pair)',
+];
+
+// ===== STATE =====
+let provider = null;
+let signer = null;
+let walletAddress = null;
+let isConnected = false;
+let slippage = 5; // percent
+let polBalance = 0n;
+let idtcBalance = 0n;
+
+// ===== WALLET =====
+async function handleConnect() {
+  if (isConnected) return;
+  try {
+    if (!window.ethereum) {
+      showToast('MetaMask not found. Install MetaMask first.', 'error');
+      return;
+    }
+    showToast('Connecting wallet...', 'info');
+
+    // Force account picker
+    await window.ethereum.request({
+      method: 'wallet_requestPermissions',
+      params: [{ eth_accounts: {} }]
+    });
+
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send('eth_accounts', []);
+    if (!accounts || accounts.length === 0) throw new Error('No accounts');
+
+    signer = await provider.getSigner();
+    walletAddress = await signer.getAddress();
+
+    // Switch to Polygon
+    await switchToPolygon();
+
+    isConnected = true;
+    const short = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+    document.getElementById('header-wallet').textContent = short;
+    document.getElementById('btn-connect').textContent = 'Connected: ' + short;
+    document.getElementById('btn-connect').disabled = true;
+
+    await loadBalances();
+    await checkAllowance();
+    await checkExistingPool();
+
+    showToast('Wallet connected!', 'success');
+
+    window.ethereum.on('accountsChanged', (accs) => {
+      if (!accs.length) window.location.reload();
+      else window.location.reload();
+    });
+    window.ethereum.on('chainChanged', () => window.location.reload());
+
+  } catch (e) {
+    console.error(e);
+    if (e.code !== 4001) showToast(e.message || 'Connection failed', 'error');
+  }
+}
+
+async function switchToPolygon() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: CONFIG.ACTIVE_CHAIN_ID }],
+    });
+  } catch (e) {
+    if (e.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: CONFIG.ACTIVE_CHAIN_ID,
+          chainName: CONFIG.CHAIN_NAME,
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+          rpcUrls: [CONFIG.RPC_URL],
+          blockExplorerUrls: [CONFIG.EXPLORER],
+        }],
+      });
+    } else if (e.code !== 4001) throw e;
+  }
+}
+
+async function loadBalances() {
+  if (!provider || !walletAddress) return;
+  try {
+    polBalance = await provider.getBalance(walletAddress);
+    const polFmt = parseFloat(ethers.formatEther(polBalance)).toFixed(4);
+    document.getElementById('pol-balance').textContent = polFmt + ' POL';
+
+    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, provider);
+    idtcBalance = await token.balanceOf(walletAddress);
+    const idtcFmt = parseFloat(ethers.formatUnits(idtcBalance, 18)).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    document.getElementById('idtc-balance').textContent = idtcFmt + ' IDTC';
+  } catch (e) {
+    console.error('Balance error:', e);
+  }
+}
+
+async function checkAllowance() {
+  if (!provider || !walletAddress) return;
+  try {
+    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, provider);
+    const allowance = await token.allowance(walletAddress, CONFIG.QUICKSWAP_V2_ROUTER);
+    const allowanceFmt = parseFloat(ethers.formatUnits(allowance, 18)).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+    const el = document.getElementById('allowance-info');
+    if (allowance > 0n) {
+      el.innerHTML = 'Current allowance: <span class="ok">' + allowanceFmt + ' IDTC</span>';
+    } else {
+      el.textContent = 'Current allowance: 0 IDTC (approval needed)';
+    }
+
+    updateButtons();
+  } catch (e) {
+    console.error('Allowance error:', e);
+  }
+}
+
+async function checkExistingPool() {
+  if (!provider) return;
+  try {
+    const factory = new ethers.Contract(CONFIG.QUICKSWAP_V2_FACTORY, FACTORY_ABI, provider);
+    const pair = await factory.getPair(CONFIG.IDTC_ADDRESS, CONFIG.WMATIC);
+    if (pair && pair !== '0x0000000000000000000000000000000000000000') {
+      showToast('Pool already exists at ' + pair.slice(0, 10) + '...', 'info');
+    }
+  } catch (e) {
+    console.error('Pool check error:', e);
+  }
+}
+
+// ===== AMOUNTS =====
+function setMaxIDTC() {
+  if (idtcBalance === 0n) return;
+  document.getElementById('input-idtc').value = ethers.formatUnits(idtcBalance, 18);
+  updatePrice();
+}
+
+function setMaxPOL() {
+  if (polBalance === 0n) return;
+  // Leave 1 POL for gas
+  const reserve = ethers.parseEther('1');
+  const available = polBalance > reserve ? polBalance - reserve : 0n;
+  document.getElementById('input-pol').value = ethers.formatEther(available);
+  updatePrice();
+}
+
+function updatePrice() {
+  const idtcAmt = parseFloat(document.getElementById('input-idtc').value) || 0;
+  const polAmt = parseFloat(document.getElementById('input-pol').value) || 0;
+
+  const priceEl = document.getElementById('price-display');
+  if (idtcAmt > 0 && polAmt > 0) {
+    const price = polAmt / idtcAmt;
+    priceEl.textContent = price.toFixed(8);
+  } else {
+    priceEl.textContent = '—';
+  }
+
+  updateButtons();
+}
+
+function setSlippage(pct, btn) {
+  slippage = pct;
+  document.querySelectorAll('.slippage-btns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function updateButtons() {
+  const idtcAmt = parseFloat(document.getElementById('input-idtc').value) || 0;
+  const polAmt = parseFloat(document.getElementById('input-pol').value) || 0;
+  const hasAmounts = idtcAmt > 0 && polAmt > 0;
+
+  document.getElementById('btn-approve').disabled = !isConnected || !hasAmounts;
+  document.getElementById('btn-add').disabled = !isConnected || !hasAmounts;
+}
+
+// ===== APPROVE =====
+async function approveIDTC() {
+  if (!signer) return;
+  const statusEl = document.getElementById('status-approve');
+  try {
+    const idtcVal = document.getElementById('input-idtc').value;
+    if (!idtcVal || parseFloat(idtcVal) <= 0) {
+      showToast('Enter IDTC amount first', 'error');
+      return;
+    }
+
+    const amount = ethers.parseUnits(idtcVal, 18);
+    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, signer);
+
+    // Check current allowance
+    const currentAllowance = await token.allowance(walletAddress, CONFIG.QUICKSWAP_V2_ROUTER);
+    if (currentAllowance >= amount) {
+      showStatus(statusEl, 'Allowance already sufficient!', 'success');
+      showToast('Allowance OK!', 'success');
+      return;
+    }
+
+    showStatus(statusEl, 'Sending approve transaction... Confirm in MetaMask.', 'pending');
+    document.getElementById('btn-approve').disabled = true;
+
+    // Approve max uint256 so we don't need to approve again
+    const maxUint = ethers.MaxUint256;
+    const tx = await token.approve(CONFIG.QUICKSWAP_V2_ROUTER, maxUint);
+
+    showStatus(statusEl, 'Transaction sent: <a href="' + CONFIG.EXPLORER + '/tx/' + tx.hash + '" target="_blank">' + tx.hash.slice(0, 14) + '...</a> — Waiting for confirmation...', 'pending');
+
+    await tx.wait();
+
+    showStatus(statusEl, 'Approved! TX: <a href="' + CONFIG.EXPLORER + '/tx/' + tx.hash + '" target="_blank">' + tx.hash.slice(0, 14) + '...</a>', 'success');
+    showToast('IDTC approved!', 'success');
+    await checkAllowance();
+
+  } catch (e) {
+    console.error(e);
+    showStatus(statusEl, 'Error: ' + (e.reason || e.message || 'Transaction failed'), 'error');
+    if (e.code !== 4001) showToast('Approve failed', 'error');
+    document.getElementById('btn-approve').disabled = false;
+  }
+}
+
+// ===== ADD LIQUIDITY =====
+async function addLiquidity() {
+  if (!signer) return;
+  const statusEl = document.getElementById('status-add');
+  try {
+    const idtcVal = document.getElementById('input-idtc').value;
+    const polVal = document.getElementById('input-pol').value;
+
+    if (!idtcVal || !polVal || parseFloat(idtcVal) <= 0 || parseFloat(polVal) <= 0) {
+      showToast('Enter both IDTC and POL amounts', 'error');
+      return;
+    }
+
+    const amountIDTC = ethers.parseUnits(idtcVal, 18);
+    const amountPOL = ethers.parseEther(polVal);
+
+    // Check allowance
+    const token = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, provider);
+    const allowance = await token.allowance(walletAddress, CONFIG.QUICKSWAP_V2_ROUTER);
+    if (allowance < amountIDTC) {
+      showToast('Insufficient allowance. Approve IDTC first (Step 2).', 'error');
+      return;
+    }
+
+    // Check balances
+    if (amountIDTC > idtcBalance) {
+      showToast('Insufficient IDTC balance', 'error');
+      return;
+    }
+    if (amountPOL > polBalance) {
+      showToast('Insufficient POL balance', 'error');
+      return;
+    }
+
+    // Slippage calc
+    const slippageFactor = BigInt(100 - slippage);
+    const amountIDTCMin = (amountIDTC * slippageFactor) / 100n;
+    const amountPOLMin = (amountPOL * slippageFactor) / 100n;
+
+    // Deadline: 20 minutes from now
+    const deadline = Math.floor(Date.now() / 1000) + 1200;
+
+    const router = new ethers.Contract(CONFIG.QUICKSWAP_V2_ROUTER, ROUTER_ABI, signer);
+
+    showStatus(statusEl, 'Sending addLiquidityETH... Confirm in MetaMask.', 'pending');
+    document.getElementById('btn-add').disabled = true;
+
+    const tx = await router.addLiquidityETH(
+      CONFIG.IDTC_ADDRESS,    // token
+      amountIDTC,              // amountTokenDesired
+      amountIDTCMin,           // amountTokenMin
+      amountPOLMin,            // amountETHMin
+      walletAddress,           // to (LP tokens go to sender)
+      deadline,                // deadline
+      { value: amountPOL }     // POL value
+    );
+
+    showStatus(statusEl, 'Transaction sent: <a href="' + CONFIG.EXPLORER + '/tx/' + tx.hash + '" target="_blank">' + tx.hash.slice(0, 14) + '...</a> — Waiting for confirmation...', 'pending');
+
+    const receipt = await tx.wait();
+
+    showStatus(statusEl,
+      'Liquidity added successfully! TX: <a href="' + CONFIG.EXPLORER + '/tx/' + tx.hash + '" target="_blank">' + tx.hash.slice(0, 14) + '...</a><br>' +
+      'Block: ' + receipt.blockNumber + ' | Gas used: ' + receipt.gasUsed.toString(),
+      'success');
+    showToast('Liquidity added! Pool is now live.', 'success');
+
+    await loadBalances();
+
+  } catch (e) {
+    console.error(e);
+    let msg = e.reason || e.message || 'Transaction failed';
+    if (msg.length > 200) msg = msg.slice(0, 200) + '...';
+    showStatus(statusEl, 'Error: ' + msg, 'error');
+    if (e.code !== 4001) showToast('Add liquidity failed', 'error');
+    document.getElementById('btn-add').disabled = false;
+  }
+}
+
+// ===== HELPERS =====
+function showStatus(el, html, type) {
+  el.className = 'status-box show ' + type;
+  el.innerHTML = '<div class="status-title">' + (type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Processing...') + '</div>' + html;
+}
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ===== BG CANVAS =====
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = Array.from({ length: 50 }, () => ({
+    x: Math.random() * w, y: Math.random() * h,
+    vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2 + 0.5,
+    a: Math.random() * 0.3 + 0.1,
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(212,175,55,' + p.a + ')';
+      ctx.fill();
+    });
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = 'rgba(212,175,55,' + (0.08 * (1 - dist / 150)) + ')';
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
