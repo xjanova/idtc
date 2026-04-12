@@ -253,13 +253,15 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
         <div class="chart-title">⬡ Token Information</div>
         <table class="info-table">
           <tr><td>Token</td><td><span class="badge-pill badge-green">IDTC</span></td></tr>
-          <tr><td>Blockchain</td><td><span class="badge-pill badge-purple">Polygon</span></td></tr>
-          <tr><td>Total Supply</td><td>100,000,000</td></tr>
+          <tr><td>Blockchain</td><td><span class="badge-pill badge-purple">Polygon Mainnet</span></td></tr>
+          <tr><td>Chain ID</td><td>137</td></tr>
+          <tr><td>Total Supply</td><td id="totalSupplyInfo">100,000,000</td></tr>
           <tr><td>Circulating</td><td id="circSupply">—</td></tr>
           <tr><td>Market Cap</td><td id="marketCap">—</td></tr>
-          <tr><td>Contract</td><td><a id="contractLink" href="#" target="_blank" style="color:var(--green-dark);font-size:.75rem;font-family:monospace"><span id="contractShort">—</span></a></td></tr>
+          <tr><td>Contract</td><td><a id="contractLink" href="https://polygonscan.com/token/0x0162847F552EA0cCc4E9eE2b39F36EcD45253815" target="_blank" style="color:var(--green-dark);font-size:.75rem;font-family:monospace"><span id="contractShort">0x0162...3815</span></a></td></tr>
           <tr><td>Decimals</td><td>18</td></tr>
           <tr><td>Standard</td><td><span class="badge-pill badge-blue">ERC-20</span></td></tr>
+          <tr><td>RPC URL</td><td style="font-size:.72rem;font-family:monospace">polygon-bor-rpc.publicnode.com</td></tr>
         </table>
         <button class="add-token-btn" onclick="addTokenToWallet()">
           🦊 Add IDTC to MetaMask
@@ -643,6 +645,64 @@ function copyAddress() {
 function shortAddr(addr) {
   return addr.slice(0,6) + '...' + addr.slice(-4);
 }
+
+// ══════════════════════════════════════════
+// AUTO-RECONNECT + PAGE LOAD DATA
+// ══════════════════════════════════════════
+async function loadMarketDataOnPageLoad() {
+  // Pre-fill Token Information using API (no wallet needed)
+  try {
+    document.getElementById('contractShort').textContent = shortAddr(CONFIG.CONTRACT_ADDRESS);
+    document.getElementById('contractLink').href = CONFIG.EXPLORER + '/token/' + CONFIG.CONTRACT_ADDRESS;
+
+    const supplyResult = await etherscanFetch({
+      module: 'stats', action: 'tokensupply',
+      contractaddress: CONFIG.CONTRACT_ADDRESS
+    });
+    if (supplyResult) {
+      const totalSupply = parseFloat(ethers.formatUnits(BigInt(supplyResult), CONFIG.TOKEN_DECIMALS));
+      const totalFmt = totalSupply.toLocaleString('en-US', {maximumFractionDigits: 0});
+      document.getElementById('totalSupplyInfo').textContent = totalFmt;
+      document.getElementById('circSupply').textContent = totalFmt + ' IDTC';
+      const mcap = totalSupply * CONFIG.TOKEN_PRICE_USD;
+      document.getElementById('marketCap').textContent = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
+    }
+  } catch(e) {
+    console.error('loadMarketData error:', e);
+  }
+}
+
+async function autoReconnect() {
+  // Try to reconnect without popup if user previously approved this site
+  if (!window.ethereum) return;
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    if (accounts && accounts.length > 0) {
+      userAddress = accounts[0];
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      const network = await provider.getNetwork();
+      const chainIdHex = '0x' + network.chainId.toString(16);
+      await onWalletConnected(userAddress, chainIdHex, network);
+
+      window.ethereum.on('accountsChanged', async (accs) => {
+        if (accs.length === 0) { disconnectWallet(); return; }
+        userAddress = accs[0];
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        const net = await provider.getNetwork();
+        await onWalletConnected(userAddress, '0x' + net.chainId.toString(16), net);
+      });
+      window.ethereum.on('chainChanged', () => window.location.reload());
+    }
+  } catch(e) {
+    console.error('autoReconnect error:', e);
+  }
+}
+
+// Run on page load
+loadMarketDataOnPageLoad();
+autoReconnect();
 
 // ══════════════════════════════════════════
 // CHARTS

@@ -898,6 +898,32 @@ function showToast(msg, type = 'info') {
   setTimeout(() => toast.remove(), 4000);
 }
 
+// ===== AUTO-RECONNECT =====
+(async function autoReconnect() {
+  if (!window.ethereum) return;
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    if (accounts && accounts.length > 0) {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      walletAddress = await signer.getAddress();
+      isConnected = true;
+      const short = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+      document.getElementById('header-wallet').textContent = short;
+      await switchToPolygon();
+      await loadBalances();
+      if (!localStorage.getItem('idtc_token_added')) {
+        await addTokenToWallet();
+      }
+      window.ethereum.on('accountsChanged', (accs) => {
+        if (!accs.length) disconnectWallet();
+        else { walletAddress = accs[0]; loadBalances(); }
+      });
+      window.ethereum.on('chainChanged', () => window.location.reload());
+    }
+  } catch(e) { console.error('autoReconnect:', e); }
+})();
+
 // ===== BG CANVAS =====
 (function() {
   const canvas = document.getElementById('bg-canvas');
