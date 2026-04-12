@@ -635,6 +635,35 @@
           </div>
         </div>
 
+        <!-- SLIPPAGE -->
+        <div style="margin-top:.8rem">
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px"><span class="en">Slippage Tolerance</span><span class="th">ค่า Slippage</span></div>
+          <div class="slippage-bar">
+            <button onclick="setSlippage(0.5,this)">0.5%</button>
+            <button onclick="setSlippage(1,this)" class="active">1%</button>
+            <button onclick="setSlippage(3,this)">3%</button>
+            <button onclick="setSlippage(5,this)">5%</button>
+          </div>
+        </div>
+
+        <!-- SWAP DETAILS -->
+        <div id="swap-details" style="margin-top:.6rem;display:none">
+          <div class="swap-detail-row"><span><span class="en">Rate</span><span class="th">อัตรา</span></span><span class="val" id="swap-rate">--</span></div>
+          <div class="swap-detail-row"><span><span class="en">Min. Received</span><span class="th">ได้รับขั้นต่ำ</span></span><span class="val" id="swap-min">--</span></div>
+          <div class="swap-detail-row"><span><span class="en">Price Impact</span><span class="th">ผลกระทบราคา</span></span><span class="val" id="swap-impact">--</span></div>
+          <div class="swap-detail-row"><span>Fee</span><span class="val">0.3%</span></div>
+        </div>
+
+        <!-- SWAP BUTTON -->
+        <button class="btn-swap-exec disabled" id="btn-swap" onclick="executeSwap()">
+          <span class="en">Connect Wallet to Swap</span><span class="th">เชื่อมกระเป๋าเพื่อแลกเปลี่ยน</span>
+        </button>
+
+        <!-- OR external DEX -->
+        <div style="margin-top:1.2rem;text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:.5rem">
+          <span class="en">Or trade on external DEX</span><span class="th">หรือเทรดที่ DEX ภายนอก</span>
+        </div>
+
         <!-- DEX BUTTONS -->
         <div class="dex-buttons">
           <a class="dex-btn dex-btn-quickswap" id="link-quickswap" href="#" target="_blank" rel="noopener">
@@ -765,6 +794,7 @@ const CONFIG = {
   SALE_PRICE: 0.05,
   // QuickSwap V2
   FACTORY_V2: '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32',
+  ROUTER_V2: '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
   WMATIC: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
   // Etherscan V2 API
   ETHERSCAN_API_KEY: '8JNXSM6PY5BPCXWS9Q12J5XBU6RSBCRGE7',
@@ -781,10 +811,18 @@ const PAIR_ABI = [
 const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function totalSupply() view returns (uint256)',
+  'function approve(address,uint256) returns (bool)',
+  'function allowance(address,address) view returns (uint256)',
+];
+const ROUTER_ABI = [
+  'function swapExactETHForTokens(uint amountOutMin, address[] path, address to, uint deadline) payable returns (uint[])',
+  'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] path, address to, uint deadline) returns (uint[])',
+  'function getAmountsOut(uint amountIn, address[] path) view returns (uint[])',
 ];
 
 // Pool state (updated on load)
 let poolData = { exists: false, pricePolPerIdtc: 0, priceIdtcPerPol: 0, reserveIDTC: 0, reservePOL: 0, pairAddress: null };
+let slippage = 1; // default 1%
 
 // DEX URLs
 const DEX_URLS = {
@@ -911,29 +949,172 @@ function formatNum(n) {
 }
 
 // ===== SWAP ESTIMATE (real pool price) =====
+function setSlippage(val, btn) {
+  slippage = val;
+  document.querySelectorAll('.slippage-bar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  estimateSwap();
+}
+
 function estimateSwap() {
   const fromVal = parseFloat(document.getElementById('swap-from-amount').value) || 0;
+  const detailsEl = document.getElementById('swap-details');
+  const btn = document.getElementById('btn-swap');
   let tokensOut = 0;
 
+  if (fromVal <= 0) {
+    document.getElementById('swap-to-amount').value = '';
+    detailsEl.style.display = 'none';
+    updateSwapButton();
+    return;
+  }
+
   if (poolData.exists) {
-    // Use real AMM formula: amountOut = (amountIn * reserveOut) / (reserveIn + amountIn) * 0.997 (0.3% fee)
     if (!isFlipped) {
-      // POL → IDTC
       tokensOut = (fromVal * poolData.reserveIDTC * 0.997) / (poolData.reservePOL + fromVal);
     } else {
-      // IDTC → POL
       tokensOut = (fromVal * poolData.reservePOL * 0.997) / (poolData.reserveIDTC + fromVal);
     }
+
+    // Show swap details
+    const minReceived = tokensOut * (1 - slippage / 100);
+    const outSymbol = isFlipped ? 'POL' : 'IDTC';
+    const inSymbol = isFlipped ? 'IDTC' : 'POL';
+    const rate = tokensOut / fromVal;
+    const reserveIn = isFlipped ? poolData.reserveIDTC : poolData.reservePOL;
+    const impact = (fromVal / (reserveIn + fromVal)) * 100;
+
+    document.getElementById('swap-rate').textContent = '1 ' + inSymbol + ' = ' + rate.toFixed(4) + ' ' + outSymbol;
+    document.getElementById('swap-min').textContent = minReceived.toFixed(4) + ' ' + outSymbol;
+    const impactEl = document.getElementById('swap-impact');
+    impactEl.textContent = impact.toFixed(2) + '%';
+    impactEl.style.color = impact > 5 ? '#ff6b6b' : impact > 1 ? '#ffb74d' : '#00e676';
+    detailsEl.style.display = 'block';
   } else {
-    // No pool — fallback to presale price estimate
     const polUsd = 0.25;
     if (!isFlipped) {
       tokensOut = (fromVal * polUsd) / CONFIG.SALE_PRICE;
     } else {
       tokensOut = (fromVal * CONFIG.SALE_PRICE) / polUsd;
     }
+    detailsEl.style.display = 'none';
   }
+
   document.getElementById('swap-to-amount').value = tokensOut > 0 ? tokensOut.toFixed(4) : '';
+  updateSwapButton();
+}
+
+function updateSwapButton() {
+  const btn = document.getElementById('btn-swap');
+  const fromVal = parseFloat(document.getElementById('swap-from-amount').value) || 0;
+
+  if (!isConnected) {
+    btn.className = 'btn-swap-exec disabled';
+    btn.innerHTML = '<span class="en">Connect Wallet to Swap</span><span class="th">เชื่อมกระเป๋าเพื่อแลกเปลี่ยน</span>';
+    btn.onclick = () => openWalletModal();
+  } else if (!poolData.exists) {
+    btn.className = 'btn-swap-exec disabled';
+    btn.innerHTML = '<span class="en">No Liquidity Pool</span><span class="th">ยังไม่มี Pool</span>';
+    btn.onclick = null;
+  } else if (fromVal <= 0) {
+    btn.className = 'btn-swap-exec disabled';
+    btn.innerHTML = '<span class="en">Enter Amount</span><span class="th">กรอกจำนวน</span>';
+    btn.onclick = null;
+  } else {
+    btn.className = 'btn-swap-exec ready';
+    if (isFlipped) {
+      btn.innerHTML = '<span class="en">Swap IDTC → POL</span><span class="th">แลก IDTC → POL</span>';
+    } else {
+      btn.innerHTML = '<span class="en">Swap POL → IDTC</span><span class="th">แลก POL → IDTC</span>';
+    }
+    btn.onclick = () => executeSwap();
+  }
+}
+
+async function executeSwap() {
+  if (!isConnected || !signer) {
+    showToast('Please connect wallet first', 'error');
+    return;
+  }
+  if (!poolData.exists) {
+    showToast('No liquidity pool available', 'error');
+    return;
+  }
+
+  const fromVal = parseFloat(document.getElementById('swap-from-amount').value) || 0;
+  if (fromVal <= 0) { showToast('Enter an amount', 'error'); return; }
+
+  const btn = document.getElementById('btn-swap');
+  const prevHTML = btn.innerHTML;
+  btn.className = 'btn-swap-exec loading';
+  btn.innerHTML = '<span class="en">Processing...</span><span class="th">กำลังดำเนินการ...</span>';
+
+  try {
+    const router = new ethers.Contract(CONFIG.ROUTER_V2, ROUTER_ABI, signer);
+    const deadline = Math.floor(Date.now() / 1000) + 600; // 10 min
+    const path = isFlipped
+      ? [CONFIG.IDTC_ADDRESS, CONFIG.WMATIC]  // IDTC → POL
+      : [CONFIG.WMATIC, CONFIG.IDTC_ADDRESS]; // POL → IDTC
+
+    // Calculate min output with slippage
+    const amountsOut = await router.getAmountsOut(
+      ethers.parseEther(fromVal.toString()), path
+    );
+    const expectedOut = amountsOut[1];
+    const minOut = expectedOut * BigInt(Math.floor((100 - slippage) * 10)) / 1000n;
+
+    let tx;
+    if (!isFlipped) {
+      // POL → IDTC: swapExactETHForTokens
+      tx = await router.swapExactETHForTokens(
+        minOut, path, walletAddress, deadline,
+        { value: ethers.parseEther(fromVal.toString()) }
+      );
+    } else {
+      // IDTC → POL: need approval first
+      const idtcContract = new ethers.Contract(CONFIG.IDTC_ADDRESS, ERC20_ABI, signer);
+      const amountIn = ethers.parseEther(fromVal.toString());
+      const currentAllowance = await idtcContract.allowance(walletAddress, CONFIG.ROUTER_V2);
+
+      if (currentAllowance < amountIn) {
+        btn.innerHTML = '<span class="en">Approving IDTC...</span><span class="th">กำลังอนุมัติ IDTC...</span>';
+        const approveTx = await idtcContract.approve(CONFIG.ROUTER_V2, ethers.MaxUint256);
+        showToast('Approving IDTC... Please wait', 'info');
+        await approveTx.wait();
+        showToast('IDTC Approved!', 'success');
+      }
+
+      btn.innerHTML = '<span class="en">Swapping...</span><span class="th">กำลังแลก...</span>';
+      tx = await router.swapExactTokensForETH(
+        amountIn, minOut, path, walletAddress, deadline
+      );
+    }
+
+    showToast('Transaction submitted! Waiting for confirmation...', 'info');
+    const receipt = await tx.wait();
+    showToast('Swap successful!', 'success');
+
+    // Refresh data
+    document.getElementById('swap-from-amount').value = '';
+    document.getElementById('swap-to-amount').value = '';
+    document.getElementById('swap-details').style.display = 'none';
+    await loadBalances();
+    await loadPoolData();
+
+  } catch (err) {
+    console.error('Swap error:', err);
+    if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
+      showToast('Transaction cancelled', 'info');
+    } else if (err.reason) {
+      showToast('Swap failed: ' + err.reason, 'error');
+    } else {
+      showToast('Swap failed. Check console for details.', 'error');
+    }
+  }
+
+  btn.className = 'btn-swap-exec ready';
+  btn.innerHTML = prevHTML;
+  updateSwapButton();
 }
 
 function flipTokens() {
@@ -1019,11 +1200,7 @@ async function connectWallet(type = 'metamask') {
     await loadBalances();
 
     showToast('Wallet connected!', 'success');
-
-    // Auto-add IDTC token (only if not added before)
-    if (!localStorage.getItem('idtc_token_added')) {
-      await addTokenToWallet();
-    }
+    updateSwapButton();
 
     // Watch changes
     window.ethereum.on('accountsChanged', (accs) => {
@@ -1114,6 +1291,7 @@ function disconnectWallet() {
   document.getElementById('from-balance').textContent = '--';
   document.getElementById('to-balance').textContent = '--';
   showToast('Wallet disconnected', 'info');
+  updateSwapButton();
 }
 
 // ===== COPY =====
@@ -1133,26 +1311,24 @@ function showToast(msg, type = 'info') {
   setTimeout(() => toast.remove(), 4000);
 }
 
-// ===== AUTO-RECONNECT =====
+// ===== AUTO-RECONNECT (silent, no popup) =====
 (async function autoReconnect() {
   if (!window.ethereum) return;
   try {
     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
     if (accounts && accounts.length > 0) {
       provider = new ethers.BrowserProvider(window.ethereum);
+      // getSigner is needed for swap — trade page needs signer
       signer = await provider.getSigner();
       walletAddress = await signer.getAddress();
       isConnected = true;
       const short = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
       document.getElementById('header-wallet').textContent = short;
-      await switchToPolygon();
       await loadBalances();
-      if (!localStorage.getItem('idtc_token_added')) {
-        await addTokenToWallet();
-      }
+      updateSwapButton();
       window.ethereum.on('accountsChanged', (accs) => {
         if (!accs.length) disconnectWallet();
-        else { walletAddress = accs[0]; loadBalances(); }
+        else { walletAddress = accs[0]; loadBalances(); updateSwapButton(); }
       });
       window.ethereum.on('chainChanged', () => window.location.reload());
     }
