@@ -1112,6 +1112,7 @@ function updatePoolUI() {
       statusEl.innerHTML = '<span style="color:#ff6b6b">No Pool</span>';
     }
     if (priceInfoEl) priceInfoEl.textContent = '$0.05 (presale)';
+    updateUsdPriceUI();
     return;
   }
 
@@ -1133,25 +1134,55 @@ function formatNum(n) {
 
 // ===== USD PRICE FETCHER =====
 let polUsdPrice = 0;
+const USDT_POLYGON = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'; // USDT on Polygon (6 decimals)
 
 async function fetchPolUsdPrice() {
+  // Method 1: On-chain via QuickSwap Router (most reliable, no API key needed)
   try {
-    // Use CoinGecko free API for POL (MATIC) price
-    const resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd');
-    const data = await resp.json();
-    if (data['matic-network'] && data['matic-network'].usd) {
-      polUsdPrice = data['matic-network'].usd;
+    const rpc = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+    const router = new ethers.Contract(CONFIG.ROUTER_V2, ROUTER_ABI, rpc);
+    const oneWmatic = ethers.parseEther('1');
+    const amounts = await router.getAmountsOut(oneWmatic, [CONFIG.WMATIC, USDT_POLYGON]);
+    const price = parseFloat(ethers.formatUnits(amounts[1], 6)); // USDT = 6 decimals
+    if (price > 0) {
+      polUsdPrice = price;
+      console.log('POL/USD (on-chain):', polUsdPrice);
+      updateUsdPriceUI();
+      return;
     }
   } catch(e) {
-    // Fallback: try alternative endpoint
-    try {
-      const resp2 = await fetch('https://min-api.cryptocompare.com/data/price?fsym=MATIC&tsyms=USD');
-      const data2 = await resp2.json();
-      if (data2.USD) polUsdPrice = data2.USD;
-    } catch(e2) {
-      console.error('Price fetch error:', e2);
-    }
+    console.warn('On-chain POL/USD failed:', e.message);
   }
+
+  // Method 2: CryptoCompare API (free, no key)
+  try {
+    const resp = await fetch('https://min-api.cryptocompare.com/data/price?fsym=MATIC&tsyms=USD');
+    const data = await resp.json();
+    if (data.USD && data.USD > 0) {
+      polUsdPrice = data.USD;
+      console.log('POL/USD (CryptoCompare):', polUsdPrice);
+      updateUsdPriceUI();
+      return;
+    }
+  } catch(e2) {
+    console.warn('CryptoCompare failed:', e2.message);
+  }
+
+  // Method 3: Binance API
+  try {
+    const resp = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=MATICUSDT');
+    const data = await resp.json();
+    if (data.price) {
+      polUsdPrice = parseFloat(data.price);
+      console.log('POL/USD (Binance):', polUsdPrice);
+      updateUsdPriceUI();
+      return;
+    }
+  } catch(e3) {
+    console.warn('Binance failed:', e3.message);
+  }
+
+  console.error('All POL/USD price sources failed');
   updateUsdPriceUI();
 }
 
@@ -1606,13 +1637,16 @@ function showToast(msg, type = 'info') {
   } catch(e) { console.error('autoReconnect:', e); }
 })();
 
-// Load pool data on page load (no wallet needed)
-loadPoolData();
+// Load all data on page load (run in parallel, then update USD after both ready)
+(async function initData() {
+  await Promise.all([loadPoolData(), fetchPolUsdPrice()]);
+  // Ensure USD UI is updated after both pool + price are ready
+  updateUsdPriceUI();
+})();
 loadTradeHistory();
-fetchPolUsdPrice();
 
-// Refresh pool data every 30 seconds, trades every 20 seconds, USD price every 60 seconds
-setInterval(loadPoolData, 30000);
+// Refresh: pool 30s, trades 20s, USD price 60s
+setInterval(async () => { await loadPoolData(); updateUsdPriceUI(); }, 30000);
 setInterval(loadTradeHistory, 20000);
 setInterval(fetchPolUsdPrice, 60000);
 
