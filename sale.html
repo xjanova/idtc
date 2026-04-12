@@ -1326,8 +1326,13 @@ async function connectWallet(type='metamask') {
       return;
     }
     showToast('Connecting wallet…', 'info');
+    // Force account picker so user can choose which account
+    await window.ethereum.request({
+      method: 'wallet_requestPermissions',
+      params: [{ eth_accounts: {} }]
+    });
     provider = new ethers.BrowserProvider(window.ethereum);
-    const accounts = await provider.send('eth_requestAccounts', []);
+    const accounts = await provider.send('eth_accounts', []);
     if (!accounts || accounts.length === 0) throw new Error('No accounts found');
     signer = await provider.getSigner();
     walletAddress = await signer.getAddress();

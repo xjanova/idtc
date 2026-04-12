@@ -364,8 +364,12 @@ async function connectWallet(type = 'metamask') {
       return;
     }
 
-    // Request accounts
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    // Force account picker so user can choose which account
+    await window.ethereum.request({
+      method: 'wallet_requestPermissions',
+      params: [{ eth_accounts: {} }]
+    });
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
     if (!accounts || accounts.length === 0) return;
 
     userAddress = accounts[0];
