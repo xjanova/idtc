@@ -320,6 +320,69 @@
   .dex-btn .dex-desc { display: block; font-size: 0.72rem; font-weight: 400; opacity: 0.7; margin-top: 1px; }
   .dex-btn .dex-arrow { font-size: 1.1rem; opacity: 0.5; }
 
+  .dex-btn-cmc {
+    background: linear-gradient(135deg, rgba(23,99,207,0.15), rgba(23,99,207,0.05));
+    color: #4da3ff;
+  }
+  .dex-btn-cmc:hover {
+    background: linear-gradient(135deg, rgba(23,99,207,0.3), rgba(23,99,207,0.1));
+    border-color: #4da3ff;
+    transform: translateY(-1px);
+  }
+
+  /* Swap Execute Button */
+  .btn-swap-exec {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-swap-exec.ready {
+    background: linear-gradient(135deg, #d4af37, #f5d060);
+    color: #1a1a2e;
+  }
+  .btn-swap-exec.ready:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(212,175,55,0.35);
+  }
+  .btn-swap-exec.disabled {
+    background: rgba(136,136,170,0.15);
+    color: rgba(136,136,170,0.5);
+    cursor: not-allowed;
+  }
+  .btn-swap-exec.loading {
+    background: linear-gradient(135deg, #d4af37, #f5d060);
+    color: #1a1a2e;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  .swap-detail-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.78rem; color: var(--muted);
+    margin-top: 6px; padding: 0 4px;
+  }
+  .swap-detail-row .val { color: var(--text); font-weight: 600; }
+  .slippage-bar {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .slippage-bar button {
+    flex: 1; padding: 5px; border: 1px solid var(--border);
+    border-radius: 8px; background: transparent;
+    color: var(--muted); font-size: 0.75rem; cursor: pointer;
+    transition: all .15s;
+  }
+  .slippage-bar button.active {
+    background: rgba(212,175,55,0.15);
+    border-color: var(--gold); color: var(--gold);
+  }
+
   .swap-note {
     margin-top: 1rem;
     padding: 10px 14px;
@@ -518,7 +581,7 @@
       <div class="chart-tabs">
         <button class="chart-tab active" onclick="switchChart('dexscreener', this)">DexScreener</button>
         <button class="chart-tab" onclick="switchChart('geckoterminal', this)">GeckoTerminal</button>
-        <button class="chart-tab" onclick="switchChart('coinmarketcap', this)">CoinMarketCap</button>
+        <a class="chart-tab" href="https://dex.coinmarketcap.com/token/polygon/0x0162847f552ea0ccc4e9ee2b39f36ecd45253815/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">CoinMarketCap &#8599;</a>
       </div>
       <div class="chart-body" id="chart-body">
         <iframe id="chart-iframe"
@@ -597,6 +660,15 @@
             <div class="dex-info">
               <span class="dex-name">PancakeSwap</span>
               <span class="dex-desc"><span class="en">Multi-chain DEX</span><span class="th">DEX หลายเชน</span></span>
+            </div>
+            <span class="dex-arrow">&#8599;</span>
+          </a>
+
+          <a class="dex-btn dex-btn-cmc" id="link-cmc" href="#" target="_blank" rel="noopener">
+            <div class="dex-icon">&#128200;</div>
+            <div class="dex-info">
+              <span class="dex-name">CoinMarketCap</span>
+              <span class="dex-desc"><span class="en">CMC DEX Trading</span><span class="th">เทรดบน CMC DEX</span></span>
             </div>
             <span class="dex-arrow">&#8599;</span>
           </a>
@@ -719,19 +791,21 @@ const DEX_URLS = {
   quickswap: 'https://quickswap.exchange/#/swap?outputCurrency=' + CONFIG.IDTC_ADDRESS,
   uniswap: 'https://app.uniswap.org/swap?outputCurrency=' + CONFIG.IDTC_ADDRESS + '&chain=polygon',
   pancake: 'https://pancakeswap.finance/swap?outputCurrency=' + CONFIG.IDTC_ADDRESS + '&chain=polygon',
+  cmc: 'https://dex.coinmarketcap.com/token/polygon/' + CONFIG.IDTC_ADDRESS + '/',
 };
 
 // Chart URLs
 const CHART_URLS = {
   dexscreener: 'https://dexscreener.com/polygon/' + CONFIG.IDTC_ADDRESS + '?embed=1&theme=dark&trades=0&info=0',
   geckoterminal: 'https://www.geckoterminal.com/polygon_pos/tokens/' + CONFIG.IDTC_ADDRESS + '?embed=1&info=0&swaps=0',
-  coinmarketcap: 'https://dex.coinmarketcap.com/token/polygon/' + CONFIG.IDTC_ADDRESS + '/',
+  // CoinMarketCap opens in new tab (no iframe embed support)
 };
 
 // Set DEX links
 document.getElementById('link-quickswap').href = DEX_URLS.quickswap;
 document.getElementById('link-uniswap').href = DEX_URLS.uniswap;
 document.getElementById('link-pancake').href = DEX_URLS.pancake;
+document.getElementById('link-cmc').href = DEX_URLS.cmc;
 
 // ===== STATE =====
 let provider = null;
