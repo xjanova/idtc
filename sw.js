@@ -1,4 +1,4 @@
-const CACHE_NAME = 'idtc-cache-v1';
+const CACHE_NAME = 'idtc-cache-v2';
 
 const APP_SHELL = [
   '/trade.html',
@@ -41,7 +41,13 @@ self.addEventListener('fetch', (event) => {
     return; // let the browser handle it (Network Only)
   }
 
-  // --- Same-origin local assets: Cache First ---
+  // --- HTML pages: Network First (always get latest) ---
+  if (url.origin === self.location.origin && url.pathname.endsWith('.html')) {
+    event.respondWith(networkFirst(event.request, 3000));
+    return;
+  }
+
+  // --- Other local assets (images, manifest): Cache First ---
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(event.request));
     return;
