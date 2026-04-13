@@ -242,32 +242,31 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
       <div class="card stat-card gold">
         <div class="stat-icon gold">📈</div>
         <div class="stat-label">IDTC Price</div>
-        <div class="stat-value" id="idtcPrice">$0.05</div>
-        <div class="stat-sub up" id="priceChange">▲ Public Sale Price</div>
+        <div class="stat-value" id="idtcPrice">Loading...</div>
+        <div class="stat-sub" id="priceChange">--</div>
       </div>
       <div class="card stat-card purple">
-        <div class="stat-icon purple">🔒</div>
-        <div class="stat-label">Staked IDTC</div>
-        <div class="stat-value" id="stakedBalance">0</div>
-        <div class="stat-sub">Yield: —%</div>
+        <div class="stat-icon purple">💰</div>
+        <div class="stat-label">Market Cap</div>
+        <div class="stat-value" id="dashMcap">Loading...</div>
+        <div class="stat-sub" id="dashTvl">TVL: --</div>
       </div>
     </div>
 
     <!-- CHARTS ROW -->
     <div class="grid-2">
 
-      <!-- Price Chart -->
-      <div class="card">
-        <div class="chart-title">
+      <!-- Real Price Chart (DexScreener) -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="chart-title" style="padding:1rem 1.25rem .5rem">
           <span>📊 IDTC Price Chart</span>
-          <div class="chart-tabs">
-            <button class="chart-tab active" onclick="updatePriceChart('1D',this)">1D</button>
-            <button class="chart-tab" onclick="updatePriceChart('7D',this)">7D</button>
-            <button class="chart-tab" onclick="updatePriceChart('1M',this)">1M</button>
-            <button class="chart-tab" onclick="updatePriceChart('ALL',this)">ALL</button>
-          </div>
+          <a href="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815" target="_blank" style="font-size:.75rem;color:var(--green-dark);font-weight:600;text-decoration:none">Full Chart ↗</a>
         </div>
-        <div class="chart-container"><canvas id="priceChart"></canvas></div>
+        <div style="height:320px">
+          <iframe src="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815?embed=1&theme=light&trades=0&info=0"
+            style="width:100%;height:100%;border:none" loading="lazy"
+            allow="clipboard-write" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+        </div>
       </div>
 
       <!-- Distribution Donut -->
@@ -279,7 +278,7 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
     </div>
 
     <!-- MARKET + WALLET INFO -->
-    <div class="grid-3">
+    <div class="grid-2">
 
       <!-- Token Info -->
       <div class="card">
@@ -319,21 +318,6 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
         <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
           <a href="sale.html" style="text-decoration:none;text-align:center;padding:.55rem;background:linear-gradient(135deg,var(--green-deep),var(--green-dark));color:#fff;border-radius:8px;font-weight:600;font-size:.82rem">Buy IDTC</a>
           <button onclick="disconnectWallet()" style="padding:.55rem;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;font-family:'Inter',sans-serif;color:var(--gray-700)">Disconnect</button>
-        </div>
-      </div>
-
-      <!-- Volume Chart -->
-      <div class="card">
-        <div class="chart-title">📉 Volume (7D)</div>
-        <div class="chart-container" style="height:180px;margin-bottom:.75rem"><canvas id="volumeChart"></canvas></div>
-        <div class="chart-title" style="margin-top:.5rem">🏦 Sale Progress</div>
-        <div style="margin-top:.5rem">
-          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--gray-700);margin-bottom:.3rem"><span>Seed Round</span><span id="seedPct">35%</span></div>
-          <div style="background:var(--gray-100);border-radius:999px;height:6px;margin-bottom:.65rem"><div style="background:var(--green);height:100%;border-radius:999px;width:35%"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--gray-700);margin-bottom:.3rem"><span>Private Sale</span><span>18%</span></div>
-          <div style="background:var(--gray-100);border-radius:999px;height:6px;margin-bottom:.65rem"><div style="background:var(--blue);height:100%;border-radius:999px;width:18%"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--gray-700);margin-bottom:.3rem"><span>Public Sale</span><span>8%</span></div>
-          <div style="background:var(--gray-100);border-radius:999px;height:6px"><div style="background:var(--gold);height:100%;border-radius:999px;width:8%"></div></div>
         </div>
       </div>
 
@@ -415,6 +399,25 @@ const ERC20_ABI = [
   "function transfer(address to, uint256 amount) returns (bool)",
   "event Transfer(address indexed from, address indexed to, uint256 value)"
 ];
+
+// QuickSwap V2 ABIs for real price
+const FACTORY_ABI = ['function getPair(address,address) view returns (address)'];
+const PAIR_ABI = [
+  'function getReserves() view returns (uint112,uint112,uint32)',
+  'function token0() view returns (address)',
+];
+const ROUTER_ABI = [
+  'function getAmountsOut(uint amountIn, address[] path) view returns (uint[])',
+];
+const FACTORY_V2 = '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32';
+const ROUTER_V2 = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
+const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
+const USDT_POLYGON = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+
+// Real price state
+let poolData = { exists: false, pricePolPerIdtc: 0, reserveIDTC: 0, reservePOL: 0, totalSupply: 100000000 };
+let polUsdPrice = 0;
+let idtcUsdPrice = 0;
 
 let provider = null;
 let signer = null;
@@ -556,9 +559,12 @@ async function loadBalances(address) {
     const idtcFormatted = idtcAmount.toLocaleString('en-US', {maximumFractionDigits: 2});
     document.getElementById('idtcBalance').textContent = idtcFormatted;
     document.getElementById('idtcBalanceFull').textContent = idtcFormatted + ' IDTC';
-    document.getElementById('idtcValueUSD').textContent = '≈ $' + (idtcAmount * CONFIG.TOKEN_PRICE_USD).toFixed(2) + ' USD';
 
-    const portfolioVal = idtcAmount * CONFIG.TOKEN_PRICE_USD;
+    // Use real price if available, fallback to presale
+    const priceForCalc = idtcUsdPrice > 0 ? idtcUsdPrice : CONFIG.TOKEN_PRICE_USD;
+    document.getElementById('idtcValueUSD').textContent = '≈ $' + (idtcAmount * priceForCalc).toFixed(2) + ' USD';
+
+    const portfolioVal = idtcAmount * priceForCalc;
     document.getElementById('portfolioValue').textContent = '$' + portfolioVal.toFixed(2);
 
     // ── Total Supply via Etherscan API ──
@@ -576,7 +582,9 @@ async function loadBalances(address) {
     }
     const totalSupplyFmt = totalSupply.toLocaleString('en-US', {maximumFractionDigits: 0});
     document.getElementById('circSupply').textContent = totalSupplyFmt + ' IDTC';
-    const mcap = totalSupply * CONFIG.TOKEN_PRICE_USD;
+    poolData.totalSupply = totalSupply;
+    const mcapPrice = idtcUsdPrice > 0 ? idtcUsdPrice : CONFIG.TOKEN_PRICE_USD;
+    const mcap = totalSupply * mcapPrice;
     document.getElementById('marketCap').textContent = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
 
     // ── Recent IDTC Transactions via API ──
@@ -713,11 +721,11 @@ async function loadMarketDataOnPageLoad() {
     });
     if (supplyResult) {
       const totalSupply = parseFloat(ethers.formatUnits(BigInt(supplyResult), CONFIG.TOKEN_DECIMALS));
+      poolData.totalSupply = totalSupply;
       const totalFmt = totalSupply.toLocaleString('en-US', {maximumFractionDigits: 0});
       document.getElementById('totalSupplyInfo').textContent = totalFmt;
       document.getElementById('circSupply').textContent = totalFmt + ' IDTC';
-      const mcap = totalSupply * CONFIG.TOKEN_PRICE_USD;
-      document.getElementById('marketCap').textContent = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
+      // Market cap will be updated by updateDashboardPrices()
     }
   } catch(e) {
     console.error('loadMarketData error:', e);
@@ -757,83 +765,113 @@ loadMarketDataOnPageLoad();
 autoReconnect();
 
 // ══════════════════════════════════════════
+// REAL PRICE: On-chain pool + POL/USD
+// ══════════════════════════════════════════
+async function loadPoolPrice() {
+  try {
+    const rpc = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+    const factory = new ethers.Contract(FACTORY_V2, FACTORY_ABI, rpc);
+    const pairAddr = await factory.getPair(CONFIG.CONTRACT_ADDRESS, WMATIC);
+
+    if (!pairAddr || pairAddr === '0x0000000000000000000000000000000000000000') {
+      poolData.exists = false;
+      return;
+    }
+
+    const pair = new ethers.Contract(pairAddr, PAIR_ABI, rpc);
+    const [reserves, token0] = await Promise.all([pair.getReserves(), pair.token0()]);
+    const isIdtcToken0 = token0.toLowerCase() === CONFIG.CONTRACT_ADDRESS.toLowerCase();
+    const resIDTC = parseFloat(ethers.formatEther(isIdtcToken0 ? reserves[0] : reserves[1]));
+    const resPOL = parseFloat(ethers.formatEther(isIdtcToken0 ? reserves[1] : reserves[0]));
+
+    if (resIDTC > 0 && resPOL > 0) {
+      poolData.exists = true;
+      poolData.reserveIDTC = resIDTC;
+      poolData.reservePOL = resPOL;
+      poolData.pricePolPerIdtc = resPOL / resIDTC;
+    }
+
+    // Total supply
+    const idtcToken = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ERC20_ABI, rpc);
+    const supply = await idtcToken.totalSupply();
+    poolData.totalSupply = parseFloat(ethers.formatEther(supply));
+  } catch(e) {
+    console.error('loadPoolPrice error:', e);
+  }
+}
+
+async function fetchPolUsdPrice() {
+  // Method 1: On-chain via QuickSwap Router (WMATIC → USDT)
+  try {
+    const rpc = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
+    const router = new ethers.Contract(ROUTER_V2, ROUTER_ABI, rpc);
+    const amounts = await router.getAmountsOut(ethers.parseEther('1'), [WMATIC, USDT_POLYGON]);
+    const price = parseFloat(ethers.formatUnits(amounts[1], 6));
+    if (price > 0) { polUsdPrice = price; return; }
+  } catch(e) { console.warn('On-chain POL/USD failed:', e.message); }
+
+  // Method 2: CryptoCompare
+  try {
+    const resp = await fetch('https://min-api.cryptocompare.com/data/price?fsym=MATIC&tsyms=USD');
+    const data = await resp.json();
+    if (data.USD > 0) { polUsdPrice = data.USD; return; }
+  } catch(e) { console.warn('CryptoCompare failed:', e.message); }
+
+  // Method 3: Binance
+  try {
+    const resp = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=MATICUSDT');
+    const data = await resp.json();
+    if (data.price) { polUsdPrice = parseFloat(data.price); }
+  } catch(e) { console.warn('Binance failed:', e.message); }
+}
+
+function updateDashboardPrices() {
+  const priceEl = document.getElementById('idtcPrice');
+  const changeEl = document.getElementById('priceChange');
+  const mcapEl = document.getElementById('dashMcap');
+  const tvlEl = document.getElementById('dashTvl');
+
+  if (poolData.exists && polUsdPrice > 0) {
+    idtcUsdPrice = poolData.pricePolPerIdtc * polUsdPrice;
+    priceEl.textContent = '$' + formatUsdPrice(idtcUsdPrice);
+    changeEl.textContent = poolData.pricePolPerIdtc.toFixed(6) + ' POL';
+    changeEl.className = 'stat-sub';
+
+    const mcap = idtcUsdPrice * poolData.totalSupply;
+    mcapEl.textContent = '$' + formatCompact(mcap);
+
+    const tvl = poolData.reservePOL * polUsdPrice * 2;
+    tvlEl.textContent = 'TVL: $' + formatCompact(tvl);
+
+    // Also update market cap in info table
+    const mcapInfo = document.getElementById('marketCap');
+    if (mcapInfo) mcapInfo.textContent = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
+  } else if (!poolData.exists) {
+    priceEl.textContent = '$0.0500';
+    changeEl.textContent = 'Presale Price';
+    changeEl.className = 'stat-sub';
+    mcapEl.textContent = '$' + formatCompact(poolData.totalSupply * 0.05);
+    tvlEl.textContent = 'No Pool Yet';
+    idtcUsdPrice = 0.05;
+  }
+}
+
+function formatUsdPrice(n) {
+  if (n >= 1) return n.toFixed(2);
+  if (n >= 0.01) return n.toFixed(4);
+  if (n >= 0.0001) return n.toFixed(6);
+  return n.toFixed(8);
+}
+function formatCompact(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(2) + 'K';
+  return n.toFixed(2);
+}
+
+// ══════════════════════════════════════════
 // CHARTS
 // ══════════════════════════════════════════
-function generatePriceData(points, base, volatility) {
-  const data = [];
-  let price = base;
-  for (let i = 0; i < points; i++) {
-    price += (Math.random() - 0.48) * volatility;
-    price = Math.max(base * 0.8, price);
-    data.push(parseFloat(price.toFixed(6)));
-  }
-  return data;
-}
-
-function generateLabels(points, type) {
-  const labels = [];
-  const now = new Date();
-  for (let i = points - 1; i >= 0; i--) {
-    const d = new Date(now);
-    if (type === '1D') { d.setHours(now.getHours() - i); labels.push(d.getHours() + ':00'); }
-    else if (type === '7D') { d.setDate(now.getDate() - i); labels.push(d.toLocaleDateString('en',{month:'short',day:'numeric'})); }
-    else if (type === '1M') { d.setDate(now.getDate() - i*2); labels.push(d.toLocaleDateString('en',{month:'short',day:'numeric'})); }
-    else { labels.push('W' + (i+1)); }
-  }
-  return labels;
-}
-
-let priceChartInstance = null;
-function initPriceChart() {
-  const ctx = document.getElementById('priceChart').getContext('2d');
-  const data = generatePriceData(24, 0.05, 0.001);
-  const labels = generateLabels(24, '1D');
-  const isUp = data[data.length-1] >= data[0];
-  const color = isUp ? '#22c55e' : '#ef4444';
-
-  const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-  gradient.addColorStop(0, isUp ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)');
-  gradient.addColorStop(1, 'rgba(255,255,255,0)');
-
-  priceChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        borderColor: color,
-        backgroundColor: gradient,
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) }
-      }},
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } },
-        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, callback: v => '$' + v.toFixed(4) } }
-      }
-    }
-  });
-}
-
-function updatePriceChart(period, btn) {
-  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  const points = { '1D': 24, '7D': 7, '1M': 15, 'ALL': 20 }[period];
-  const newData = generatePriceData(points, 0.05, 0.002);
-  const newLabels = generateLabels(points, period);
-  priceChartInstance.data.labels = newLabels;
-  priceChartInstance.data.datasets[0].data = newData;
-  priceChartInstance.update('active');
-}
-
 function initDistChart() {
   const ctx = document.getElementById('distChart').getContext('2d');
   const labels = ['Investors', 'Ecosystem', 'Team', 'Staking', 'Marketing', 'Liquidity'];
@@ -855,34 +893,19 @@ function initDistChart() {
   });
 }
 
-function initVolumeChart() {
-  const ctx = document.getElementById('volumeChart').getContext('2d');
-  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const volumes = [12000, 19500, 8400, 24000, 16000, 21000, 13500];
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{ data: volumes, backgroundColor: 'rgba(34,197,94,.6)', borderColor: 'rgba(34,197,94,1)', borderWidth: 1, borderRadius: 4 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'K' } }
-      }
-    }
-  });
-}
-
-// Init charts on load
-window.addEventListener('load', () => {
-  initPriceChart();
+// Init on load: real prices + distribution chart
+window.addEventListener('load', async () => {
   initDistChart();
-  initVolumeChart();
-  // Auto-reconnect is handled by autoReconnect() above — no popup
+  // Load real prices from on-chain
+  await Promise.all([loadPoolPrice(), fetchPolUsdPrice()]);
+  updateDashboardPrices();
 });
+
+// Refresh prices every 60 seconds
+setInterval(async () => {
+  await Promise.all([loadPoolPrice(), fetchPolUsdPrice()]);
+  updateDashboardPrices();
+}, 60000);
 
 // PWA Service Worker
 if ('serviceWorker' in navigator) {
