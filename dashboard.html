@@ -256,16 +256,21 @@ nav{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 2rem;displ
     <!-- CHARTS ROW -->
     <div class="grid-2">
 
-      <!-- Real Price Chart (DexScreener) -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="chart-title" style="padding:1rem 1.25rem .5rem">
+      <!-- Price Chart (real data from GeckoTerminal) -->
+      <div class="card">
+        <div class="chart-title">
           <span>📊 IDTC Price Chart</span>
-          <a href="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815" target="_blank" style="font-size:.75rem;color:var(--green-dark);font-weight:600;text-decoration:none">Full Chart ↗</a>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="loadPriceChart('1D',this)">1D</button>
+            <button class="chart-tab" onclick="loadPriceChart('7D',this)">7D</button>
+            <button class="chart-tab" onclick="loadPriceChart('1M',this)">1M</button>
+            <button class="chart-tab" onclick="loadPriceChart('ALL',this)">ALL</button>
+          </div>
         </div>
-        <div style="height:320px">
-          <iframe src="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815?embed=1&theme=light&trades=0&info=0"
-            style="width:100%;height:100%;border:none" loading="lazy"
-            allow="clipboard-write" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+        <div class="chart-container"><canvas id="priceChart"></canvas></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem">
+          <span id="chartStatus" style="font-size:.72rem;color:var(--gray-700)">Loading real data...</span>
+          <a href="https://dexscreener.com/polygon/0x0162847f552EA0cCc4E9eE2b39F36EcD45253815" target="_blank" style="font-size:.72rem;color:var(--green-dark);font-weight:600;text-decoration:none">Full Chart ↗</a>
         </div>
       </div>
 
@@ -869,6 +874,121 @@ function formatCompact(n) {
 }
 
 // ══════════════════════════════════════════
+// PRICE CHART (real OHLCV from GeckoTerminal)
+// ══════════════════════════════════════════
+const POOL_ADDRESS = '0xb6587e97fe377f089d8ec632a68fce523eedb55f';
+const GECKO_API = 'https://api.geckoterminal.com/api/v2/networks/polygon_pos/pools/' + POOL_ADDRESS;
+let priceChartInstance = null;
+
+async function loadPriceChart(period, btn) {
+  if (btn) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const statusEl = document.getElementById('chartStatus');
+  statusEl.textContent = 'Loading...';
+
+  // Determine timeframe & limit
+  let tf, agg, limit;
+  if (period === '1D')  { tf = 'hour';  agg = 1;  limit = 24; }
+  else if (period === '7D')  { tf = 'hour';  agg = 4;  limit = 42; }
+  else if (period === '1M') { tf = 'day';   agg = 1;  limit = 30; }
+  else                      { tf = 'day';   agg = 1;  limit = 90; }
+
+  let labels = [], prices = [];
+
+  try {
+    const url = GECKO_API + '/ohlcv/' + tf + '?aggregate=' + agg + '&limit=' + limit + '&currency=usd';
+    const resp = await fetch(url);
+    const json = await resp.json();
+    const ohlcv = json.data && json.data.attributes && json.data.attributes.ohlcv_list;
+
+    if (ohlcv && ohlcv.length > 0) {
+      // ohlcv is [[timestamp, open, high, low, close, volume], ...] newest first
+      const sorted = [...ohlcv].reverse();
+      sorted.forEach(c => {
+        const d = new Date(c[0] * 1000);
+        if (period === '1D') {
+          labels.push(d.getHours() + ':00');
+        } else if (period === '7D') {
+          labels.push(d.toLocaleDateString('en', {month:'short', day:'numeric', hour:'numeric'}));
+        } else {
+          labels.push(d.toLocaleDateString('en', {month:'short', day:'numeric'}));
+        }
+        prices.push(parseFloat(c[4])); // close price
+      });
+      statusEl.textContent = 'Live data • ' + prices.length + ' points';
+    }
+  } catch(e) {
+    console.warn('GeckoTerminal OHLCV failed:', e.message);
+  }
+
+  // Fallback: if no OHLCV data, use current price as flat line
+  if (prices.length === 0 && idtcUsdPrice > 0) {
+    const pts = period === '1D' ? 24 : period === '7D' ? 7 : period === '1M' ? 30 : 60;
+    const now = new Date();
+    for (let i = pts - 1; i >= 0; i--) {
+      const d = new Date(now);
+      if (period === '1D') { d.setHours(now.getHours() - i); labels.push(d.getHours() + ':00'); }
+      else { d.setDate(now.getDate() - i); labels.push(d.toLocaleDateString('en', {month:'short', day:'numeric'})); }
+      prices.push(idtcUsdPrice);
+    }
+    statusEl.textContent = 'Current price (no historical data yet)';
+  } else if (prices.length === 0) {
+    statusEl.textContent = 'No data available';
+    return;
+  }
+
+  renderPriceChart(labels, prices);
+}
+
+function renderPriceChart(labels, prices) {
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  const isUp = prices[prices.length - 1] >= prices[0];
+  const color = isUp ? '#22c55e' : '#ef4444';
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+  gradient.addColorStop(0, isUp ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+  if (priceChartInstance) {
+    priceChartInstance.data.labels = labels;
+    priceChartInstance.data.datasets[0].data = prices;
+    priceChartInstance.data.datasets[0].borderColor = color;
+    priceChartInstance.data.datasets[0].backgroundColor = gradient;
+    priceChartInstance.update('active');
+    return;
+  }
+
+  priceChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: prices,
+        borderColor: color,
+        backgroundColor: gradient,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) }
+      }},
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, callback: v => '$' + formatUsdPrice(v) } }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════
 // CHARTS
 // ══════════════════════════════════════════
 function initDistChart() {
@@ -892,12 +1012,14 @@ function initDistChart() {
   });
 }
 
-// Init on load: real prices + distribution chart
+// Init on load: real prices + charts
 window.addEventListener('load', async () => {
   initDistChart();
   // Load real prices from on-chain
   await Promise.all([loadPoolPrice(), fetchPolUsdPrice()]);
   updateDashboardPrices();
+  // Load real price chart
+  loadPriceChart('1D', null);
 });
 
 // Refresh prices every 60 seconds
