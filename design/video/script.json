@@ -1,0 +1,48 @@
+{
+  "title": "IDTC explainer v1",
+  "format": "16:9 1920x1080 30fps",
+  "voice": "English female, warm and confident (MiniMax web library voice)",
+  "segments": [
+    {
+      "id": "s1", "kind": "lip", "presenter": "p1-medium",
+      "en": "Hi, let me introduce IDTC, the Invest Energy-Development Coin: a token built to support energy development, on a chain where every rule can be checked.",
+      "th": "สวัสดีค่ะ ขอแนะนำ IDTC เหรียญเพื่อการพัฒนาพลังงาน บนเชนที่ตรวจสอบได้ทุกกติกา"
+    },
+    {
+      "id": "s2", "kind": "broll", "visual": ["hero-1", "wind", "storage"],
+      "en": "In 2025, the world is set to invest about three point three trillion dollars in energy, according to the International Energy Agency. Yet most people can't take part. IDTC Energy Capital aims to change that, starting with solar, wind and energy storage across Asia and the Middle East.",
+      "th": "ปี 2025 โลกลงทุนด้านพลังงานราว 3.3 ล้านล้านดอลลาร์ (IEA) แต่คนส่วนใหญ่เข้าไม่ถึง IDTC Energy Capital ตั้งใจเปลี่ยนเรื่องนี้ เริ่มจากโซลาร์ ลม และระบบกักเก็บพลังงาน ในเอเชียและตะวันออกกลาง"
+    },
+    {
+      "id": "s3", "kind": "lip", "presenter": "p3-left",
+      "en": "IDTC lives on TPIX Chain, chain ID forty-two eighty-nine, where gas fees are zero. You can buy, sell and send without holding any other coin.",
+      "th": "IDTC อยู่บนเชน TPIX (Chain ID 4289) ค่าแก๊สเป็นศูนย์ ซื้อ ขาย โอนได้โดยไม่ต้องถือเหรียญอื่น"
+    },
+    {
+      "id": "s4", "kind": "broll", "visual": ["donut", "lock", "unlock-curve"],
+      "en": "The supply is fixed at one point one trillion. Seventy percent is locked in a smart contract that has no owner. It unlocks slowly: one, two, three and four year tranches, each released monthly over the following year. There is never a big unlock day.",
+      "th": "จำนวนเหรียญคงที่ 1.1 ล้านล้าน ล็อก 70% ในสัญญาที่ไม่มีเจ้าของ ปลดทีละน้อยเป็น 4 ก้อน 1–4 ปี แต่ละก้อนทยอยปลดรายเดือนตลอดปีถัดไป ไม่มีวันปลดก้อนใหญ่"
+    },
+    {
+      "id": "s5", "kind": "lip", "presenter": "p2-closeup",
+      "en": "And the code can't be changed. No minting, no pausing, no blacklists and no early withdrawals, not even by the team.",
+      "th": "และโค้ดแก้ไม่ได้ ไม่มีการสร้างเหรียญเพิ่ม ไม่มีการหยุดโอน ไม่มีแบล็กลิสต์ และถอนก่อนกำหนดไม่ได้ แม้แต่ทีมงานเอง"
+    },
+    {
+      "id": "s6", "kind": "broll", "visual": ["presale-card", "bridge"],
+      "en": "The presale price is fixed in the contract at zero point zero zero zero zero zero one five dollars per IDTC. Pay with USDT and your tokens arrive in the same transaction. Holding USDT on BNB Chain? Bridge it to TPIX one to one.",
+      "th": "ราคา presale ฝังในสัญญาที่ $0.0000015 ต่อ IDTC จ่ายด้วย USDT แล้วได้เหรียญในธุรกรรมเดียวกัน มี USDT บน BNB Chain ก็ส่งผ่านสะพานมาเชน TPIX ได้ 1:1"
+    },
+    {
+      "id": "s7", "kind": "broll", "visual": ["add-network", "wallets"],
+      "en": "One tap on our website adds TPIX Chain and IDTC to MetaMask, Trust Wallet, OKX and more.",
+      "th": "กดปุ่มเดียวบนเว็บ เพิ่มเชน TPIX และเหรียญ IDTC ลง MetaMask, Trust Wallet, OKX และอื่น ๆ"
+    },
+    {
+      "id": "s8", "kind": "lip", "presenter": "p1-medium",
+      "en": "Every number in this video points back to a verified contract. Read the whitepaper, check the explorer, and decide for yourself. IDTC: energy development you can verify. Visit idtc dot online.",
+      "th": "ทุกตัวเลขในคลิปนี้ชี้กลับไปที่สัญญาที่ verified อ่านไวท์เปเปอร์ ตรวจบน explorer แล้วตัดสินใจเอง · IDTC พัฒนาพลังงานแบบตรวจสอบได้ · idtc.online"
+    }
+  ],
+  "end_card_th": "สินทรัพย์ดิจิทัลมีความเสี่ยง ราคาอาจผันผวน ไม่ใช่คำแนะนำการลงทุน"
+}
