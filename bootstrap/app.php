@@ -12,7 +12,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // idtc.online is behind Cloudflare: read the visitor's real IP, or every admin login throttle and
+        // audit-log IP becomes one shared Cloudflare address. require (not config()) — the config service
+        // is not bound yet when this closure runs. List + reasoning: config/trustedproxy.php.
+        $middleware->trustProxies(
+            at: (require __DIR__.'/../config/trustedproxy.php')['proxies'],
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

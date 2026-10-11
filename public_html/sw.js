@@ -1,0 +1,13 @@
+// The old static idtc.online registered a caching service worker at /sw.js.
+// This replacement clears every cache it made, unregisters itself and reloads open tabs,
+// so returning visitors see the new site instead of a stale cached copy.
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+    event.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+        await self.registration.unregister();
+        const clients = await self.clients.matchAll({ type: 'window' });
+        clients.forEach((c) => c.navigate(c.url));
+    })());
+});
