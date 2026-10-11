@@ -78,7 +78,10 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // IDTC: ภาษาไทยเป็นค่าเริ่มต้นเสมอ (หลังบ้านเป็นภาษาไทยอย่างเดียว) ไม่อ่านจาก .env
+    // เพราะ .env.example ของ Laravel ตั้ง APP_LOCALE=en ไว้ · หน้าสาธารณะตั้งภาษาเองตาม URL
+    // (middleware site.locale) · fallback เป็น en เพื่อให้ข้อความของ framework (validation ฯลฯ) ยังมี
+    'locale' => 'th',
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

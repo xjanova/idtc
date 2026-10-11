@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * รายชื่อสัญญาทุกตัวที่เกี่ยวกับ IDTC สำหรับแสดงผล (หน้า presale, ความโปร่งใส, ไวท์เปเปอร์)
+ * รายชื่อสัญญาทุกตัวที่เกี่ยวกับ IDTC สำหรับแสดงผล (หน้า presale, ความโปร่งใส, ไวท์เปเปอร์) — ข้อความตามภาษาของหน้า
  *
  * ที่อยู่มาจาก Idtc::contracts() เสมอ — รวมค่าที่แอดมินแก้ทับจากหลังบ้าน
  */
@@ -47,32 +47,40 @@ class ContractList
     /** ตารางสัญญาแบบ Markdown (GFM) สำหรับแทน {{contracts_table}} ในไวท์เปเปอร์ */
     public static function markdownTable(): string
     {
-        $lines = ['| สัญญา | หน้าที่ | ที่อยู่บนเชน TPIX |', '|---|---|---|'];
+        $lines = ['| '.__('plan.table.contract').' | '.__('plan.table.role').' | '.__('plan.table.address').' |', '|---|---|---|'];
         foreach (static::rows() as $row) {
-            $cell = $row['address'] ? '['.$row['address'].']('.$row['url'].')' : 'รอ deploy';
+            $cell = $row['address'] ? '['.$row['address'].']('.$row['url'].')' : __('site.pending');
             $lines[] = '| **'.$row['name'].'** | `'.$row['kind'].'` · '.$row['role'].' | '.$cell.' |';
         }
 
         return implode("\n", $lines);
     }
 
-    /** @return array<string, array{0: string, 1: string, 2: string, 3?: bool}> */
+    /**
+     * ชื่อและหน้าที่ของสัญญาในภาษาของหน้าที่เปิดอยู่ (lang/{th,en}/plan.php → contracts.*)
+     * ตัวเลขในคำอธิบายคำนวณจาก config/idtc.php ทุกครั้ง
+     *
+     * @return array<string, array{0: string, 1: string, 2: string, 3?: bool}>
+     */
     protected static function meta(): array
     {
-        $locked = array_sum(array_map(fn ($t) => (float) $t['amount'], (array) config('idtc.vesting.tranches', [])));
+        $tranches = (array) config('idtc.vesting.tranches', []);
+        $locked = array_sum(array_map(fn ($t) => (float) $t['amount'], $tranches));
         $sale = (array) config('idtc.sale', []);
         $rate = ((float) ($sale['rate_num'] ?? 0) / max(1.0, (float) ($sale['rate_den'] ?? 1))) * 10 ** (int) ($sale['pay_decimals'] ?? 6) / 10 ** (int) config('idtc.token.decimals', 18);
+        $text = fn (string $key, string $field, array $replace = []) => __("plan.contracts.$key.$field", $replace);
+        $row = fn (string $key, string $kind, array $replace = [], bool $optional = false) => [$text($key, 'name'), $kind, $text($key, 'role', $replace), $optional];
 
         return [
-            'token' => ['เหรียญ IDTC', 'FactoryERC20V2', 'ERC-20 · 18 ทศนิยม · ไม่มี mint, pause หรือ blacklist'],
-            'vesting' => ['สัญญาล็อก 70%', 'TrancheVesting', 'ล็อก '.number_format($locked / 1e6).' ล้าน IDTC '.count((array) config('idtc.vesting.tranches', [])).' ก้อน · ไม่มีเจ้าของ'],
-            'presale' => ['Presale', 'FixedPriceSale', 'ขายราคาคงที่ 1 USDT = '.number_format($rate, 2).' IDTC · USDT เข้ากระเป๋าโครงการทันที'],
-            'usdt' => ['USDT บนเชน TPIX', 'USDT_TPIX', 'USDT 6 ทศนิยม · หนุน 1:1 กับ USDT บน BNB Chain'],
-            'wtpix' => ['Wrapped TPIX', 'WTPIX', 'TPIX ในรูป ERC-20 สำหรับพูลบน TPIX DEX'],
-            'dex_factory' => ['TPIX DEX Factory', 'TPIXDEXFactory', 'สร้างพูลแลกเปลี่ยนแบบ Uniswap V2'],
-            'dex_router' => ['TPIX DEX Router', 'TPIXDEXRouter02', 'แลกเปลี่ยนและเพิ่มสภาพคล่อง'],
-            'pair_usdt' => ['พูล IDTC/USDT', 'TPIX DEX Pair', 'สภาพคล่องคู่ IDTC/USDT', true],
-            'pair_tpix' => ['พูล IDTC/TPIX', 'TPIX DEX Pair', 'สภาพคล่องคู่ IDTC/WTPIX', true],
+            'token' => $row('token', 'FactoryERC20V2'),
+            'vesting' => $row('vesting', 'TrancheVesting', ['amount' => SiteLocale::big($locked), 'count' => count($tranches)]),
+            'presale' => $row('presale', 'FixedPriceSale', ['rate' => number_format($rate, 2)]),
+            'usdt' => $row('usdt', 'USDT_TPIX'),
+            'wtpix' => $row('wtpix', 'WTPIX'),
+            'dex_factory' => $row('dex_factory', 'TPIXDEXFactory'),
+            'dex_router' => $row('dex_router', 'TPIXDEXRouter02'),
+            'pair_usdt' => $row('pair_usdt', 'TPIX DEX Pair', [], true),
+            'pair_tpix' => $row('pair_tpix', 'TPIX DEX Pair', [], true),
         ];
     }
 }

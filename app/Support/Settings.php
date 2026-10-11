@@ -10,7 +10,8 @@ use Throwable;
  * ค่าตั้งจากหลังบ้าน (ตาราง settings) — แคชทั้งชุดไว้ ล้างทุกครั้งที่บันทึก
  *
  * คีย์ที่ใช้:
- *   announcement        ข้อความประกาศบนหน้าเว็บ (ว่าง = ไม่แสดง)
+ *   announcement        ข้อความประกาศบนหน้าเว็บภาษาไทย (ว่าง = ไม่แสดง)
+ *   announcement_en     ข้อความประกาศบนหน้าเว็บภาษาอังกฤษ (ว่าง = หน้าอังกฤษไม่แสดงแถบประกาศ)
  *   social              ['telegram' => url, ...]
  *   project_wallets     [['label' => ..., 'address' => ...], ...]
  *   indexer.start_block บล็อกเริ่มดึงยอด presale
@@ -91,9 +92,11 @@ class Settings
         );
     }
 
-    public function announcement(): ?string
+    /** ประกาศของหน้าภาษาที่ระบุ — หน้าภาษาอังกฤษใช้ announcement_en (ว่าง = ไม่แสดง ไม่เอาข้อความไทยไปแสดงแทน) */
+    public function announcement(string $locale = SiteLocale::DEFAULT): ?string
     {
-        $text = trim((string) $this->get('announcement', ''));
+        $key = $locale === SiteLocale::DEFAULT ? 'announcement' : 'announcement_'.$locale;
+        $text = trim((string) $this->get($key, ''));
 
         return $text !== '' ? $text : null;
     }

@@ -36,6 +36,7 @@ class AuditLog extends Model
         'settings.contract' => 'ตั้งที่อยู่สัญญา',
         'settings.indexer' => 'ตั้งบล็อกเริ่มดึงยอดขาย',
         'content.announcement' => 'แก้ประกาศหน้าเว็บ',
+        'content.announcement_en' => 'แก้ประกาศหน้าเว็บภาษาอังกฤษ',
         'content.social' => 'แก้ลิงก์โซเชียล',
         'wallets.update' => 'แก้รายชื่อกระเป๋าโครงการ',
         'admins.add' => 'เพิ่มผู้ดูแล',

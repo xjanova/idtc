@@ -1,5 +1,6 @@
 @php
-    $site = preg_replace('#^https?://#', '', rtrim(url('/add-network'), '/'));
+    // ลิงก์เปิดเว็บในแอปกระเป๋า: หน้าเพิ่มเชนในภาษาเดียวกับหน้าที่เปิดอยู่ (/add-network หรือ /en/add-network)
+    $site = preg_replace('#^https?://#', '', rtrim(lroute('add-network'), '/'));
     $enc = rawurlencode('https://'.$site);
     $wallets = [
         ['MetaMask', 'M', '#f6851b', 'https://metamask.app.link/dapp/'.$site],
@@ -12,21 +13,21 @@
 @endphp
 <div class="addnet reveal" id="addnet">
     <div>
-        <h3>เพิ่มเชน TPIX และเหรียญ IDTC ในคลิกเดียว</h3>
-        <p>บนคอมพิวเตอร์ ปุ่มนี้ให้กระเป๋า (MetaMask, OKX, Rabby ฯลฯ) เพิ่มเชนก่อน แล้วเพิ่มเหรียญ IDTC ต่อให้ทันที</p>
+        <h3>{{ __('addnet.desktop_title') }}</h3>
+        <p>{{ __('addnet.desktop_text') }}</p>
         <dl class="netinfo">
-            <dt>ชื่อเครือข่าย</dt><dd>{{ config('idtc.chain.name') }}</dd>
+            <dt>{{ __('addnet.network') }}</dt><dd>{{ config('idtc.chain.name') }}</dd>
             <dt>Chain ID</dt><dd>{{ config('idtc.chain.id') }} (0x{{ strtoupper(substr((string) config('idtc.chain.hex'), 2)) }})</dd>
             <dt>RPC</dt><dd>{{ config('idtc.chain.rpc_public') }}</dd>
             <dt>Explorer</dt><dd>{{ config('idtc.chain.explorer') }}</dd>
-            <dt>สกุลเงิน</dt><dd>TPIX · 18 ทศนิยม</dd>
-            <dt>เหรียญ IDTC</dt><dd>{{ \App\Support\Idtc::contract('token') ?? 'รอ deploy' }}</dd>
+            <dt>{{ __('addnet.currency') }}</dt><dd>{{ __('addnet.currency_value') }}</dd>
+            <dt>{{ __('addnet.token') }}</dt><dd>{{ \App\Support\Idtc::contract('token') ?? __('site.pending') }}</dd>
         </dl>
-        <button class="btn btn-primary" type="button" @click="addNetwork()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>เพิ่มเชน + เหรียญ IDTC</button>
+        <button class="btn btn-primary" type="button" @click="addNetwork()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>{{ __('site.add_network_full') }}</button>
     </div>
     <div>
-        <h3>บนมือถือ: เปิดในแอปกระเป๋า</h3>
-        <p>แตะแอปที่คุณใช้ เว็บนี้จะเปิดในเบราว์เซอร์ของแอปนั้น แล้วเพิ่มเชนกับเหรียญให้อัตโนมัติ</p>
+        <h3>{{ __('addnet.mobile_title') }}</h3>
+        <p>{{ __('addnet.mobile_text') }}</p>
         <div class="wallets">
             @foreach ($wallets as [$name, $letter, $color, $href])
                 <a class="wallet" href="{{ $href }}" rel="noopener"><span class="wl" style="background:{{ $color }}">{{ $letter }}</span>{{ $name }}</a>

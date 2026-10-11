@@ -122,6 +122,32 @@ class SettingsTest extends TestCase
         $this->assertNull($log->details['old']);
     }
 
+    public function test_english_announcement_is_saved_separately_and_shown_only_on_english_pages(): void
+    {
+        $this->loginAsOwner()->post('/admin/content', ['section' => 'announcement', 'announcement' => 'เปิดขายรอบแรก', 'announcement_en' => "  Round 1\n<b>opens</b> "])
+            ->assertSessionHas('status');
+
+        $settings = app(Settings::class);
+        $this->assertSame('เปิดขายรอบแรก', $settings->announcement());
+        $this->assertSame('Round 1 <b>opens</b>', $settings->announcement('en'));
+        $this->assertSame(1, AuditLog::query()->where('action', 'content.announcement_en')->count());
+
+        $this->get('/en')->assertSee('Round 1 &lt;b&gt;opens&lt;/b&gt;', false)->assertDontSee('เปิดขายรอบแรก');
+        $this->get('/')->assertSee('เปิดขายรอบแรก')->assertDontSee('Round 1');
+
+        // ฟอร์มที่ไม่ส่งช่องภาษาอังกฤษมา ไม่ลบประกาศภาษาอังกฤษเดิม
+        $this->loginAsOwner()->post('/admin/content', ['section' => 'announcement', 'announcement' => 'ข่าวใหม่']);
+        $this->assertSame('Round 1 <b>opens</b>', app(Settings::class)->announcement('en'));
+
+        // ล้างช่องภาษาอังกฤษ = หน้าอังกฤษไม่มีแถบประกาศ
+        $this->loginAsOwner()->post('/admin/content', ['section' => 'announcement', 'announcement' => 'ข่าวใหม่', 'announcement_en' => '']);
+        $this->assertNull(app(Settings::class)->announcement('en'));
+        $this->get('/en')->assertDontSee('class="announce"', false);
+
+        $this->loginAsOwner()->post('/admin/content', ['section' => 'announcement', 'announcement_en' => str_repeat('a', 241)])
+            ->assertSessionHasErrors('announcement_en');
+    }
+
     public function test_announcement_length_is_limited(): void
     {
         $this->loginAsOwner()->post('/admin/content', ['section' => 'announcement', 'announcement' => str_repeat('ก', 241)])

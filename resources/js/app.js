@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import { addNetworkAndToken, connectWallet, injected, isMobile, reader, short, units, walletError, fmt, CFG } from './chain';
+import { chosenLocale, pageUrl, rememberLocale, t } from './i18n';
 import './presale';
 import './transparency';
 import './whitepaper';
@@ -53,22 +54,43 @@ Alpine.data('site', () => ({
             this.account = account;
             window.dispatchEvent(new CustomEvent('idtc:account', { detail: account }));
         } catch (e) {
-            if (e?.code === 'NO_WALLET' && isMobile()) { location.href = '/add-network'; return; }
+            if (e?.code === 'NO_WALLET' && isMobile()) { location.href = pageUrl('addNetwork', '/add-network'); return; }
             this.say(walletError(e), 'err');
         }
     },
     async addNetwork() {
         if (!injected()) {
-            if (isMobile()) { location.href = '/add-network'; return; }
+            if (isMobile()) { location.href = pageUrl('addNetwork', '/add-network'); return; }
             document.getElementById('addnet')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
-            this.say('ไม่พบกระเป๋าในเบราว์เซอร์นี้ ติดตั้ง MetaMask ก่อน หรือเปิดเว็บนี้ในแอปกระเป๋าบนมือถือ', 'err');
+            this.say(t('site.no_wallet'), 'err');
             return;
         }
         try {
             const r = await addNetworkAndToken();
-            this.say(r.token ? 'เพิ่มเชน TPIX และเหรียญ IDTC ลงกระเป๋าแล้ว' : 'เพิ่มเชน TPIX แล้ว · เหรียญ IDTC จะเพิ่มได้เมื่อสัญญาขึ้นเชน', 'ok');
+            this.say(r.token ? t('site.added_both') : t('site.added_chain'), 'ok');
         } catch (e) { this.say(walletError(e), 'err'); }
     },
+    /** ปุ่ม TH | EN: จำภาษาที่เลือกไว้ในคุกกี้ (เซิร์ฟเวอร์ใช้ตอนเข้าเว็บครั้งถัดไป) และพาไปส่วนเดิมของหน้า */
+    pickLang(code, e) {
+        rememberLocale(code);
+        if (location.hash && e?.currentTarget?.href) {
+            e.preventDefault();
+            location.href = e.currentTarget.href.split('#')[0] + location.hash;
+        }
+    },
+}));
+
+/* ───────────── "Switch to English?" — หน้าไทยเท่านั้น, ไม่ redirect เอง ───────────── */
+Alpine.data('langHint', () => ({
+    show: false,
+    init() {
+        // ไม่ชวนซ้ำถ้าเคยเลือกภาษาแล้ว หรือเบราว์เซอร์ตั้งภาษาไทยไว้ (navigator.languages = Accept-Language)
+        const langs = navigator.languages?.length ? navigator.languages : [navigator.language || ''];
+        if (chosenLocale() || langs.some((l) => /^th\b/i.test(l))) return;
+        setTimeout(() => { this.show = true; }, 900);
+    },
+    pick() { rememberLocale('en'); },
+    dismiss() { rememberLocale('th'); this.show = false; },
 }));
 
 /* ───────────── hero slider ───────────── */
@@ -170,7 +192,7 @@ Alpine.data('presaleStats', () => ({
 /* ───────────── tokenomics donut ───────────── */
 Alpine.data('donut', (alloc) => ({
     centerValue: '1.1T',
-    centerLabel: 'IDTC ทั้งหมด',
+    centerLabel: t('chart.total'),
     init() {
         const total = alloc.reduce((a, it) => a + Number(it.amount), 0);
         const R = 80, C = 2 * Math.PI * R;
@@ -189,7 +211,7 @@ Alpine.data('donut', (alloc) => ({
     },
     highlight(i) {
         this.$refs.svg.querySelectorAll('.donut-seg').forEach((s) => s.classList.toggle('dim', i !== null && +s.dataset.seg !== i));
-        if (i === null) { this.centerValue = '1.1T'; this.centerLabel = 'IDTC ทั้งหมด'; return; }
+        if (i === null) { this.centerValue = '1.1T'; this.centerLabel = t('chart.total'); return; }
         this.centerValue = `${((Number(this.alloc[i].amount) / this.total) * 100).toFixed(1)}%`;
         this.centerLabel = this.alloc[i].name;
     },
@@ -204,14 +226,14 @@ Alpine.data('unlockChart', (tranches) => ({
         let s = `<defs><linearGradient id="lineGrad" x1="0" x2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#a3e635"/></linearGradient>
           <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(163,230,53,.35)"/><stop offset="1" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>`;
         [0, 275, 550, 825, 1100].forEach((v) => { s += `<line class="grid" x1="${L}" x2="${Rr}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end">${v ? `${fmt(v)}B` : '0'}</text>`; });
-        [0, 12, 24, 36, 48, 60].forEach((m) => { s += `<text x="${X(m)}" y="${Bt + 22}" text-anchor="middle">${m ? `เดือน ${m}` : 'เปิดตลาด'}</text>`; });
+        [0, 12, 24, 36, 48, 60].forEach((m) => { s += `<text x="${X(m)}" y="${Bt + 22}" text-anchor="${m === 60 ? 'end' : 'middle'}">${m ? t('chart.month', { m }) : t('chart.launch')}</text>`; });
         let d = '', area = `M${X(0)},${Bt}`;
         for (let m = 0; m <= 60; m += 0.5) { const p = `${X(m).toFixed(1)},${Y(circ(m)).toFixed(1)}`; d += (m ? 'L' : 'M') + p; area += `L${p}`; }
         area += `L${X(60)},${Bt}Z`;
         s += `<rect x="${L}" y="${T}" width="${Rr - L}" height="${Bt - T}" fill="rgba(59,130,246,.07)"/><path d="${area}" fill="url(#areaGrad)"/><path class="line" d="${d}"/>`;
         [0, 24, 36, 48, 60].forEach((m) => {
             const v = Math.round(circ(m)), end = m === 60;
-            s += `<circle class="mark" cx="${X(m)}" cy="${Y(v)}" r="5"/><text class="ann" x="${X(m) + (end ? -10 : 10)}" y="${Y(v) - 12}" text-anchor="${end ? 'end' : 'start'}">${m === 0 ? `หมุนเวียน ${fmt(v)}B` : end ? 'ครบ 1.1T' : `${fmt(v)}B`}</text>`;
+            s += `<circle class="mark" cx="${X(m)}" cy="${Y(v)}" r="5"/><text class="ann" x="${X(m) + (end ? -10 : 10)}" y="${Y(v) + (end ? 24 : -12)}" text-anchor="${end ? 'end' : 'start'}">${m === 0 ? t('chart.circulating', { v: `${fmt(v)}B` }) : end ? t('chart.complete', { v: shortNum(v * B) }) : `${fmt(v)}B`}</text>`;
         });
         this.$refs.svg.innerHTML = s;
         if (reduce) return;
@@ -293,6 +315,9 @@ function initFlow() {
     new IntersectionObserver(([en]) => { const was = running; running = en.isIntersecting; if (running && !was) requestAnimationFrame(frame); }).observe(cv);
     requestAnimationFrame(frame);
 }
+
+// $t('presale.raised', { v }) ในเทมเพลต Alpine — ข้อความจากพจนานุกรมของหน้า (./i18n)
+Alpine.magic('t', () => t);
 
 window.Alpine = Alpine;
 document.addEventListener('DOMContentLoaded', () => { initReveal(); initFlow(); });

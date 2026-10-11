@@ -4,8 +4,10 @@
  * - อ่านข้อมูล: JsonRpcProvider ตรงไปที่ rpc1.tpix.online (เปิด CORS ให้ idtc.online แล้ว)
  * - เขียนข้อมูล: ผ่านกระเป๋าของผู้ใช้ (window.ethereum) — เว็บไม่เคยถือคีย์ใคร
  * - ค่าเชน/ที่อยู่สัญญามาจาก window.IDTC (App\Support\Idtc::publicConfig)
+ * - ข้อความที่ผู้ใช้เห็นมาจากพจนานุกรมตามภาษาของหน้า (./i18n → lang/{th,en}/js.php)
  */
 import { BrowserProvider, Contract, Interface, JsonRpcProvider, formatUnits, getAddress } from 'ethers';
+import { localDate, t } from './i18n';
 
 export const CFG = window.IDTC || { chain: {}, token: {}, contracts: {}, sale: {} };
 
@@ -97,7 +99,7 @@ const chainParams = () => ({
 
 /** สลับไปเชน TPIX — ถ้ากระเป๋ายังไม่รู้จักเชนนี้ ให้เพิ่มก่อน */
 export async function ensureChain(eth = injected()) {
-    if (!eth) throw Object.assign(new Error('ไม่พบกระเป๋าในเบราว์เซอร์นี้'), { code: 'NO_WALLET' });
+    if (!eth) throw Object.assign(new Error(t('wallet.no_wallet')), { code: 'NO_WALLET' });
     try {
         await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CFG.chain.hex }] });
     } catch (e) {
@@ -126,7 +128,7 @@ export async function addNetworkAndToken() {
 /** เชื่อมกระเป๋า + สลับเชน แล้วคืน signer */
 export async function connectWallet() {
     const eth = injected();
-    if (!eth) throw Object.assign(new Error('ไม่พบกระเป๋าในเบราว์เซอร์นี้'), { code: 'NO_WALLET' });
+    if (!eth) throw Object.assign(new Error(t('wallet.no_wallet')), { code: 'NO_WALLET' });
     const [account] = await eth.request({ method: 'eth_requestAccounts' });
     await ensureChain(eth);
     const provider = new BrowserProvider(eth, 'any');
@@ -140,37 +142,38 @@ export function isRejected(e) {
     return /user (rejected|denied|cancel+ed)|rejected by (the )?user|request rejected/i.test(e?.message || e?.info?.error?.message || '');
 }
 
-/** แปลง error ของกระเป๋า/สัญญาเป็นข้อความไทยที่บอกว่าต้องทำอะไรต่อ */
+/** แปลง error ของกระเป๋า/สัญญาเป็นข้อความ (ภาษาของหน้า) ที่บอกว่าต้องทำอะไรต่อ */
 export function walletError(e) {
-    if (e?.code === 'NO_WALLET') return isMobile() ? 'เปิดเว็บนี้ในแอปกระเป๋า (MetaMask, Trust, OKX) แล้วลองอีกครั้ง' : 'ติดตั้ง MetaMask หรือกระเป๋าที่รองรับ EVM ก่อน';
-    if (isRejected(e)) return 'คุณยกเลิกในกระเป๋า กดอีกครั้งเมื่อพร้อม';
-    if (e?.code === -32002) return 'กระเป๋ามีคำขอค้างอยู่ เปิดกระเป๋าแล้วกดยืนยันหรือยกเลิกก่อน';
-    if (e?.code === 4100) return 'กระเป๋ายังไม่อนุญาตบัญชีนี้ให้เว็บใช้ กดเชื่อมกระเป๋าอีกครั้ง';
-    if (e?.code === 4902) return 'กระเป๋ายังไม่มีเชน TPIX กด "เพิ่มเชน + เหรียญ" ก่อน';
-    if (e?.code === 'WRONG_CHAIN') return 'กระเป๋ายังไม่อยู่บนเชน TPIX กดอีกครั้งแล้วยืนยันการสลับเชนในกระเป๋า';
-    if (e?.code === 'ACCOUNT_CHANGED') return 'บัญชีในกระเป๋าเปลี่ยนระหว่างทำรายการ ระบบหยุดให้ก่อน ตรวจยอดแล้วเริ่มใหม่';
-    if (e?.code === 'TIMEOUT') return 'เชนตอบช้าเกินไป ตรวจอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง';
-    if (e?.code === 'TX_REVERTED') return 'รายการถูกปฏิเสธบนเชน ไม่มีการตัดเงินนอกจากค่าแก๊ส (ซึ่งเป็น 0)';
+    if (e?.code === 'NO_WALLET') return isMobile() ? t('wallet.no_wallet_mobile') : t('wallet.no_wallet_desktop');
+    if (isRejected(e)) return t('wallet.rejected');
+    if (e?.code === -32002) return t('wallet.pending');
+    if (e?.code === 4100) return t('wallet.unauthorized');
+    if (e?.code === 4902) return t('wallet.unknown_chain');
+    if (e?.code === 'WRONG_CHAIN') return t('wallet.wrong_chain');
+    if (e?.code === 'ACCOUNT_CHANGED') return t('wallet.account_changed');
+    if (e?.code === 'TIMEOUT') return t('wallet.timeout');
+    if (e?.code === 'TX_REVERTED') return t('wallet.reverted');
     const dec = decodeRevert(e);
-    if (dec && REVERT_TH[dec.name]) return REVERT_TH[dec.name];
+    if (dec && REVERT_NAMES.has(dec.name)) return t(`revert.${dec.name}`);
     const reason = (dec?.name === 'Error' ? String(dec.args?.[0] ?? '') : '') || e?.reason || e?.shortMessage || e?.info?.error?.message || e?.message || '';
-    if (e?.code === 'INSUFFICIENT_FUNDS' || /insufficient funds/i.test(reason)) return 'กระเป๋าตั้งค่าแก๊สไว้มากกว่า 0 แต่ไม่มี TPIX จ่าย ลองตั้งค่าแก๊สในกระเป๋าเป็น 0 แล้วกดใหม่';
-    if (['NETWORK_ERROR', 'SERVER_ERROR'].includes(e?.code) || /failed to fetch|network error|load failed/i.test(reason)) return 'เชื่อมต่อเชน TPIX ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่';
+    if (e?.code === 'INSUFFICIENT_FUNDS' || /insufficient funds/i.test(reason)) return t('wallet.gas_funds');
+    if (['NETWORK_ERROR', 'SERVER_ERROR'].includes(e?.code) || /failed to fetch|network error|load failed/i.test(reason)) return t('wallet.network');
+    // ข้อความ revert ที่ RPC ส่งกลับมาเป็นตัวหนังสือ → key ในพจนานุกรม (reason.*)
     const map = {
-        NotActive: 'ยังไม่อยู่ในช่วงเวลาขาย',
-        BelowMinimum: 'ยอดซื้อต่ำกว่าขั้นต่ำ',
-        CapExceeded: 'ยอดนี้เกินจำนวนที่เหลือใน presale',
-        WalletLimitExceeded: 'ยอดนี้เกินเพดานต่อกระเป๋า',
-        EnforcedPause: 'presale หยุดชั่วคราวอยู่',
-        ZeroOutput: 'ยอดซื้อน้อยเกินไป',
-        NothingToRelease: 'ยังไม่มีงวดที่ถึงเวลาปลด',
-        'insufficient allowance': 'ต้องกดอนุญาต USDT ก่อน',
-        'transfer amount exceeds balance': 'USDT ในกระเป๋าไม่พอ',
+        NotActive: 'NotActive',
+        BelowMinimum: 'BelowMinimum',
+        CapExceeded: 'CapExceeded',
+        WalletLimitExceeded: 'WalletLimitExceeded',
+        EnforcedPause: 'EnforcedPause',
+        ZeroOutput: 'ZeroOutput',
+        NothingToRelease: 'NothingToRelease',
+        'insufficient allowance': 'allowance',
+        'transfer amount exceeds balance': 'balance',
     };
-    for (const [k, v] of Object.entries(map)) if (reason.includes(k)) return v;
+    for (const [k, v] of Object.entries(map)) if (reason.includes(k)) return t(`reason.${v}`);
     // RPC ของเชน TPIX (Polygon Edge) ไม่ส่ง revert data กลับมา — บอกได้แค่ว่าสัญญาปฏิเสธ
-    if (e?.code === 'CALL_EXCEPTION' || /execution (was )?reverted|missing revert data|unable to apply transaction/i.test(reason)) return 'สัญญาปฏิเสธรายการนี้ ตรวจยอดและเงื่อนไขแล้วลองใหม่อีกครั้ง';
-    return reason ? `ทำรายการไม่สำเร็จ: ${reason.slice(0, 140)}` : 'ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง';
+    if (e?.code === 'CALL_EXCEPTION' || /execution (was )?reverted|missing revert data|unable to apply transaction/i.test(reason)) return t('wallet.contract_rejected');
+    return reason ? t('wallet.failed_reason', { reason: reason.slice(0, 140) }) : t('wallet.failed');
 }
 
 /* ───────────── ส่วนเสริมสำหรับหน้า presale และความโปร่งใส ───────────── */
@@ -197,20 +200,11 @@ ABI.errors = [
     'error ERC20InvalidSpender(address spender)',
 ];
 
-const REVERT_TH = {
-    NotActive: 'ยังไม่อยู่ในช่วงเวลาขาย',
-    BelowMinimum: 'ยอดซื้อต่ำกว่าขั้นต่ำของ presale',
-    ZeroOutput: 'ยอดซื้อน้อยเกินไป',
-    CapExceeded: 'ยอดนี้เกินจำนวนที่เหลือใน presale',
-    WalletLimitExceeded: 'ยอดนี้เกินเพดานต่อกระเป๋า',
-    EnforcedPause: 'ระบบหยุดชั่วคราวอยู่ (presale หรือ USDT) ลองใหม่ภายหลัง',
-    NothingToRelease: 'ยังไม่มีงวดที่ถึงเวลาปลด',
-    ERC20InsufficientBalance: 'ยอดเหรียญในกระเป๋าไม่พอ',
-    ERC20InsufficientAllowance: 'ยอดอนุญาต USDT ไม่พอ กดอนุญาต USDT ก่อน',
-    ReentrancyGuardReentrantCall: 'สัญญาปฏิเสธรายการซ้อน ลองใหม่อีกครั้ง',
-    SafeERC20FailedOperation: 'โอนเหรียญไม่สำเร็จ',
-    Panic: 'สัญญาปฏิเสธรายการนี้',
-};
+/** custom error ที่มีคำอธิบายในพจนานุกรม (revert.*) */
+const REVERT_NAMES = new Set([
+    'NotActive', 'BelowMinimum', 'ZeroOutput', 'CapExceeded', 'WalletLimitExceeded', 'EnforcedPause', 'NothingToRelease',
+    'ERC20InsufficientBalance', 'ERC20InsufficientAllowance', 'ReentrancyGuardReentrantCall', 'SafeERC20FailedOperation', 'Panic',
+]);
 
 const errorsIface = new Interface(ABI.errors);
 
@@ -255,16 +249,16 @@ export function withTimeout(promise, ms = 15000) {
 export function parseAmount(raw, decimals) {
     let s = String(raw ?? '').trim().replace(/\s+/g, '');
     if (s === '') return { units: null, error: '', empty: true };
-    if (s.startsWith('-')) return { units: null, error: 'จำนวนต้องไม่ติดลบ', empty: false };
+    if (s.startsWith('-')) return { units: null, error: t('amount.negative'), empty: false };
     if (s.includes(',')) {
         // รับเฉพาะจุลภาคคั่นหลักพัน (1,000.50) — "10,5" แบบยุโรปจะกลายเป็น 105 จึงไม่รับ
-        if (!/^\d{1,3}(,\d{3})+(\.\d*)?$/.test(s)) return { units: null, error: 'ใช้จุด (.) เป็นทศนิยม เช่น 10.5', empty: false };
+        if (!/^\d{1,3}(,\d{3})+(\.\d*)?$/.test(s)) return { units: null, error: t('amount.decimal_point'), empty: false };
         s = s.replace(/,/g, '');
     }
-    if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return { units: null, error: 'กรอกเป็นตัวเลขเท่านั้น', empty: false };
+    if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return { units: null, error: t('amount.digits'), empty: false };
     const [int = '', frac = ''] = s.split('.');
-    if (frac.length > decimals) return { units: null, error: `ทศนิยมได้ไม่เกิน ${decimals} ตำแหน่ง`, empty: false };
-    if (int.replace(/^0+/, '').length > 15) return { units: null, error: 'จำนวนมากเกินไป', empty: false };
+    if (frac.length > decimals) return { units: null, error: t('amount.decimals', { n: decimals }), empty: false };
+    if (int.replace(/^0+/, '').length > 15) return { units: null, error: t('amount.too_large'), empty: false };
     const units = BigInt((int || '0') + frac.padEnd(decimals, '0'));
     return { units, error: '', empty: false };
 }
@@ -357,9 +351,5 @@ export function splitDuration(seconds) {
     return { d, h, m, s };
 }
 
-/** วันที่แบบไทย (พ.ศ.) */
-export function thaiDate(ts, withTime = false) {
-    if (!ts) return '—';
-    const opt = withTime ? { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'long', year: 'numeric' };
-    return new Date(Number(ts) * 1000).toLocaleString('th-TH', opt);
-}
+/** วันที่ตามภาษาของหน้า: ไทย = พ.ศ. (th-TH) · อังกฤษ = ค.ศ. (en-GB) — ดู ./i18n */
+export { localDate };

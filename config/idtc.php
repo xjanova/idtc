@@ -73,15 +73,16 @@ return [
     ],
 
     // การจัดสรร 1.1T (ล็อก 70% + หมุนเวียน 30%) — เจ้าของเลือกแบบ "สมดุล" 2026-10-11
+    // name/note คือข้อความภาษาไทย (หลังบ้านใช้) · หน้าเว็บแปลตาม key จาก lang/{th,en}/plan.php
     'allocation' => [
-        ['group' => 'locked', 'name' => 'ล็อก 1 ปี', 'note' => 'ปลดเดือนที่ 13–24', 'amount' => '220000000000', 'color' => '#1e40af'],
-        ['group' => 'locked', 'name' => 'ล็อก 2 ปี', 'note' => 'ปลดเดือนที่ 25–36', 'amount' => '220000000000', 'color' => '#2563eb'],
-        ['group' => 'locked', 'name' => 'ล็อก 3 ปี', 'note' => 'ปลดเดือนที่ 37–48', 'amount' => '165000000000', 'color' => '#3b82f6'],
-        ['group' => 'locked', 'name' => 'ล็อก 4 ปี', 'note' => 'ปลดเดือนที่ 49–60', 'amount' => '165000000000', 'color' => '#60a5fa'],
-        ['group' => 'liquid', 'name' => 'Presale', 'note' => 'ขายที่ $0.0000015 ด้วย USDT', 'amount' => '100000000000', 'color' => '#a3e635'],
-        ['group' => 'liquid', 'name' => 'ดำเนินงาน การตลาด และ listing', 'note' => 'กระเป๋าโครงการ', 'amount' => '100000000000', 'color' => '#10b981'],
-        ['group' => 'liquid', 'name' => 'สำรองดูแลราคาและเติมพูล', 'note' => 'ใช้ตามกติกาที่ประกาศ', 'amount' => '80000000000', 'color' => '#2dd4bf'],
-        ['group' => 'liquid', 'name' => 'สภาพคล่องเริ่มต้น', 'note' => 'พูล IDTC/USDT และ IDTC/TPIX', 'amount' => '50000000000', 'color' => '#e6f23a'],
+        ['key' => 'lock_1y', 'group' => 'locked', 'name' => 'ล็อก 1 ปี', 'note' => 'ปลดเดือนที่ 13–24', 'amount' => '220000000000', 'color' => '#1e40af'],
+        ['key' => 'lock_2y', 'group' => 'locked', 'name' => 'ล็อก 2 ปี', 'note' => 'ปลดเดือนที่ 25–36', 'amount' => '220000000000', 'color' => '#2563eb'],
+        ['key' => 'lock_3y', 'group' => 'locked', 'name' => 'ล็อก 3 ปี', 'note' => 'ปลดเดือนที่ 37–48', 'amount' => '165000000000', 'color' => '#3b82f6'],
+        ['key' => 'lock_4y', 'group' => 'locked', 'name' => 'ล็อก 4 ปี', 'note' => 'ปลดเดือนที่ 49–60', 'amount' => '165000000000', 'color' => '#60a5fa'],
+        ['key' => 'presale', 'group' => 'liquid', 'name' => 'Presale', 'note' => 'ขายที่ $0.0000015 ด้วย USDT', 'amount' => '100000000000', 'color' => '#a3e635'],
+        ['key' => 'operations', 'group' => 'liquid', 'name' => 'ดำเนินงาน การตลาด และ listing', 'note' => 'กระเป๋าโครงการ', 'amount' => '100000000000', 'color' => '#10b981'],
+        ['key' => 'reserve', 'group' => 'liquid', 'name' => 'สำรองดูแลราคาและเติมพูล', 'note' => 'ใช้ตามกติกาที่ประกาศ', 'amount' => '80000000000', 'color' => '#2dd4bf'],
+        ['key' => 'liquidity', 'group' => 'liquid', 'name' => 'สภาพคล่องเริ่มต้น', 'note' => 'พูล IDTC/USDT และ IDTC/TPIX', 'amount' => '50000000000', 'color' => '#e6f23a'],
     ],
 
     // กระเป๋าที่เข้าหลังบ้านได้ (เซ็นข้อความด้วยกระเป๋า) — คั่นด้วยจุลภาค · ตัวแรกคือเจ้าของ

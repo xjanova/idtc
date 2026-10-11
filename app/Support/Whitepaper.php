@@ -5,7 +5,7 @@ namespace App\Support;
 use Illuminate\Support\Str;
 
 /**
- * แปลงไวท์เปเปอร์ (Markdown ใน resources/content) เป็น HTML สำหรับหน้า /whitepaper
+ * แปลงไวท์เปเปอร์ (Markdown ใน resources/content) เป็น HTML สำหรับหน้า /whitepaper และ /en/whitepaper
  *
  * เนื้อหาไม่ถูกแก้ — แค่แทน {{contracts_table}} ด้วยตารางสัญญาจริง ใส่ id ให้หัวข้อ h2 (ทำสารบัญ)
  * และห่อตารางด้วยกล่องเลื่อนแนวนอนสำหรับจอเล็ก
@@ -13,6 +13,15 @@ use Illuminate\Support\Str;
 class Whitepaper
 {
     public const PLACEHOLDER = '{{contracts_table}}';
+
+    /**
+     * ไฟล์ไวท์เปเปอร์ของแต่ละภาษา: resources/content/whitepaper.{th,en}.md
+     * แก้ทับได้ด้วย config idtc.whitepaper_path.{locale} (ใช้ในเทส)
+     */
+    public static function path(string $locale): string
+    {
+        return (string) config('idtc.whitepaper_path.'.$locale, resource_path('content/whitepaper.'.$locale.'.md'));
+    }
 
     /** @return array{title: string, html: string, toc: list<array{id: string, num: string, text: string}>}|null */
     public static function render(string $path): ?array

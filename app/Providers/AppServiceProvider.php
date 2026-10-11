@@ -9,6 +9,7 @@ use App\Services\Auth\SiweAuth;
 use App\Services\Chain\RpcClient;
 use App\Support\Idtc;
 use App\Support\Settings;
+use App\Support\SiteLocale;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
@@ -35,11 +36,11 @@ class AppServiceProvider extends ServiceProvider
         // ที่อยู่สัญญาที่แอดมินตั้งจากหลังบ้าน แก้ทับค่าใน config/idtc.php (แคชไว้ ล้างเมื่อบันทึก)
         Idtc::resolveContractsUsing(fn () => $this->app->make(Settings::class)->contractOverrides());
 
-        // ประกาศ + ลิงก์โซเชียลจากหลังบ้าน → layout หน้าสาธารณะ
+        // ประกาศ (ตามภาษาของหน้า) + ลิงก์โซเชียลจากหลังบ้าน → layout หน้าสาธารณะ
         View::composer('layouts.site', function ($view) {
             $settings = $this->app->make(Settings::class);
             if (! $view->offsetExists('announcement')) {
-                $view->with('announcement', $settings->announcement());
+                $view->with('announcement', $settings->announcement(SiteLocale::current()));
             }
             if (! $view->offsetExists('socialLinks')) {
                 $view->with('socialLinks', $settings->social());

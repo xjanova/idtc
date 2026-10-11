@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\SetSiteLocale;
+use App\Support\SiteLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,6 +24,10 @@ $app = Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PORT
                 | Request::HEADER_X_FORWARDED_PROTO,
         );
+
+        // ภาษาของหน้าสาธารณะ (routes/web.php) · คุกกี้ภาษาตั้งจาก JS ตอนกดสลับภาษา จึงไม่เข้ารหัส
+        $middleware->alias(['site.locale' => SetSiteLocale::class]);
+        $middleware->encryptCookies(except: [SiteLocale::COOKIE]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

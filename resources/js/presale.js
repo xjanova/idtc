@@ -4,14 +4,16 @@
  * ตัวเลขทุกตัวคิดด้วย BigInt ตามสูตรในสัญญา: tokensOut = payAmount × rateNumerator ÷ rateDenominator (ปัดลง)
  * ก่อนสัญญาขึ้นเชน ใช้อัตราจาก config (แผน) · พอมีที่อยู่สัญญา อ่านค่าจริงจากสัญญาเองทั้งหมด
  * ลำดับการซื้อ: เชื่อมกระเป๋า → อนุญาต USDT เท่ายอดที่ซื้อ (ถ้ายังไม่พอ) → buy(ยอด) → รอ receipt
+ * ข้อความทุกตัวมาจากพจนานุกรมตามภาษาของหน้า (./i18n → lang/{th,en}/js.php)
  */
 import Alpine from 'alpinejs';
 import { Contract, Interface } from 'ethers';
 import {
     ABI, CFG, assertWallet, chainNow, connectWallet, contractAddress, decodeRevert, explorerAddress, explorerTx,
     formatAmount, injected, isMobile, isRejected, parseAmount, readProvider, sendTx, short, splitDuration,
-    syncChainClock, thaiDate, unitsToInput, waitReceipt, walletAccount, walletError, watchToken, withTimeout,
+    syncChainClock, unitsToInput, waitReceipt, walletAccount, walletError, watchToken, withTimeout,
 } from './chain';
+import { BIG_EXP, BIG_UNIT, localDate, t } from './i18n';
 
 const PAY_DEC = Number(CFG.sale?.pay_decimals ?? 6);
 const TOKEN_DEC = Number(CFG.token?.decimals ?? 18);
@@ -139,8 +141,8 @@ Alpine.data('presale', () => ({
             this.checkQuote();
         } catch (e) {
             this.loadError = e?.code === 'BAD_DATA' || e?.code === 'CALL_EXCEPTION'
-                ? 'อ่านสัญญา presale ไม่ได้ ที่อยู่สัญญาอาจไม่ถูกต้อง'
-                : 'อ่านข้อมูลจากเชนไม่ได้ (เครือข่ายช้าหรือหลุด)';
+                ? t('presale.load_bad')
+                : t('presale.load_net');
         } finally {
             this.loading = false;
         }
@@ -242,15 +244,15 @@ Alpine.data('presale', () => ({
         if (p.error) return p.error;
         if (p.empty) return '';
         const u = p.units;
-        if (u === 0n) return 'กรอกจำนวนมากกว่า 0';
-        if (this.min > 0n && u < this.min) return `ขั้นต่ำ ${formatAmount(this.min, PAY_DEC, 2, { trim: true })} USDT`;
-        if (this.localQuote === 0n) return 'ยอดซื้อน้อยเกินไป';
+        if (u === 0n) return t('presale.problem.zero');
+        if (this.min > 0n && u < this.min) return t('presale.problem.min', { min: formatAmount(this.min, PAY_DEC, 2, { trim: true }) });
+        if (this.localQuote === 0n) return t('presale.problem.too_small');
         if (this.deployed && this.loaded) {
-            if (this.quoteUnits > this.remaining) return `เกินจำนวนที่เหลือใน presale · ซื้อได้อีกไม่เกิน ${formatAmount(this.maxPayFor(this.remaining), PAY_DEC, 2, { trim: true })} USDT`;
-            if (this.account && this.walletLeft !== null && this.quoteUnits > this.walletLeft) return `เกินเพดานต่อกระเป๋า · ซื้อได้อีก ${formatAmount(this.walletLeft, TOKEN_DEC, 2, { trim: true })} IDTC`;
-            if (this.saleStock !== null && this.quoteUnits > this.saleStock) return 'สัญญา presale มีเหรียญพร้อมขายไม่พอสำหรับยอดนี้';
+            if (this.quoteUnits > this.remaining) return t('presale.problem.over_cap', { max: formatAmount(this.maxPayFor(this.remaining), PAY_DEC, 2, { trim: true }) });
+            if (this.account && this.walletLeft !== null && this.quoteUnits > this.walletLeft) return t('presale.problem.over_wallet', { left: formatAmount(this.walletLeft, TOKEN_DEC, 2, { trim: true }) });
+            if (this.saleStock !== null && this.quoteUnits > this.saleStock) return t('presale.problem.stock');
         }
-        if (this.account && this.usdtBal !== null && u > this.usdtBal) return `USDT ในกระเป๋าไม่พอ (มี ${formatAmount(this.usdtBal, PAY_DEC, 2)} USDT)`;
+        if (this.account && this.usdtBal !== null && u > this.usdtBal) return t('presale.problem.balance', { bal: formatAmount(this.usdtBal, PAY_DEC, 2) });
         return '';
     },
 
@@ -269,26 +271,21 @@ Alpine.data('presale', () => ({
         if (this.now < this.start) return 'upcoming';
         return 'live';
     },
-    get statusLabel() {
-        return {
-            nodeploy: 'รอ deploy', loading: 'กำลังอ่านสัญญา…', error: 'อ่านสัญญาไม่ได้', soldout: 'ขายครบแล้ว',
-            paused: 'หยุดชั่วคราว', ended: 'ปิดรอบแล้ว', upcoming: 'ยังไม่เปิดขาย', live: 'เปิดขายอยู่',
-        }[this.status];
-    },
+    get statusLabel() { return t(`presale.status.${this.status}`); },
     get statusNote() {
         switch (this.status) {
-            case 'nodeploy': return 'ตัวเลขคำนวณจากราคาในแผน';
-            case 'upcoming': return `เริ่มขายใน ${this.countdown(this.start)}`;
-            case 'live': return this.end ? `ปิดรอบใน ${this.countdown(this.end)}` : '';
-            case 'ended': return `ปิดเมื่อ ${thaiDate(this.end, true)}`;
-            case 'paused': return 'ทีมงานหยุดขายชั่วคราว ราคาไม่เปลี่ยน';
+            case 'nodeploy': return t('presale.note.nodeploy');
+            case 'upcoming': return t('presale.note.upcoming', { time: this.countdown(this.start) });
+            case 'live': return this.end ? t('presale.note.live', { time: this.countdown(this.end) }) : '';
+            case 'ended': return t('presale.note.ended', { date: localDate(this.end, true) });
+            case 'paused': return t('presale.note.paused');
             default: return '';
         }
     },
     countdown(target) {
         const { d, h, m, s } = splitDuration(target - this.now);
         const hms = [h, m, s].map((x) => String(x).padStart(2, '0')).join(':');
-        return d > 0 ? `${d.toLocaleString('en-US')} วัน ${hms}` : hms;
+        return d > 0 ? t('presale.days', { d: d.toLocaleString('en-US'), hms }) : hms;
     },
 
     /* ───────── แถบความคืบหน้า ───────── */
@@ -299,6 +296,9 @@ Alpine.data('presale', () => ({
     usdt(v, d = 2) { return v === null || v === undefined ? '—' : formatAmount(v, PAY_DEC, d); },
     usdtShort(v) { return v === null || v === undefined ? '—' : formatAmount(v, PAY_DEC, PAY_DEC, { trim: true }); },
     idtc(v, d = 2) { return v === null || v === undefined ? '—' : formatAmount(v, TOKEN_DEC, d); },
+    /** จำนวนเหรียญก้อนใหญ่ตามภาษา: "100,000 ล้าน" · "100 billion" */
+    big(v) { return v === null || v === undefined ? '—' : `${formatAmount(v, TOKEN_DEC + BIG_EXP, 2, { trim: true })} ${BIG_UNIT}`; },
+    get raisedText() { return t('presale.raised', { v: this.usdt(this.raised) }); },
 
     /* ───────── กระเป๋าและธุรกรรม ───────── */
     async connect() {
@@ -323,7 +323,7 @@ Alpine.data('presale', () => ({
         if (!this.busy || this.phase.endsWith('-wait')) return;
         this.flowId++;
         this.busy = false; this.phase = '';
-        this.notice = 'ยกเลิกแล้ว ถ้ากระเป๋ายังมีคำขอค้างอยู่ ให้กดปฏิเสธในกระเป๋าด้วย';
+        this.notice = t('presale.cancelled');
     },
 
     /** ขั้นเดียวจบ: อนุญาต USDT (ถ้ายอดอนุญาตยังไม่พอ) แล้วซื้อต่อทันที */
@@ -344,7 +344,7 @@ Alpine.data('presale', () => ({
             // อ่านค่าสดก่อนเริ่ม กันซื้อด้วยข้อมูลเก่า
             await Promise.all([this.loadSale(), this.loadUser()]);
             alive();
-            if (this.status !== 'live') throw Object.assign(new Error(`ซื้อไม่ได้ตอนนี้: ${this.statusLabel}`), { code: 'NOT_LIVE' });
+            if (this.status !== 'live') throw Object.assign(new Error(t('presale.not_live', { status: this.statusLabel })), { code: 'NOT_LIVE' });
             if (this.payUnits !== amount) throw halt('CANCELLED');
             if (this.problem) throw Object.assign(new Error(this.problem), { code: 'PRECHECK' });
 
@@ -407,29 +407,29 @@ Alpine.data('presale', () => ({
         if (this.payAddr) {
             try {
                 const paused = await withTimeout(new Contract(this.payAddr, ['function paused() view returns (bool)'], readProvider()).paused(), 8000);
-                if (paused) return 'USDT บนเชน TPIX หยุดโอนชั่วคราว ลองใหม่ภายหลัง';
+                if (paused) return t('presale.usdt_paused');
             } catch { /* USDT บางตัวไม่มี paused() */ }
         }
         if (step === 'buy') {
-            if (this.status !== 'live') return `ซื้อไม่ได้ตอนนี้: ${this.statusLabel}`;
+            if (this.status !== 'live') return t('presale.not_live', { status: this.statusLabel });
             if (this.problem) return this.problem;
-            if (this.allowance !== null && this.allowance < amount) return 'ยอดอนุญาต USDT ไม่พอ กด "อนุญาต USDT" อีกครั้ง';
-            return 'สัญญา presale ปฏิเสธรายการนี้ ตรวจยอดและเงื่อนไขแล้วลองใหม่อีกครั้ง';
+            if (this.allowance !== null && this.allowance < amount) return t('presale.allowance_low');
+            return t('presale.sale_rejected');
         }
-        return 'สัญญา USDT ปฏิเสธการอนุญาต ลองใหม่อีกครั้ง';
+        return t('presale.approve_rejected');
     },
 
     describe(e) {
         if (['NOT_LIVE', 'PRECHECK'].includes(e?.code)) return e.message;
-        if (e?.code === 'TIMEOUT' && e?.hash) return 'ส่งรายการแล้ว แต่เชนยังไม่ยืนยันภายใน 3 นาที ตรวจสถานะได้จากลิงก์ด้านล่าง';
+        if (e?.code === 'TIMEOUT' && e?.hash) return t('presale.tx_slow');
         const d = decodeRevert(e);
         if (d?.name === 'ERC20InsufficientBalance') {
             return String(d.args?.[0] || '').toLowerCase() === this.saleAddr.toLowerCase()
-                ? 'สัญญา presale มีเหรียญ IDTC ไม่พอส่งมอบ แจ้งทีมงาน'
-                : 'USDT ในกระเป๋าไม่พอ';
+                ? t('presale.sale_stock_low')
+                : t('presale.usdt_low');
         }
-        if (d?.name === 'EnforcedPause') return this.paused ? 'presale หยุดชั่วคราวอยู่' : 'USDT บนเชน TPIX หยุดโอนชั่วคราว ลองใหม่ภายหลัง';
-        if (isRejected(e)) return 'คุณยกเลิกในกระเป๋า ยังไม่มีการตัดเงิน กดอีกครั้งเมื่อพร้อม';
+        if (d?.name === 'EnforcedPause') return this.paused ? t('presale.paused') : t('presale.usdt_paused');
+        if (isRejected(e)) return t('presale.rejected');
         return walletError(e);
     },
 
@@ -437,7 +437,7 @@ Alpine.data('presale', () => ({
         if (!this.tokenAddr) return;
         try {
             await watchToken(this.tokenAddr);
-            this.notice = 'ส่งคำขอเพิ่ม IDTC ไปที่กระเป๋าแล้ว';
+            this.notice = t('presale.token_added');
         } catch (e) { this.error = walletError(e); }
     },
 
@@ -445,7 +445,7 @@ Alpine.data('presale', () => ({
         if (!this.payAddr) return;
         try {
             await watchToken(this.payAddr, { symbol: 'USDT', decimals: PAY_DEC, image: undefined });
-            this.notice = 'ส่งคำขอเพิ่ม USDT (TPIX) ไปที่กระเป๋าแล้ว';
+            this.notice = t('presale.usdt_added');
         } catch (e) { this.error = walletError(e); }
     },
 
@@ -453,16 +453,7 @@ Alpine.data('presale', () => ({
         this.success = null; this.error = ''; this.errorTx = ''; this.notice = '';
     },
 
-    get phaseText() {
-        return {
-            connect: 'เปิดกระเป๋าเพื่อเชื่อมต่อ…',
-            prepare: 'กำลังตรวจเชนและยอดล่าสุดก่อนซื้อ…',
-            approve: 'ขั้นที่ 1/2 · ยืนยัน "อนุญาต USDT" ในกระเป๋า',
-            'approve-wait': 'รอเชนยืนยันการอนุญาต USDT…',
-            buy: 'ขั้นที่ 2/2 · ยืนยัน "ซื้อ IDTC" ในกระเป๋า',
-            'buy-wait': 'รอเชนยืนยันการซื้อ…',
-        }[this.phase] || '';
-    },
+    get phaseText() { return this.phase ? t(`presale.phase.${this.phase}`) : ''; },
 
     get mobileNoWallet() { return this.noWallet && isMobile(); },
 }));

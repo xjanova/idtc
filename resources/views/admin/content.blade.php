@@ -14,7 +14,7 @@
         <p class="readonly-note" style="margin-bottom:16px">สิทธิ์ของคุณดูได้อย่างเดียว — แก้ไขไม่ได้</p>
     @endif
     <div class="grid-2">
-        <form class="panel form" method="POST" action="{{ route('admin.content.update') }}" x-data="{ text: @js(old('announcement', $announcement)), max: {{ $max }}, busy: false }" @submit="if (busy) { $event.preventDefault(); return; } busy = true">
+        <form class="panel form" method="POST" action="{{ route('admin.content.update') }}" x-data="{ text: @js(old('announcement', $announcement)), textEn: @js(old('announcement_en', $announcementEn)), max: {{ $max }}, busy: false }" @submit="if (busy) { $event.preventDefault(); return; } busy = true">
             @csrf
             <input type="hidden" name="section" value="announcement">
             <h3>แถบประกาศบนหน้าเว็บ <span class="meta">เว้นว่าง = ไม่แสดง</span></h3>
@@ -23,6 +23,12 @@
                 <textarea class="textarea" name="announcement" x-model="text" :maxlength="max" rows="3" placeholder="เช่น presale รอบแรกเปิดขาย 1 พ.ย. เวลา 10:00 น." @disabled($ro)></textarea>
                 <small><span x-text="text.length"></span> / {{ $max }} ตัวอักษร · แสดงเป็นข้อความล้วน (ไม่รองรับ HTML)</small>
                 @error('announcement')<span class="err">{{ $message }}</span>@enderror
+            </label>
+            <label class="field">
+                <span>ข้อความประกาศภาษาอังกฤษ (หน้า /en)</span>
+                <textarea class="textarea" name="announcement_en" x-model="textEn" :maxlength="max" rows="2" placeholder="e.g. Presale round 1 opens 1 Nov at 10:00 (UTC+7)" lang="en" @disabled($ro)></textarea>
+                <small><span x-text="textEn.length"></span> / {{ $max }} ตัวอักษร · เว้นว่าง = หน้าภาษาอังกฤษไม่แสดงแถบประกาศ (ไม่เอาข้อความไทยไปแสดงแทน)</small>
+                @error('announcement_en')<span class="err">{{ $message }}</span>@enderror
             </label>
             <div>
                 <p class="hint" style="margin-bottom:6px">ตัวอย่างบนหน้าเว็บ</p>

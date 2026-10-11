@@ -33,6 +33,7 @@ class ContentController extends Controller
         return view('admin.content', [
             'title' => 'เนื้อหาและประกาศ',
             'announcement' => (string) $settings->get('announcement', ''),
+            'announcementEn' => (string) $settings->get('announcement_en', ''),
             'social' => $settings->social(),
             'networks' => self::SOCIAL,
             'max' => self::ANNOUNCEMENT_MAX,
@@ -47,17 +48,30 @@ class ContentController extends Controller
         if ($section === 'announcement') {
             $v = Validator::make($request->all(), [
                 'announcement' => ['nullable', 'string', 'max:'.self::ANNOUNCEMENT_MAX],
+                'announcement_en' => ['nullable', 'string', 'max:'.self::ANNOUNCEMENT_MAX],
             ], [
                 'announcement.max' => 'ประกาศยาวได้ไม่เกิน '.self::ANNOUNCEMENT_MAX.' ตัวอักษร',
                 'announcement.string' => 'ประกาศต้องเป็นข้อความ',
+                'announcement_en.max' => 'ประกาศภาษาอังกฤษยาวได้ไม่เกิน '.self::ANNOUNCEMENT_MAX.' ตัวอักษร',
+                'announcement_en.string' => 'ประกาศภาษาอังกฤษต้องเป็นข้อความ',
             ]);
             if ($v->fails()) {
                 return back()->withErrors($v)->withInput()->with('error', $v->errors()->first());
             }
             // ข้อความล้วน บรรทัดเดียว — layout แสดงด้วย {{ }} อยู่แล้ว (escape HTML)
-            $text = trim(preg_replace('/\s+/u', ' ', (string) $request->input('announcement', '')) ?? '');
+            $clean = fn (string $field) => trim(preg_replace('/\s+/u', ' ', (string) $request->input($field, '')) ?? '');
+            $text = $clean('announcement');
             [$old] = $settings->put('announcement', $text !== '' ? $text : null, $by);
             Audit::change('content.announcement', $old, $text !== '' ? $text : null);
+            // หน้าภาษาอังกฤษ (/en) แสดงเฉพาะประกาศภาษาอังกฤษ — เว้นว่าง = หน้าอังกฤษไม่มีแถบประกาศ
+            // (ฟอร์มเก่าที่ไม่ส่งช่องนี้มา ไม่ลบค่าเดิม)
+            if ($request->has('announcement_en')) {
+                $textEn = $clean('announcement_en');
+                [$oldEn] = $settings->put('announcement_en', $textEn !== '' ? $textEn : null, $by);
+                if ($oldEn !== ($textEn !== '' ? $textEn : null)) {
+                    Audit::change('content.announcement_en', $oldEn, $textEn !== '' ? $textEn : null);
+                }
+            }
 
             return back()->with('status', $text !== '' ? 'บันทึกประกาศแล้ว แสดงบนหน้าเว็บทันที' : 'ปิดแถบประกาศแล้ว');
         }

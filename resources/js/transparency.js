@@ -3,20 +3,22 @@
  *
  * สูตรเดียวกับสัญญา: งวดที่ k ของก้อนหนึ่งปลดที่เวลา start + (cliff + k) × period
  * ก่อนสัญญาขึ้นเชน แสดง "แผน" จาก config/idtc.php (ไม่มีวันเริ่ม จึงไม่มีนับถอยหลัง)
+ * ข้อความทุกตัวมาจากพจนานุกรมตามภาษาของหน้า (./i18n → lang/{th,en}/js.php)
  */
 import Alpine from 'alpinejs';
 import { Contract, Interface } from 'ethers';
 import {
     ABI, CFG, assertWallet, chainNow, connectWallet, contractAddress, decodeRevert, explorerAddress, explorerTx,
-    formatAmount, readProvider, sendTx, short, splitDuration, syncChainClock, thaiDate, waitReceipt, walletError, withTimeout,
+    formatAmount, readProvider, sendTx, short, splitDuration, syncChainClock, waitReceipt, walletError, withTimeout,
 } from './chain';
+import { BIG_EXP, localDate, t } from './i18n';
 
 const DEC = Number(CFG.token?.decimals ?? 18);
 const ONE = 10n ** BigInt(DEC);
 const VEST_ABI = [...ABI.vesting, ...ABI.errors, 'event Released(address indexed to, uint256 amount)'];
 const vestIface = new Interface(VEST_ABI);
 
-const trancheName = (cliff) => (cliff % 12 === 0 ? `ล็อก ${cliff / 12} ปี` : `ล็อก ${cliff} เดือน`);
+const trancheName = (cliff) => (cliff > 0 && cliff % 12 === 0 ? t('lock.tranche_years', { n: cliff / 12 }) : t('lock.tranche_months', { n: cliff }));
 
 Alpine.data('lockDashboard', (plan) => ({
     vestAddr: contractAddress('vesting'),
@@ -115,8 +117,8 @@ Alpine.data('lockDashboard', (plan) => ({
             this.tick();
         } catch (e) {
             this.loadError = e?.code === 'BAD_DATA' || e?.code === 'CALL_EXCEPTION'
-                ? 'อ่านสัญญาล็อกไม่ได้ ที่อยู่สัญญาอาจไม่ถูกต้อง'
-                : 'อ่านข้อมูลจากเชนไม่ได้ (เครือข่ายช้าหรือหลุด) ระบบจะลองใหม่เอง';
+                ? t('lock.load_bad')
+                : t('lock.load_net');
         } finally {
             this.loading = false;
         }
@@ -127,10 +129,10 @@ Alpine.data('lockDashboard', (plan) => ({
     get cells() { return Math.max(60, ...this.tranches.map((t) => t.cliff + t.release)); },
     get pctReleased() { return this.total > 0n ? Number((this.released * 10000n) / this.total) / 100 : 0; },
 
-    /** ล้านเหรียญ: 220000000000 → "220,000 ล้าน" (ระหว่างรออ่านสัญญาแสดง … ไม่โชว์ 0 หลอก) */
-    million(v) { return this.deployed && !this.loaded ? '…' : formatAmount(v ?? 0n, DEC + 6, 2, { trim: true }); },
+    /** จำนวนก้อนใหญ่ตามภาษา: 220000000000 → ไทย "220,000" (ล้าน) · อังกฤษ "220" (billion) — ระหว่างรออ่านสัญญาแสดง … ไม่โชว์ 0 หลอก */
+    million(v) { return this.deployed && !this.loaded ? '…' : formatAmount(v ?? 0n, DEC + BIG_EXP, 2, { trim: true }); },
     full(v, d = 2) { return this.deployed && !this.loaded ? '…' : v === null || v === undefined ? '—' : formatAmount(v, DEC, d); },
-    thaiDate,
+    localDate,
 
     /* ───────── ก้อนล็อก ───────── */
     /**
@@ -152,11 +154,11 @@ Alpine.data('lockDashboard', (plan) => ({
         }
         return html;
     },
-    firstUnlock(t) {
-        return this.live ? thaiDate(this.start + (t.cliff + 1) * this.period) : `เดือนที่ ${t.cliff + 1} หลังวันเริ่มล็อก`;
+    firstUnlock(tr) {
+        return this.live ? localDate(this.start + (tr.cliff + 1) * this.period) : t('lock.month_after', { n: tr.cliff + 1 });
     },
-    lastUnlock(t) {
-        return this.live ? thaiDate(this.start + (t.cliff + t.release) * this.period) : `เดือนที่ ${t.cliff + t.release}`;
+    lastUnlock(tr) {
+        return this.live ? localDate(this.start + (tr.cliff + tr.release) * this.period) : t('lock.month', { n: tr.cliff + tr.release });
     },
     perInstallment(t) { return t.release ? t.amount / BigInt(t.release) : 0n; },
 
@@ -164,17 +166,17 @@ Alpine.data('lockDashboard', (plan) => ({
     get nextLabel() {
         if (!this.live) {
             const first = [...this.tranches].sort((a, b) => a.cliff - b.cliff)[0];
-            return first ? `ก้อน "${first.name}" งวดที่ 1 · เดือนที่ ${first.cliff + 1} หลังวันเริ่มล็อก` : '';
+            return first ? t('lock.next_plan', { name: first.name, n: first.cliff + 1 }) : '';
         }
-        if (!this.nextAt) return 'ปลดครบทุกงวดแล้ว';
+        if (!this.nextAt) return t('lock.all_done');
         const parts = this.tranches
-            .map((t) => {
-                const cliffEnd = this.start + t.cliff * this.period;
+            .map((tr) => {
+                const cliffEnd = this.start + tr.cliff * this.period;
                 const k = (this.nextAt - cliffEnd) / this.period;
-                return Number.isInteger(k) && k >= 1 && k <= t.release ? `ก้อน "${t.name}" งวดที่ ${k}/${t.release}` : null;
+                return Number.isInteger(k) && k >= 1 && k <= tr.release ? t('lock.next_part', { name: tr.name, k, total: tr.release }) : null;
             })
             .filter(Boolean);
-        return parts.join(' + ') || thaiDate(this.nextAt, true);
+        return parts.join(' + ') || localDate(this.nextAt, true);
     },
     get nextAmountPlan() {
         const first = [...this.tranches].sort((a, b) => a.cliff - b.cliff)[0];
@@ -237,7 +239,7 @@ Alpine.data('lockDashboard', (plan) => ({
         } catch (e) {
             if (e?.code === 'CANCELLED') return;
             const d = decodeRevert(e);
-            this.error = d?.name === 'NothingToRelease' ? 'ยังไม่มีงวดที่ถึงเวลาปลด (อาจมีคนกดปลดไปก่อนแล้ว)' : walletError(e);
+            this.error = d?.name === 'NothingToRelease' ? t('lock.nothing') : walletError(e);
             this.errorTx = e?.hash || (this.phase === 'wait' ? this.errorTx : '');
         } finally {
             if (id === this.flowId) { this.busy = false; this.phase = ''; }
@@ -246,7 +248,7 @@ Alpine.data('lockDashboard', (plan) => ({
     },
 
     get phaseText() {
-        return { connect: 'เปิดกระเป๋าเพื่อเชื่อมต่อ…', sign: 'ยืนยันรายการ "release" ในกระเป๋า…', wait: 'รอเชนยืนยัน…' }[this.phase] || '';
+        return this.phase ? t(`lock.phase.${this.phase}`) : '';
     },
 }));
 
@@ -273,7 +275,7 @@ Alpine.data('verifyBadge', (address) => ({
         if (address) fetchVerified(address).then((s) => { this.state = s; });
     },
     get label() {
-        return { checking: 'กำลังตรวจ…', verified: '✓ verified', unverified: 'ยังไม่ verify', notcontract: 'ไม่พบสัญญา', unknown: 'ตรวจบน explorer ↗', none: 'รอ deploy' }[this.state];
+        return t(`verify.${this.state}`);
     },
     get cls() {
         return { verified: 'pill-ok', unverified: 'pill-warn', notcontract: 'pill-warn' }[this.state] || 'pill-wait';

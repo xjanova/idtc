@@ -180,7 +180,7 @@ class PublicPagesTest extends TestCase
 
     public function test_whitepaper_shows_placeholder_when_markdown_is_missing(): void
     {
-        config(['idtc.whitepaper_path' => storage_path('framework/testing/missing-whitepaper.md')]);
+        config(['idtc.whitepaper_path.th' => storage_path('framework/testing/missing-whitepaper.md')]);
 
         $this->get('/whitepaper')
             ->assertOk()

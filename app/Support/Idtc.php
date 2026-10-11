@@ -92,8 +92,16 @@ class Idtc
             ],
             'contracts' => static::contracts(),
             'sale' => config('idtc.sale'),
-            'vesting' => config('idtc.vesting'),
+            // ชื่อก้อนล็อกตามภาษาของหน้า (Tokenomics) — ตัวเลขชุดเดียวกับ config/idtc.php
+            'vesting' => ['period_seconds' => (int) config('idtc.vesting.period_seconds'), 'tranches' => Tokenomics::tranches()],
             'site' => url('/'),
+            // ภาษาของหน้า: ข้อความทุกตัวที่ JS แสดงมาจาก lang/{th,en}/js.php (resources/js/i18n.js)
+            'locale' => SiteLocale::current(),
+            'i18n' => __('js'),
+            'urls' => [
+                'home' => SiteLocale::route('home'),
+                'addNetwork' => SiteLocale::route('add-network'),
+            ],
         ];
     }
 }
