@@ -71,7 +71,7 @@
                 </form>
             </div>
         </aside>
-        <div class="scrim" x-show="nav" x-cloak x-transition.opacity @click="nav = false"></div>
+        <div class="scrim" x-show="nav" x-cloak @click="nav = false"></div>
 
         <main class="main" id="main">
             <div class="topbar">
@@ -113,7 +113,7 @@
     </div>
 
     {{-- กล่องยืนยันกลาง: ทวนผลของคำสั่งและที่อยู่ปลายทางก่อนเปิดกระเป๋าเซ็น --}}
-    <div class="modal" x-show="$store.confirm.open" x-cloak x-transition.opacity @keydown.escape.window="$store.confirm.open && $store.confirm.answer(false)" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal" x-show="$store.confirm.open" x-cloak @keydown.escape.window="$store.confirm.open && $store.confirm.answer(false)" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
         <div class="modal-card" :class="{ danger: $store.confirm.danger }" @click.outside="$store.confirm.answer(false)">
             <h2 id="confirmTitle" x-text="$store.confirm.title"></h2>
             <ul><template x-for="line in $store.confirm.lines" :key="line"><li x-text="line"></li></template></ul>

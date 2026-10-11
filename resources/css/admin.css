@@ -250,3 +250,10 @@
     .adm .side { transition: none; }
     .adm .spin { animation: none; }
 }
+
+/* เฟดเข้าด้วย CSS (ไม่ใช้ x-transition — กดปิดเร็ว ๆ แล้ว Alpine โยน error ใน console) */
+.adm .modal, .adm .scrim { animation: admfade .18s ease-out; }
+.adm .modal-card { animation: admpop .2s ease-out; }
+@keyframes admfade { from { opacity: 0; } }
+@keyframes admpop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .adm .modal, .adm .scrim, .adm .modal-card { animation: none; } }
