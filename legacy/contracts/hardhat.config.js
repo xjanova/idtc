@@ -12,23 +12,23 @@ module.exports = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
     polygon: {
-      url: "https://polygon-rpc.com",
+      url: "https://polygon-bor-rpc.publicnode.com",
       chainId: 137,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
   },
+  sourcify: {
+    enabled: true
+  },
   etherscan: {
-    apiKey: {
-      polygon: process.env.POLYGONSCAN_API_KEY || "",
-      polygonAmoy: process.env.POLYGONSCAN_API_KEY || ""
-    },
+    apiKey: process.env.POLYGONSCAN_API_KEY || "",
     customChains: [
       {
-        network: "polygonAmoy",
-        chainId: 80002,
+        network: "polygon",
+        chainId: 137,
         urls: {
-          apiURL: "https://api-amoy.polygonscan.com/api",
-          browserURL: "https://amoy.polygonscan.com"
+          apiURL: "https://api.etherscan.io/v2/api?chainid=137",
+          browserURL: "https://polygonscan.com"
         }
       }
     ]

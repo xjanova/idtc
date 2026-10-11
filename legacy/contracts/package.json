@@ -1,0 +1,23 @@
+{
+  "name": "idtc-contracts",
+  "version": "1.0.0",
+  "description": "IDTC ERC-20 Token Contracts",
+  "scripts": {
+    "compile": "node node_modules/hardhat/internal/cli/bootstrap.js compile",
+    "deploy:amoy": "node node_modules/hardhat/internal/cli/bootstrap.js run scripts/deploy.js --network amoy",
+    "verify:amoy": "node node_modules/hardhat/internal/cli/bootstrap.js verify --network amoy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-verify": "^2.0.12",
+    "hardhat": "^2.22.15"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.2.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.0"
+  }
+}

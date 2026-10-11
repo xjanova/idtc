@@ -1,0 +1,413 @@
+﻿WHITEPAPER
+             
+Invest Energy-Development Coin (IDTC)
+1. 
+บทนำ
+ (
+Introduction)
+    
+IDTC Energy Capital 
+เป็นโครงการที่พัฒนาแพลตฟอร์มการลงทุนบนเทคโนโลยี
+ 
+Blockchain 
+โดยมุ่งเน้นการเชื่อมโยงนักลงทุนกับโครงการพลังงานจริง
+ 
+เช่น
+ 
+น้ำมัน
+ 
+และพลังงานแสงอาทิตย์
+ 
+ในภูมิภาคตะวันออกกลาง
+ 
+และเอเชีย
+โดย
+โครงการมีเป้าหมายเพื่อเปิดโอกาสให้นักลงทุนรายย่อยสามารถเข้าถึงการลงทุนในอุตสาหกรรมพลังงานได้ง่ายขึ้น
+ 
+ผ่านระบบที่โปร่งใส
+ 
+ตรวจสอบได้
+ 
+และมีประสิทธิภาพ
+.
+2
+. 
+วิสัยทัศน์
+ (
+Vision)
+IDTC
+ 
+คือตัวเชื่อมโยงระหวางนักลงทุนทุกระดับกับ
+ระบบการลงทุน
+เกียวกับ
+พลังงานและการพัฒนา
+ท้องถิ่น
+ 
+ที่
+ 
+โปร่งใส
+ (
+Transparent
+)
+,
+เข้าถึงได้ง่าย
+ (
+Accessible
+)
+,
+กระจายศูนย์
+ (
+Decentralized
+)
+,
+ให้ผลตอบแทนแก่นักลงทุนที่สมเหตุสมผล
+ในไลยะยาว
+,
+เชิ่งจะช่วยให้นักลงทุนรายย่อย
+ 
+กลางหรือรายใหย่
+ 
+ทีสนใจลงทุนเกียวกับ
+ 
+Crypto 
+currentcy
+ 
+และการแลกเปลี่ยน
+ 
+น้ำมันหรือพะลังงานไฟฟ้าในท้องที่ของท่านและทุกมุมโลก
+.
+ 2.1   
+IDTC Token is used for:
+💰
+ Investment in energy projects 
+🔒
+ Staking for passive income 
+🗳️
+ Governance voting 
+⚡
+ Payment for energy-related services 
+🔄
+ Trading within ecosystem
+3
+. Market Opportunity
+มูลค่าการลงทุนพลังงานโลก
+:
+ 
+≈ 3.3 
+ล้านล้านดอลลาร์
+ (
+USD 3.3 Trillion)
+ 
+พลังงานสะอาด
+ (
+Clean Energy): 
+≈ 2.2 
+ล้านล้านดอลลาร์
+ (
+~67%)
+ 
+Fossil Fuel: 
+≈ 1.1 
+ล้านล้านดอลลาร์
+ (
+~33%
+4
+. Token Overview
+Token Name: IDTC 
+Full Name: Invest Energy-Development Coin
+Chain ID (
+Mainnet
+) ……….
+ 
+Chain ID (
+Testnet
+)…………
+Type: Utility Token 
+Blockchain: BSC (BEP-
+20)
+Tagline: Smart Energy Token 
+5
+. Token Information
+Initial Price: $0.0000
+3
+ USD 
+Total Supply: 1,100,000,000,000 C
+oin
+RPC URL
+………….
+ 
+Explore
+……………
+…..
+5.1
+   
+ 
+โปรโตคอล 
+DEX
+TPIX DEX 
+เป็น 
+Uniswap V2 fork 
+ที่ 
+deploy 
+บน 
+TPIX Chain 
+โดยตรง ใช้ 
+AMM 
+สูตร 
+x·y
+=k 
+ค่าธรรมเนียม 
+0.3% (0.25% 
+ให้ 
+LP, 0.05% 
+ให้คลัง 
+protocol)
+ขั้นตอนการ 
+Swap 
+ผ่าน 
+AMM
+ผู้ใช้
+→Router02→Pair (
+x·y
+=k)→
+แบ่งค่าธรรมเนียม 
+0.
+01
+%→
+ได้โทเคน
+Contract
+คำอธิบาย
+TPIXDEXFactory
+สร้างและจัดการ 
+trading pair contracts
+TPIXDEXRouter02
+จัดการ 
+multi-hop swaps 
+และสภาพคล่อง
+TPIXDEXPair
+สระสภาพคล่อง พร้อม 
+ERC-20 LP tokens
+WTPIX
+Wrapped TPIX 
+สำหรับใช้ใน 
+DEX
+6
+. 
+รายละเอียดการขายโทเคน
+        
+การขายเหรียญ 
+IDTC
+ 
+แบ่งเป็น 
+3 
+รอบ รับ 
+BNB 
+และ 
+USDT 
+บน 
+BSC 
+เหรียญที่ซื้อจะมีตาราง 
+vesting 
+สามารถเคลมเป็น
+ w IDTC 
+(BEP-20) 
+หรือ 
+IDTC
+ native 
+เมื่อ 
+bridge 
+พร้อม
+  
+🔹
+ Seed Round (
+นักลงทุนใหญ่)
+ 
+💵
+ 
+ราคา
+: $0.00003 
+🔒
+ Lock: 12–24 
+เดือน
+ 
+🎯
+ 
+กลุ่ม
+: VC / Whale / Strategic Partner 
+  
+🔹
+ Private Sale 
+💵
+ 
+ราคา
+: $0.00005 
+🔒
+ Lock: 6–12 
+เดือน
+ 
+🎯
+ 
+กลุ่ม
+: 
+นักลงทุนระดับกลาง
+ 
+  
+🔹
+ Public Sale (ICO / IDO) 
+💵
+ 
+ราคา
+: $0.00008 
+🎯
+ 
+กลุ่ม
+: 
+นักลงทุนทั่วไป
+ 
+  
+🔹
+ Listing Price (
+PancakeSwap
+) 
+💵
+ 
+ราคา
+: $0.00010 – $0.00012 
+🎯
+ 
+ราคาเปิดตลาดจริง
+ 
+6
+.
+1
+ 
+ 
+Tokenomics
+ 
+การจัดสรรโทเค็น
+ 
+และรายได้
+นักลงทุน
+: 
+40% 
+ทีมพัฒนา
+: 
+20% 
+(
+มีการล็อกเหรียญ
+ 
+1–2 
+ปี
+)
+ 
+การตลาด
+: 
+15% 
+พัฒนาโครงการ
+: 
+15% 
+รางวัล
+/
+สำรอง
+: 
+10% 
+7
+. Security
+ใช้
+ 
+Smart Contract 
+บน
+ 
+Blockchain 
+รองรับ
+ 
+Wallet 
+มาตรฐาน
+ 
+เช่น
+ 
+MetaMask 
+8
+. 
+Roadmap
+Phase
+1
+. 
+สร้าง
+ 
+Token, 
+สร้าง
+ 
+Website + Community
+ 
+10/04/2026
+Phase
+2
+. 
+เปิดขาย
+ 
+ICO / IDO, 
+ลิสต์บน
+ 
+PancakeSwap
+ 
+20/04/2026
+Phase
+3
+. 
+เปิด
+ 
+Platform 
+ลงทุน
+ + 
+Staking + 
+Governance
+ 
+30/04/2026
+Phase
+4
+. 
+ขยายระดับภูมิภาค
+, 
+พัฒนา
+ 
+Ecosystem 
+เต็มรูปแบบ
+  
+10/05/2026
+9
+. 
+ทีมงาน
+ (
+Team)
+ 
+IDTC
+ 
+พัฒนาโดย 
+Xman
+ Studio 
+ทีมพัฒนาบล็อกเชนที่มีประสบการณ์ เชี่ยวชาญด้าน 
+DeFi, Web3 
+และแอปพลิเคชันระดับองค์กรสำหรับตลาดเอเชียตะวันออกเฉียงใต้ ทีมมีความเชี่ยวชาญลึกซึ้งในด้าน 
+Solidity smart contracts, 
+การ 
+deploy 
+เชน 
+EVM, 
+การพัฒนา 
+Web3 full-stack 
+และการเชื่อมต่อกับระบบธุรกิจในโลกจริง
+Founder: …
+Developer: …
+Advisor: …
+ 1
+0
+. Contact Information
+       .      Facebook page. 
+IDTC Energy Capital
+📧
+ info@idtc.io 
+🛠️
+ support@idtc.io 
+💼
+ info@investenergy-dev.com
