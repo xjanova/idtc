@@ -1,0 +1,39 @@
+{
+  "note": "TEST-ONLY fixture: signed by a random throwaway key generated once with ethers; the key was not kept.",
+  "address": "0x399679922b673FEE28c507B07FF12e17aBFD78a8",
+  "cases": {
+    "valid": {
+      "nonce": "TestNonceValid0000000001",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0x399679922b673FEE28c507B07FF12e17aBFD78a8\n\nเข้าสู่หลังบ้าน IDTC\n\nURI: http://localhost/admin\nVersion: 1\nChain ID: 4289\nNonce: TestNonceValid0000000001\nIssued At: 2026-10-11T05:00:00Z\nExpiration Time: 2026-10-11T05:05:00Z",
+      "signature": "0x35eec7defec213dc0f06975334a0e7bd2bc41720104d7659a97d737c4fc60cc10aff4c74ac1fa97b1926607de03a472ec8daf7db86fc0755c3b4af1c79821bbd1b"
+    },
+    "valid2": {
+      "nonce": "TestNonceValid0000000002",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0x399679922b673FEE28c507B07FF12e17aBFD78a8\n\nเข้าสู่หลังบ้าน IDTC\n\nURI: http://localhost/admin\nVersion: 1\nChain ID: 4289\nNonce: TestNonceValid0000000002\nIssued At: 2026-10-11T05:00:00Z\nExpiration Time: 2026-10-11T05:05:00Z",
+      "signature": "0xeb76a1c487c53f18e32659c5b60495db7536d22e6a548362a8006f1a3c6405b055a7104f4d87111934a57245fd5b563fd3686e61e6cb8e5bb3a4d2c93a7af4441c"
+    },
+    "wrong_domain": {
+      "nonce": "TestNonceWrongDomain0001",
+      "message": "evil.example wants you to sign in with your Ethereum account:\n0x399679922b673FEE28c507B07FF12e17aBFD78a8\n\nเข้าสู่หลังบ้าน IDTC\n\nURI: https://evil.example/admin\nVersion: 1\nChain ID: 4289\nNonce: TestNonceWrongDomain0001\nIssued At: 2026-10-11T05:00:00Z\nExpiration Time: 2026-10-11T05:05:00Z",
+      "signature": "0xe2080cdd879f5563d8b101c2e0ead9dee19b60d641f64fa48001b688e52f87797410eea9a1a3cf6f36d98d72fca4746f03fd81d0c035a85f10103ccf725749771c"
+    },
+    "wrong_chain": {
+      "nonce": "TestNonceWrongChain00001",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0x399679922b673FEE28c507B07FF12e17aBFD78a8\n\nเข้าสู่หลังบ้าน IDTC\n\nURI: http://localhost/admin\nVersion: 1\nChain ID: 1\nNonce: TestNonceWrongChain00001\nIssued At: 2026-10-11T05:00:00Z\nExpiration Time: 2026-10-11T05:05:00Z",
+      "signature": "0xb7345c1f1ba7c0358f0d16ef3ca3a2d76b26e0d712d7d4bffbaf24e44163c8e1182f950450842cf1c73467e1b2606d77ebe2d19c2ed73fa4bf0c210c65f061921b"
+    }
+  },
+  "hello": {
+    "message": "hello idtc",
+    "signature": "0xc6361e1478b4f91084a2f2f5d9fc9eb30e00a527a8b818009581018b0e3bbfc200b6e1bbeb4c0791925df9fe03a0b84aebc0cd29f33ef5fb5c6b2b1fc498540e1b"
+  },
+  "topics": {
+    "Purchased": "0xf761777482b4b40d2bcc0d050cfba6829900a2d8b3484bd0244ec0feeb3db504",
+    "setLimits(uint256,uint256)": "0xc4590d3f",
+    "setWindow(uint64,uint64)": "0x0a57fcb2",
+    "tranche(uint256)": "0xd241c9c0",
+    "nextUnlock()": "0x02cb1244",
+    "getReserves()": "0x0902f1ac"
+  },
+  "thai_hash": "0xbd20d84fb9b5477ed97c8f206dd174677e8ed2be0422a2d5f90105dcbd7b67b3"
+}

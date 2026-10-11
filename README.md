@@ -56,3 +56,25 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+## หลังบ้าน IDTC (ระบบควบคุมเหรียญ) — `/admin`
+
+เข้าด้วยการเซ็นข้อความในกระเป๋า (EIP-4361) ไม่มีรหัสผ่าน และเซิร์ฟเวอร์ไม่ถือคีย์ใด ๆ — คำสั่งบนเชน (หยุดขาย ตั้งเวลา เปลี่ยนกระเป๋ารับเงิน ฯลฯ) เซ็นในกระเป๋าบนเบราว์เซอร์เท่านั้น
+
+- **เจ้าของคนแรก:** ใส่ที่อยู่กระเป๋าใน `.env` → `IDTC_ADMIN_WALLETS=0xเจ้าของ,0xแอดมิน2` (ตัวแรก = owner, ที่เหลือ = admin) แล้วเข้า `/admin/login`
+- **ผู้ดูแลเพิ่มเติม:** owner เพิ่มจากหน้า "ผู้ดูแล" (สิทธิ์ owner / admin / viewer) หรือทางสำรองบนเซิร์ฟเวอร์: `php artisan idtc:admin 0xที่อยู่ --role=admin`
+- **ที่อยู่สัญญา:** ตั้งจากหน้า "ตั้งค่าเหรียญ" (ตรวจ `eth_getCode` ก่อนบันทึก) หรือใน `.env` (`IDTC_TOKEN_ADDRESS`, `IDTC_VESTING_ADDRESS`, `IDTC_PRESALE_ADDRESS`, `IDTC_PAIR_USDT`, `IDTC_PAIR_TPIX`) — ค่าจากหลังบ้านแก้ทับ `.env`
+
+### งานตามเวลา (ดึงยอดขายจากเชน)
+
+`php artisan idtc:index-sales` ดึง event `Purchased` ของสัญญา presale ลงฐานข้อมูล (ทีละ 5,000 บล็อก รันซ้ำได้ไม่เกิดรายการซ้ำ) และตามผลธุรกรรมของหลังบ้านที่ค้างอยู่ — ตั้งไว้ใน `routes/console.php` ให้รันทุกนาที
+
+ใน DirectAdmin → Cron Jobs เพิ่มบรรทัดเดียว:
+
+```
+* * * * * cd /home/admin/domains/idtc.online && php artisan schedule:run >> /dev/null 2>&1
+```
+
+ปุ่ม "ซิงก์ตอนนี้" ในหลังบ้านรันคำสั่งเดียวกันทันที · ถ้าตั้งที่อยู่ presale หลังเปิดขายแล้ว ให้ใส่ "บล็อกเริ่ม" (บล็อกที่ deploy สัญญา) ในหน้าตั้งค่าเหรียญเพื่อดึงยอดย้อนหลัง
