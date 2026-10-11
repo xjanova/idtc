@@ -1,0 +1,1080 @@
+<title>IDTC Energy Capital</title>
+<meta name="description" content="IDTC — เหรียญเพื่อการพัฒนาพลังงานบนเชน TPIX ล็อก 70% ในสัญญา ราคา presale ฝังในสัญญา ตรวจสอบได้ทุกบรรทัด">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: night energy — one dark world, image-led hero, content in a 1200px column, admin as an app shell.
+   Brand comes from the coin itself: emerald leaves, lime bolt, solar blue, sunrise gold for price only. */
+:root {
+  color-scheme: dark;
+  --bg: #04080a;
+  --bg-2: #07110f;
+  --bg-3: #0b1714;
+  --panel: rgba(255, 255, 255, .035);
+  --panel-2: rgba(255, 255, 255, .06);
+  --line: rgba(220, 255, 240, .09);
+  --line-2: rgba(220, 255, 240, .16);
+  --fg-strong: #ffffff;
+  --fg: #eaf4ef;
+  --fg-2: #b0c3bb;
+  --fg-3: #7b8f88;
+  --emerald: #10b981;
+  --emerald-2: #059669;
+  --lime: #a3e635;
+  --bolt: #e6f23a;
+  --solar: #3b82f6;
+  --gold: #f5c86b;
+  --red: #fb7185;
+  --on-accent: #03130c;
+  --font-display: "Anuphan", "Noto Sans Thai", system-ui, sans-serif;
+  --font-body: "Noto Sans Thai", "Anuphan", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r-panel: 20px;
+  --r-field: 12px;
+  --wrap: 1200px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.7; overflow-x: clip; -webkit-font-smoothing: antialiased; }
+a { color: var(--lime); text-underline-offset: 3px; }
+img { max-width: 100%; display: block; }
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--fg-strong); text-wrap: balance; margin: 0; line-height: 1.2; letter-spacing: -.01em; }
+p { margin: 0; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 6px; }
+.wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding-inline: 20px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+.grad { background: linear-gradient(95deg, var(--lime), var(--emerald) 55%, #2dd4bf); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.kicker { font-family: var(--font-display); color: var(--lime); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px; }
+.h2 { font-size: clamp(28px, 3.6vw, 42px); font-weight: 700; max-width: 26ch; }
+.lead { color: var(--fg-2); max-width: 64ch; font-size: clamp(15.5px, 1.4vw, 17.5px); }
+.tag-illus { position: absolute; left: 12px; bottom: 12px; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: rgba(4, 8, 10, .72); border: 1px solid var(--line); color: var(--fg-3); backdrop-filter: blur(6px); }
+.tag-sample { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--gold); background: rgba(245, 200, 107, .08); border: 1px solid rgba(245, 200, 107, .25); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+
+/* ── prototype bar ── */
+.proto { position: relative; z-index: 60; background: linear-gradient(90deg, #0d1f19, #0b1613); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--fg-2); }
+.proto .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding-block: 8px; }
+.proto b { color: var(--fg); }
+.proto nav { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.proto nav a { color: var(--fg-2); text-decoration: none; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--line); }
+.proto nav a:hover, .proto nav a.is-on { color: var(--on-accent); background: var(--lime); border-color: var(--lime); }
+
+/* ── site nav ── */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: rgba(4, 8, 10, .72); backdrop-filter: blur(14px) saturate(140%); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 22px; min-height: 66px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg-strong); font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .02em; }
+.brand img { width: 36px; height: 36px; }
+.brand small { display: block; font-size: 10.5px; font-weight: 500; letter-spacing: .12em; color: var(--fg-3); text-transform: uppercase; line-height: 1.1; }
+.nav-links { display: flex; gap: 4px; margin-left: 8px; }
+.nav-links a { color: var(--fg-2); text-decoration: none; font-size: 15px; padding: 8px 12px; border-radius: 10px; }
+.nav-links a:hover { color: var(--fg-strong); background: var(--panel-2); }
+.nav-cta { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.lang { font-size: 13px; color: var(--fg-3); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+@media (max-width: 920px) { .nav-links { display: none; } }
+
+/* ── buttons ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-family: var(--font-display); font-weight: 700; font-size: 15.5px; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease; white-space: nowrap; }
+.btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.btn-primary { background: linear-gradient(95deg, var(--lime), var(--emerald)); color: var(--on-accent); box-shadow: 0 14px 36px -14px rgba(163, 230, 53, .65); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 18px 44px -12px rgba(16, 185, 129, .8); }
+.btn-ghost { background: var(--panel); border-color: var(--line-2); color: var(--fg); }
+.btn-ghost:hover { background: var(--panel-2); }
+.btn-sm { min-height: 38px; padding: 0 15px; font-size: 14px; }
+.btn-block { width: 100%; }
+.btn-danger { background: rgba(251, 113, 133, .1); border-color: rgba(251, 113, 133, .35); color: #fecdd3; }
+
+/* ── views ── */
+.view { display: none; }
+.view.is-on { display: block; }
+
+/* ── hero ── */
+.hero { position: relative; isolation: isolate; overflow: hidden; border-bottom: 1px solid var(--line); }
+.hero-bg { position: absolute; inset: 0; z-index: -2; background: var(--bg) url("img/hero.webp") right center / cover no-repeat; transform: scale(1.04); animation: heroDrift 26s ease-in-out infinite alternate; }
+.hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4, 8, 10, .97) 0%, rgba(4, 8, 10, .86) 34%, rgba(4, 8, 10, .25) 64%, rgba(4, 8, 10, .1) 100%), linear-gradient(0deg, var(--bg) 0%, transparent 28%); }
+@keyframes heroDrift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.1) translate3d(-1.4%, -1%, 0); } }
+#flow { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
+.hero .wrap { padding-block: clamp(56px, 8vw, 104px) clamp(56px, 7vw, 92px); }
+.hero-copy { max-width: 640px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(163, 230, 53, .35); background: rgba(163, 230, 53, .08); color: var(--lime); font-size: 13.5px; font-weight: 600; margin-bottom: 22px; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0 rgba(163, 230, 53, .6); animation: pulse 2s ease-out infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(163, 230, 53, 0); } 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); } }
+.hero h1 { font-size: clamp(36px, 5.4vw, 64px); font-weight: 700; line-height: 1.12; margin-bottom: 20px; }
+.hero h1 .grad { display: block; }
+.hero-lead { color: var(--fg-2); font-size: clamp(16px, 1.5vw, 18.5px); max-width: 56ch; margin-bottom: 28px; }
+.hero-lead b { color: var(--fg-strong); font-weight: 600; }
+.price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 8px; }
+.price-amt { font-family: var(--font-display); font-size: clamp(36px, 4.4vw, 54px); font-weight: 700; color: var(--gold); letter-spacing: -.02em; line-height: 1.05; }
+.price-unit { color: var(--fg-2); font-size: 15px; }
+.price-sub { color: var(--fg-3); font-size: 14px; margin-bottom: 26px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.meter { margin-top: 30px; max-width: 520px; padding: 16px 18px; border-radius: 16px; background: rgba(4, 8, 10, .6); border: 1px solid var(--line); backdrop-filter: blur(8px); }
+.meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--fg-2); margin-bottom: 10px; flex-wrap: wrap; }
+.meter-head b { color: var(--fg-strong); font-size: 19px; font-family: var(--font-display); }
+.bar { height: 9px; border-radius: 999px; background: rgba(255, 255, 255, .07); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: var(--w, 0%); border-radius: inherit; background: linear-gradient(90deg, var(--emerald), var(--lime)); box-shadow: 0 0 18px rgba(163, 230, 53, .55); transition: width 1.6s cubic-bezier(.2, .7, .2, 1); position: relative; overflow: hidden; }
+.bar > i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent); transform: translateX(-100%); animation: sheen 2.8s ease-in-out infinite; }
+@keyframes sheen { 60%, 100% { transform: translateX(100%); } }
+.meter-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-size: 12.5px; color: var(--fg-3); flex-wrap: wrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; padding: 0; list-style: none; }
+.chips li { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: rgba(4, 8, 10, .55); border: 1px solid var(--line); font-size: 13px; color: var(--fg-2); backdrop-filter: blur(6px); }
+.chips svg { width: 14px; height: 14px; stroke: var(--lime); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.load-in > * { animation: rise .8s cubic-bezier(.2, .7, .2, 1) both; }
+.load-in > *:nth-child(2) { animation-delay: .08s; } .load-in > *:nth-child(3) { animation-delay: .16s; } .load-in > *:nth-child(4) { animation-delay: .24s; } .load-in > *:nth-child(5) { animation-delay: .32s; } .load-in > *:nth-child(6) { animation-delay: .4s; } .load-in > *:nth-child(7) { animation-delay: .48s; } .load-in > *:nth-child(8) { animation-delay: .56s; }
+@keyframes rise { from { opacity: .001; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* ── stats ribbon ── */
+.stats { background: var(--bg-2); border-bottom: 1px solid var(--line); }
+.stats .wrap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat { padding: 26px 22px; border-left: 1px solid var(--line); }
+.stat:first-child { border-left: 0; }
+.stat-label { font-size: 13px; color: var(--fg-3); margin-bottom: 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.stat-value { font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 30px); font-weight: 700; color: var(--fg-strong); font-variant-numeric: tabular-nums; }
+.stat-value small { font-size: .55em; color: var(--fg-2); font-weight: 500; margin-left: 4px; }
+@media (max-width: 760px) { .stats .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat:nth-child(3) { border-left: 0; } .stat { border-top: 1px solid var(--line); } }
+
+/* ── sections ── */
+.section { padding-block: clamp(64px, 9vw, 112px); border-bottom: 1px solid var(--line); position: relative; }
+.section-alt { background: var(--bg-2); }
+.section-head { display: grid; gap: 14px; margin-bottom: 44px; }
+.reveal { transition: opacity .9s ease, transform .9s cubic-bezier(.2, .7, .2, 1); }
+.reveal.pre { opacity: .001; transform: translateY(26px); }
+
+/* sectors */
+.sectors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.sector { position: relative; border-radius: var(--r-panel); overflow: hidden; border: 1px solid var(--line); background: var(--bg-3); }
+.sector figure { margin: 0; position: relative; aspect-ratio: 16 / 10; overflow: hidden; }
+.sector figure img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+.sector:hover figure img { transform: scale(1.06); }
+.sector figure::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, var(--bg-3) 0%, transparent 55%); }
+.sector-body { padding: 4px 22px 24px; position: relative; }
+.sector h3 { font-size: 20px; margin-bottom: 8px; }
+.sector p { color: var(--fg-2); font-size: 15px; }
+@media (max-width: 860px) { .sectors { grid-template-columns: 1fr; } }
+
+/* guarantees */
+.guard { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
+.guard-list { list-style: none; margin: 30px 0 0; padding: 0; display: grid; gap: 12px; }
+.guard-list li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; align-items: start; padding: 16px 18px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+.guard-list .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(251, 113, 133, .08); border: 1px solid rgba(251, 113, 133, .25); }
+.guard-list .ic svg { width: 20px; height: 20px; stroke: #fda4af; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.guard-list b { display: block; color: var(--fg-strong); font-family: var(--font-display); font-weight: 600; font-size: 16.5px; }
+.guard-list span { color: var(--fg-2); font-size: 14.5px; }
+.vault { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 1; max-width: 520px; justify-self: center; width: 100%; }
+.vault img { width: 100%; height: 100%; object-fit: cover; animation: breathe 9s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.035); filter: brightness(1.08) saturate(1.1); } }
+.vault-badge { position: absolute; right: 16px; top: 16px; padding: 10px 14px; border-radius: 14px; background: rgba(4, 8, 10, .74); border: 1px solid var(--line-2); backdrop-filter: blur(8px); }
+.vault-badge b { display: block; font-family: var(--font-display); font-size: 26px; color: var(--fg-strong); line-height: 1.1; }
+.vault-badge span { font-size: 12.5px; color: var(--fg-2); }
+@media (max-width: 900px) { .guard { grid-template-columns: 1fr; } }
+
+/* tokenomics */
+.tokenomics { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
+.donut-wrap { position: relative; max-width: 440px; width: 100%; justify-self: center; aspect-ratio: 1; }
+.donut-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.donut-wrap circle { fill: none; stroke-width: 26; }
+.donut-seg { transition: stroke-dashoffset 1.6s cubic-bezier(.2, .7, .2, 1), opacity .25s; cursor: pointer; }
+.donut-seg.dim { opacity: .25; }
+.donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.donut-center b { font-family: var(--font-display); font-size: clamp(26px, 3.4vw, 38px); color: var(--fg-strong); line-height: 1.1; }
+.donut-center span { color: var(--fg-3); font-size: 13.5px; }
+.alloc { width: 100%; border-collapse: collapse; font-size: 15px; }
+.alloc th { text-align: left; font-weight: 500; color: var(--fg-3); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; padding: 0 10px 10px; }
+.alloc td { padding: 12px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+.alloc tr:hover td { background: var(--panel); }
+.alloc .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 10px; vertical-align: 1px; }
+.alloc td:nth-child(2), .alloc td:nth-child(3), .alloc th:nth-child(2), .alloc th:nth-child(3) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.alloc .group td { color: var(--fg-3); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; padding-top: 18px; border-top: 0; }
+.alloc small { display: block; color: var(--fg-3); font-size: 13px; }
+.table-scroll { overflow-x: auto; }
+@media (max-width: 900px) { .tokenomics { grid-template-columns: 1fr; } }
+
+/* unlock chart */
+.chart-card { border-radius: var(--r-panel); border: 1px solid var(--line); background: linear-gradient(180deg, var(--bg-3), var(--bg-2)); padding: clamp(18px, 3vw, 30px); }
+.chart-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 24px; margin-bottom: 18px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--fg-2); }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: 4px; margin-right: 7px; }
+.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-svg text { fill: var(--fg-3); font-size: 11px; font-family: var(--font-body); }
+.chart-svg .grid { stroke: var(--line); stroke-width: 1; }
+.chart-svg .line { fill: none; stroke: url(#lineGrad); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.chart-svg .mark { fill: var(--bg); stroke: var(--lime); stroke-width: 2.5; }
+.chart-svg .ann { fill: var(--fg-2); font-size: 11.5px; }
+.chart-scroll { overflow-x: auto; }
+.chart-scroll svg { min-width: 640px; }
+.notes3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+.note { padding: 14px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); font-size: 14px; color: var(--fg-2); }
+.note b { display: block; color: var(--fg-strong); font-family: var(--font-display); font-size: 20px; }
+@media (max-width: 760px) { .notes3 { grid-template-columns: 1fr; } }
+
+/* routes */
+.routes-hero { position: relative; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); margin-bottom: 26px; aspect-ratio: 21 / 7; min-height: 180px; }
+.routes-hero img { width: 100%; height: 100%; object-fit: cover; }
+.routes-hero .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(18px, 5vw, 64px); background: linear-gradient(90deg, rgba(4, 8, 10, .3), transparent 40%, transparent 60%, rgba(4, 8, 10, .3)); }
+.chain-pill { padding: 8px 14px; border-radius: 999px; font-family: var(--font-display); font-weight: 700; font-size: 14px; background: rgba(4, 8, 10, .7); border: 1px solid var(--line-2); backdrop-filter: blur(6px); }
+.chain-pill.bsc { color: var(--gold); } .chain-pill.tpix { color: var(--lime); }
+.routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: route; }
+.route { position: relative; padding: 24px; border-radius: var(--r-panel); background: var(--panel); border: 1px solid var(--line); display: grid; gap: 10px; align-content: start; }
+.route .step { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; color: var(--on-accent); background: linear-gradient(135deg, var(--lime), var(--emerald)); }
+.route h3 { font-size: 19px; }
+.route p { color: var(--fg-2); font-size: 14.5px; }
+.route .meta { font-size: 13px; color: var(--fg-3); }
+.route-best { border-color: rgba(163, 230, 53, .45); box-shadow: 0 0 0 1px rgba(163, 230, 53, .15), 0 30px 70px -40px rgba(163, 230, 53, .6); }
+.route-best::before { content: "ราคาคงที่ ไม่มี slippage"; position: absolute; top: -11px; right: 18px; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--lime); color: var(--on-accent); }
+@media (max-width: 900px) { .routes { grid-template-columns: 1fr; } }
+
+/* add network */
+.addnet { margin-top: 26px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; border-radius: var(--r-panel); overflow: hidden; border: 1px solid var(--line-2); background: linear-gradient(120deg, rgba(16, 185, 129, .1), rgba(59, 130, 246, .06)); }
+.addnet > div { padding: clamp(20px, 3vw, 30px); }
+.addnet > div + div { border-left: 1px solid var(--line); }
+.addnet h3 { font-size: 20px; margin-bottom: 6px; }
+.addnet p { color: var(--fg-2); font-size: 14.5px; margin-bottom: 16px; }
+.netinfo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; font-size: 13.5px; margin: 0 0 18px; }
+.netinfo dt { color: var(--fg-3); }
+.netinfo dd { margin: 0; color: var(--fg); font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
+.wallets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.wallet { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px; background: rgba(4, 8, 10, .55); border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-size: 14px; font-weight: 600; transition: border-color .2s, transform .2s; }
+.wallet:hover { border-color: var(--lime); transform: translateY(-1px); }
+.wallet .wl { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 13px; flex: none; }
+.toast { margin-top: 12px; font-size: 13.5px; color: var(--fg-2); min-height: 1.4em; }
+.toast.ok { color: var(--lime); } .toast.err { color: #fda4af; }
+@media (max-width: 860px) { .addnet { grid-template-columns: 1fr; } .addnet > div + div { border-left: 0; border-top: 1px solid var(--line); } }
+
+/* roadmap */
+.roadmap { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.phase { padding: 22px; border-radius: var(--r-panel); border: 1px solid var(--line); background: var(--panel); position: relative; }
+.phase .st { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
+.st-done { color: var(--lime); background: rgba(163, 230, 53, .1); border: 1px solid rgba(163, 230, 53, .3); }
+.st-now { color: var(--gold); background: rgba(245, 200, 107, .1); border: 1px solid rgba(245, 200, 107, .35); }
+.st-next { color: var(--fg-3); background: var(--panel); border: 1px solid var(--line); }
+.phase h3 { font-size: 18px; margin-bottom: 10px; }
+.phase ul { margin: 0; padding-left: 18px; color: var(--fg-2); font-size: 14.5px; display: grid; gap: 4px; }
+.phase-now { border-color: rgba(245, 200, 107, .4); box-shadow: 0 30px 70px -45px rgba(245, 200, 107, .7); }
+@media (max-width: 900px) { .roadmap { grid-template-columns: 1fr; } }
+
+/* whitepaper band */
+.wp { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: clamp(26px, 5vw, 60px); align-items: center; }
+.wp-cover { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 2 / 3; border: 1px solid var(--line-2); box-shadow: 0 40px 90px -40px rgba(16, 185, 129, .6); transform: perspective(900px) rotateY(10deg); transition: transform .6s; max-width: 280px; }
+.wp-cover:hover { transform: perspective(900px) rotateY(0); }
+.wp-cover img { width: 100%; height: 100%; object-fit: cover; }
+.wp-cover .t { position: absolute; inset: 0; padding: 26px 22px; display: flex; flex-direction: column; }
+.wp-cover .t img { width: 46px; height: 46px; margin-bottom: 14px; }
+.wp-cover .t b { font-family: var(--font-display); font-size: 25px; color: #fff; line-height: 1.15; }
+.wp-cover .t span { color: var(--fg-2); font-size: 12px; margin-top: 8px; letter-spacing: .1em; text-transform: uppercase; }
+.toc { columns: 2; column-gap: 28px; padding: 0; margin: 22px 0 26px; list-style: none; font-size: 15px; color: var(--fg-2); }
+.toc li { break-inside: avoid; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.toc li b { color: var(--lime); font-family: var(--font-mono); font-size: 12.5px; margin-right: 10px; }
+@media (max-width: 760px) { .wp { grid-template-columns: 1fr; } .wp-cover { justify-self: center; } .toc { columns: 1; } }
+
+/* faq */
+.faq { display: grid; gap: 10px; max-width: 860px; }
+.faq details { border-radius: 16px; border: 1px solid var(--line); background: var(--panel); }
+.faq summary { cursor: pointer; padding: 18px 20px; font-family: var(--font-display); font-weight: 600; font-size: 16.5px; color: var(--fg-strong); list-style: none; display: flex; justify-content: space-between; gap: 18px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--lime); font-size: 22px; line-height: 1; transition: transform .25s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { padding: 0 20px 20px; color: var(--fg-2); font-size: 15px; }
+
+/* risk + cta */
+.risk { border-radius: var(--r-panel); border: 1px solid rgba(245, 200, 107, .28); background: rgba(245, 200, 107, .05); padding: 22px 24px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 16px; }
+.risk svg { width: 30px; height: 30px; stroke: var(--gold); fill: none; stroke-width: 2; }
+.risk h3 { font-size: 17px; margin-bottom: 6px; color: var(--gold); }
+.risk p { color: var(--fg-2); font-size: 14.5px; }
+.cta-band { position: relative; isolation: isolate; overflow: hidden; text-align: center; padding-block: clamp(72px, 10vw, 128px); }
+.cta-band::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url("img/wave.webp") center bottom / cover no-repeat; animation: waveDrift 18s ease-in-out infinite alternate; }
+@keyframes waveDrift { to { transform: scale(1.08) translateX(-2%); } }
+.cta-band h2 { font-size: clamp(30px, 4.4vw, 52px); margin: 0 auto 16px; max-width: 20ch; }
+.cta-band p { color: var(--fg-2); margin: 0 auto 28px; max-width: 52ch; }
+.cta-band .cta-row { justify-content: center; }
+
+/* footer */
+.footer { background: #030605; border-top: 1px solid var(--line); padding-block: 48px 36px; font-size: 14px; color: var(--fg-3); }
+.footer .cols { display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 28px; margin-bottom: 30px; }
+.footer h4 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); margin-bottom: 12px; }
+.footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+.footer a { color: var(--fg-3); text-decoration: none; }
+.footer a:hover { color: var(--lime); }
+.footer .bottom { border-top: 1px solid var(--line); padding-top: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+@media (max-width: 760px) { .footer .cols { grid-template-columns: 1fr 1fr; } }
+
+/* ── presale view ── */
+.page-head { padding-block: clamp(44px, 6vw, 72px) 30px; border-bottom: 1px solid var(--line); background: radial-gradient(60% 120% at 85% 0%, rgba(16, 185, 129, .16), transparent 60%), var(--bg); }
+.page-head h1 { font-size: clamp(30px, 4vw, 46px); margin-bottom: 10px; }
+.presale-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 24px; padding-block: 36px 80px; align-items: start; }
+.buy-card { position: relative; border-radius: 24px; padding: 2px; background: conic-gradient(from var(--ang, 0deg), rgba(163, 230, 53, .7), rgba(16, 185, 129, .15) 25%, rgba(59, 130, 246, .4) 50%, rgba(16, 185, 129, .15) 75%, rgba(163, 230, 53, .7)); animation: spin 8s linear infinite; }
+@property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes spin { to { --ang: 360deg; } }
+.buy-inner { border-radius: 22px; background: linear-gradient(180deg, #0a1513, #060c0b); padding: clamp(20px, 3vw, 30px); }
+.buy-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--lime); font-weight: 600; }
+.field { border-radius: 16px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); padding: 14px 16px; }
+.field label { display: flex; justify-content: space-between; font-size: 13px; color: var(--fg-3); margin-bottom: 6px; gap: 10px; }
+.field-row { display: flex; align-items: center; gap: 12px; }
+.field input { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--fg-strong); font-family: var(--font-display); font-size: 30px; font-weight: 600; outline: none; font-variant-numeric: tabular-nums; }
+.field output { flex: 1; min-width: 0; color: var(--fg-strong); font-family: var(--font-display); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.coin { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; border-radius: 999px; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); font-weight: 700; font-family: var(--font-display); font-size: 15px; flex: none; }
+.coin img, .coin .usdt { width: 24px; height: 24px; border-radius: 50%; }
+.coin .usdt { background: #26a17b; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 800; }
+.quick { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.quick button { border: 1px solid var(--line); background: var(--panel); color: var(--fg-2); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.quick button:hover { color: var(--fg-strong); border-color: var(--lime); }
+.swap-arrow { display: grid; place-items: center; margin: -6px 0; position: relative; z-index: 1; }
+.swap-arrow span { width: 38px; height: 38px; border-radius: 12px; background: #0d1a17; border: 1px solid var(--line-2); display: grid; place-items: center; }
+.swap-arrow svg { width: 18px; height: 18px; stroke: var(--lime); fill: none; stroke-width: 2.4; }
+.kv { display: grid; gap: 8px; margin: 18px 0; font-size: 14px; }
+.kv div { display: flex; justify-content: space-between; gap: 12px; color: var(--fg-2); }
+.kv b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.steps2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.side-stack { display: grid; gap: 18px; }
+.panel { border-radius: var(--r-panel); background: var(--panel); border: 1px solid var(--line); padding: 22px; }
+.panel h3 { font-size: 17px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14.5px; color: var(--fg-2); }
+.rules li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
+.rules svg { width: 18px; height: 18px; stroke: var(--lime); fill: none; stroke-width: 2.4; margin-top: 4px; }
+.addr { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-2); background: rgba(255, 255, 255, .04); border: 1px solid var(--line); padding: 3px 8px; border-radius: 8px; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .presale-grid { grid-template-columns: 1fr; } }
+
+/* ── transparency view ── */
+.lock-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-block: 36px 24px; }
+.tranche { padding: 22px; border-radius: var(--r-panel); border: 1px solid var(--line); background: var(--panel); display: grid; gap: 12px; }
+.tranche-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tranche-top h3 { font-size: 18px; }
+.tranche-top b { font-family: var(--font-display); font-size: 22px; color: var(--fg-strong); font-variant-numeric: tabular-nums; }
+.tranche .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--fg-3); flex-wrap: wrap; }
+.timeline { display: grid; grid-template-columns: repeat(60, 1fr); gap: 2px; }
+.timeline i { height: 14px; border-radius: 2px; background: rgba(255, 255, 255, .06); }
+.timeline i.lock { background: rgba(59, 130, 246, .28); }
+.timeline i.rel { background: linear-gradient(180deg, var(--lime), var(--emerald)); }
+.countdown { display: flex; gap: 10px; flex-wrap: wrap; }
+.countdown div { min-width: 74px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); text-align: center; }
+.countdown b { display: block; font-family: var(--font-display); font-size: 26px; color: var(--fg-strong); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.countdown span { font-size: 12px; color: var(--fg-3); }
+.contracts { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.contracts th { text-align: left; font-weight: 500; color: var(--fg-3); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; padding: 0 12px 10px; white-space: nowrap; }
+.contracts td { padding: 14px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
+.ok-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--lime); background: rgba(163, 230, 53, .1); border: 1px solid rgba(163, 230, 53, .3); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.wait-pill { display: inline-flex; font-size: 12.5px; font-weight: 700; color: var(--fg-3); background: var(--panel); border: 1px solid var(--line); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+@media (max-width: 860px) { .lock-grid { grid-template-columns: 1fr; } }
+
+/* ── admin view ── */
+.admin { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; background: #050a09; }
+.side { border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.side .brand { margin: 4px 8px 22px; }
+.side a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; color: var(--fg-2); text-decoration: none; font-size: 15px; }
+.side a svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; flex: none; }
+.side a:hover { background: var(--panel); color: var(--fg-strong); }
+.side a.on { background: rgba(163, 230, 53, .1); color: var(--lime); box-shadow: inset 2px 0 0 var(--lime); }
+.side .grp { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); margin: 16px 12px 6px; }
+.side .who { margin-top: auto; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); font-size: 13px; }
+.main { padding: 22px clamp(16px, 3vw, 32px) 60px; min-width: 0; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.topbar h1 { font-size: 26px; }
+.topbar .right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.net-ok { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg-2); }
+.net-ok i { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.kpi { padding: 18px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 4px; }
+.kpi span { font-size: 13px; color: var(--fg-3); }
+.kpi b { font-family: var(--font-display); font-size: 26px; color: var(--fg-strong); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.kpi em { font-style: normal; font-size: 12.5px; color: var(--lime); }
+.kpi em.down { color: #fda4af; }
+.admin-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; }
+.admin-grid .panel { background: #08100e; }
+.spark { width: 100%; height: 190px; display: block; }
+.spark text { fill: var(--fg-3); font-size: 10.5px; font-family: var(--font-body); }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th { text-align: left; font-weight: 500; color: var(--fg-3); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 0 10px 10px; white-space: nowrap; }
+.tbl td { padding: 11px 10px; border-top: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tbl td.r, .tbl th.r { text-align: right; }
+.ctrl { display: grid; gap: 10px; }
+.ctrl-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, .025); flex-wrap: wrap; }
+.ctrl-row div { display: grid; }
+.ctrl-row b { color: var(--fg-strong); font-weight: 600; font-size: 14.5px; }
+.ctrl-row span { color: var(--fg-3); font-size: 12.5px; }
+.sig { font-size: 12px; color: var(--fg-3); display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.sig svg { width: 14px; height: 14px; stroke: var(--gold); fill: none; stroke-width: 2.2; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; font-size: 13.5px; }
+.log li { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); color: var(--fg-2); }
+.log li:first-child { border-top: 0; }
+.log time { color: var(--fg-3); font-family: var(--font-mono); font-size: 12px; }
+.toggle { width: 42px; height: 24px; border-radius: 999px; background: var(--lime); position: relative; flex: none; border: 0; cursor: pointer; }
+.toggle::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #052e1c; transition: right .2s; }
+.toggle.off { background: rgba(255, 255, 255, .15); }
+.toggle.off::after { right: 21px; background: #cbd5d1; }
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .admin { grid-template-columns: 1fr; } .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; } .side .grp, .side .who { display: none; } }
+
+/* ── brand view ── */
+.brand-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding-block: 36px 24px; }
+.logo-card { border-radius: var(--r-panel); border: 1px solid var(--line); overflow: hidden; }
+.logo-card .stage { display: grid; grid-template-columns: 1fr 1fr; }
+.logo-card .stage > div { padding: 26px 18px; display: flex; align-items: end; justify-content: center; gap: 18px; }
+.logo-card .light { background: #ffffff; }
+.logo-card .dark { background: #05070a; }
+.logo-card .cap { padding: 16px 20px; background: var(--panel); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo-card .cap b { font-family: var(--font-display); color: var(--fg-strong); }
+.logo-card .cap span { color: var(--fg-3); font-size: 13.5px; }
+.board { margin-top: 18px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); }
+.board table { width: 100%; border-collapse: collapse; font-size: 14px; background: #0b0f14; }
+.board td, .board th { padding: 11px 14px; border-top: 1px solid rgba(255, 255, 255, .06); text-align: left; white-space: nowrap; }
+.board th { color: #8a94a6; font-weight: 500; font-size: 12.5px; border-top: 0; }
+.board .tk { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #fff; }
+.board .tk img, .board .tk i { width: 22px; height: 22px; border-radius: 50%; }
+.board .up { color: #22c55e; } .board .dn { color: #f43f5e; }
+.presenter { margin-top: 18px; border-radius: var(--r-panel); overflow: hidden; border: 1px solid var(--line); position: relative; }
+.presenter img { width: 100%; }
+@media (max-width: 860px) { .brand-grid { grid-template-columns: 1fr; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal.pre { opacity: 1; transform: none; }
+}
+</style>
+
+<!-- ═════════════ prototype switcher ═════════════ -->
+<div class="proto">
+  <div class="wrap">
+    <span><b>ต้นแบบดีไซน์ IDTC v2</b> · ภาพทั้งหมดเจนใหม่จาก ChatGPT · ตัวเลขที่ติดป้าย "ตัวอย่าง" ยังไม่ใช่ข้อมูลจริง</span>
+    <nav aria-label="หน้าในต้นแบบ">
+      <a href="#home" data-view="home">หน้าแรก</a>
+      <a href="#presale" data-view="presale">Presale</a>
+      <a href="#lock" data-view="lock">ความโปร่งใส</a>
+      <a href="#admin" data-view="admin">หลังบ้าน</a>
+      <a href="#brand" data-view="brand">โลโก้ + ผู้นำเสนอ</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ═════════════ site nav (public pages) ═════════════ -->
+<header class="nav" id="siteNav">
+  <div class="wrap">
+    <a class="brand" href="#home" data-view="home"><img src="img/logo-64.png" alt=""><span>IDTC<small>Energy Capital</small></span></a>
+    <nav class="nav-links" aria-label="เมนูหลัก">
+      <a href="#home" data-view="home">ภาพรวม</a>
+      <a href="#presale" data-view="presale">Presale</a>
+      <a href="#lock" data-view="lock">ความโปร่งใส</a>
+      <a href="#home" data-jump="tokenomics" data-view="home">Tokenomics</a>
+      <a href="#home" data-jump="whitepaper" data-view="home">ไวท์เปเปอร์</a>
+    </nav>
+    <div class="nav-cta">
+      <span class="lang">TH · EN</span>
+      <button class="btn btn-ghost btn-sm" type="button" data-addnet>เพิ่มเชน + เหรียญ</button>
+      <button class="btn btn-primary btn-sm" type="button">เชื่อมกระเป๋า</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═════════════════════════ HOME ═════════════════════════ -->
+<main class="view" id="view-home">
+  <section class="hero">
+    <div class="hero-bg" role="img" aria-label="ภาพประกอบ: ฟาร์มโซลาร์และสถานีไฟฟ้ายามค่ำ"></div>
+    <canvas id="flow" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="hero-copy load-in">
+        <p class="eyebrow"><span class="pulse"></span>Presale เปิดแล้วบนเชน TPIX · ค่าแก๊ส 0</p>
+        <h1>ลงทุนในการพัฒนาพลังงาน <span class="grad">ด้วยเหรียญที่ตรวจสอบได้ทุกบรรทัด</span></h1>
+        <p class="hero-lead">IDTC คือเหรียญของโครงการ IDTC Energy Capital บนเชน TPIX <b>เหรียญ 70% ถูกล็อกในสัญญาที่ไม่มีใครถอนก่อนกำหนดได้</b> ราคา presale ฝังในสัญญา แก้ไม่ได้ และทุกการซื้อขายเปิดดูได้บน explorer</p>
+        <div>
+          <div class="price"><span class="price-amt">$0.0000015</span><span class="price-unit">ต่อ IDTC · ราคา presale</span></div>
+          <p class="price-sub">≈ 0.00005 บาท · 1 USDT = 666,666.67 IDTC</p>
+        </div>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#presale" data-view="presale"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>ซื้อ IDTC ใน Presale</a>
+          <a class="btn btn-ghost" href="#home" data-jump="whitepaper" data-view="home"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>อ่านไวท์เปเปอร์</a>
+        </div>
+        <div class="meter">
+          <div class="meter-head"><span>ขายแล้วใน presale <span class="tag-sample">ตัวอย่าง</span></span><b class="num" data-count="12480000000">0</b></div>
+          <div class="bar"><i style="--w:12.48%" data-bar></i></div>
+          <div class="meter-foot"><span>12.48% ของ 100,000 ล้าน IDTC</span><span>ได้แล้ว $18,720 · 214 กระเป๋า</span></div>
+        </div>
+        <ul class="chips">
+          <li><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>ล็อก <b>70%</b> นาน 5 ปี</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>ซอร์สโค้ด verified</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>ไม่มีปุ่ม mint เพิ่ม</li>
+          <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H10a2 2 0 0 0 0 4h5"/></svg>จ่ายด้วย USDT</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats" aria-label="ตัวเลขสำคัญ">
+    <div class="wrap">
+      <div class="stat"><div class="stat-label">จำนวนเหรียญทั้งหมด</div><div class="stat-value"><span data-count="1100000000000" data-short>0</span></div></div>
+      <div class="stat"><div class="stat-label">ล็อกอยู่ในสัญญา</div><div class="stat-value"><span data-count="770000000000" data-short>0</span><small>70%</small></div></div>
+      <div class="stat"><div class="stat-label">มูลค่ารวมที่ราคา presale</div><div class="stat-value">$<span data-count="1650000">0</span></div></div>
+      <div class="stat"><div class="stat-label">ผู้ถือเหรียญ <span class="tag-sample">ตัวอย่าง</span></div><div class="stat-value"><span data-count="214">0</span><small>กระเป๋า</small></div></div>
+    </div>
+  </section>
+
+  <section class="section" id="about">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">IDTC Energy Capital</p>
+        <h2 class="h2">เหรียญที่ตั้งใจทำเพื่อ <span class="grad">การพัฒนาพลังงาน</span></h2>
+        <p class="lead">เป้าหมายของโครงการคือระดมทุนจากนักลงทุนทุกขนาดเพื่อพัฒนาโครงการพลังงานในเอเชียและตะวันออกกลาง ทุกโครงการที่จะใช้เงินต้องประกาศพร้อมเอกสารให้ตรวจสอบได้ก่อนเสมอ</p>
+      </div>
+      <div class="sectors">
+        <article class="sector reveal">
+          <figure><img src="img/solar.webp" alt="ภาพประกอบ: แผงโซลาร์ยามแดดสุดท้าย" loading="lazy"><span class="tag-illus">ภาพประกอบ</span></figure>
+          <div class="sector-body"><h3>พลังงานแสงอาทิตย์</h3><p>ฟาร์มโซลาร์และโซลาร์รูฟท็อป ซึ่งต้นทุนต่อหน่วยลดลงเร็วที่สุดในภาคพลังงาน</p></div>
+        </article>
+        <article class="sector reveal">
+          <figure><img src="img/wind.webp" alt="ภาพประกอบ: กังหันลมบนสันเขายามค่ำ" loading="lazy"><span class="tag-illus">ภาพประกอบ</span></figure>
+          <div class="sector-body"><h3>พลังงานลม</h3><p>กังหันลมบนบกในพื้นที่ที่มีลมสม่ำเสมอ เดินเครื่องได้ทั้งกลางวันและกลางคืน</p></div>
+        </article>
+        <article class="sector reveal">
+          <figure><img src="img/storage.webp" alt="ภาพประกอบ: ระบบกักเก็บพลังงานแบตเตอรี่" loading="lazy"><span class="tag-illus">ภาพประกอบ</span></figure>
+          <div class="sector-body"><h3>กักเก็บพลังงานและโครงข่าย</h3><p>แบตเตอรี่ระดับโครงข่ายที่เก็บไฟจากแดดและลมไว้ใช้ตอนที่ต้องการจริง</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="trust">
+    <div class="wrap guard">
+      <div class="reveal">
+        <p class="kicker">ความน่าเชื่อถือที่พิสูจน์ได้</p>
+        <h2 class="h2">สิ่งที่สัญญาของ IDTC <span class="grad">ทำไม่ได้</span> แม้แต่ทีมงานเอง</h2>
+        <p class="lead" style="margin-top:14px">คำสัญญาบนกระดาษเปลี่ยนได้ แต่โค้ดบนเชนเปลี่ยนไม่ได้ ทุกข้อด้านล่างตรวจสอบได้จากซอร์สโค้ดที่ verified บน explorer</p>
+        <ul class="guard-list">
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></span><div><b>สร้างเหรียญเพิ่มไม่ได้</b><span>จำนวน 1.1 ล้านล้านเหรียญคงที่ตลอดไป ไม่มีฟังก์ชัน mint</span></div></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></span><div><b>หยุดการโอนหรือแบล็กลิสต์กระเป๋าไม่ได้</b><span>ไม่มีปุ่ม pause ไม่มีรายชื่อดำ เหรียญของคุณเป็นของคุณ</span></div></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></span><div><b>ถอนเหรียญที่ล็อกก่อนกำหนดไม่ได้</b><span>สัญญาล็อกไม่มีเจ้าของ ปลดตามตารางเวลาเท่านั้น</span></div></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></span><div><b>ขึ้นราคา presale กลางรอบไม่ได้</b><span>ราคาฝังตอนสร้างสัญญา ไม่มีฟังก์ชันแก้ราคา</span></div></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></span><div><b>ยึดเงินค่าซื้อไว้ในสัญญาไม่ได้</b><span>USDT ที่จ่ายเข้ากระเป๋าโครงการทันที และคุณได้เหรียญในธุรกรรมเดียวกัน</span></div></li>
+        </ul>
+      </div>
+      <figure class="vault reveal" style="margin:0">
+        <img src="img/lock.webp" alt="ภาพประกอบ: ตู้นิรภัยแก้วแบ่ง 4 ช่วงเวลา" loading="lazy">
+        <div class="vault-badge"><b class="num"><span data-count="770000000000" data-short>0</span></b><span>IDTC ล็อกในสัญญา · ปลดครบปี 2031</span></div>
+        <span class="tag-illus">ภาพประกอบ</span>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="tokenomics">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Tokenomics</p>
+        <h2 class="h2">1.1 ล้านล้านเหรียญ <span class="grad">ล็อกไว้ 70%</span> หมุนเวียนจริง 30%</h2>
+      </div>
+      <div class="tokenomics">
+        <div class="donut-wrap reveal">
+          <svg viewBox="0 0 200 200" id="donut" aria-label="แผนภูมิการจัดสรรเหรียญ"></svg>
+          <div class="donut-center"><b id="donutVal">1.1T</b><span id="donutLbl">IDTC ทั้งหมด</span></div>
+        </div>
+        <div class="table-scroll reveal">
+          <table class="alloc" id="allocTable">
+            <thead><tr><th>ส่วน</th><th>สัดส่วน</th><th>จำนวน</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="unlock">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">ตารางปลดล็อก</p>
+        <h2 class="h2">ไม่มีวันไหนที่ปลดล็อก <span class="grad">ก้อนใหญ่</span></h2>
+        <p class="lead">แต่ละก้อนล็อกเต็มจำนวนตามระยะเวลา แล้วทยอยปลดเท่า ๆ กัน 12 เดือน เหรียญหมุนเวียนจึงเพิ่มแบบค่อยเป็นค่อยไป ปลดมากสุดเดือนละ 1.67% ของ supply</p>
+      </div>
+      <div class="chart-card reveal">
+        <div class="chart-top">
+          <div class="legend"><span><i style="background:linear-gradient(90deg,#a3e635,#10b981)"></i>เหรียญหมุนเวียนสะสม</span><span><i style="background:rgba(59,130,246,.6)"></i>ยังล็อกอยู่</span></div>
+          <span class="tag-sample" style="color:var(--fg-3);border-color:var(--line);background:var(--panel)">เดือนที่ 0 = วันเปิดตลาด</span>
+        </div>
+        <div class="chart-scroll"><svg class="chart-svg" id="unlockChart" viewBox="0 0 900 330" aria-label="กราฟเหรียญหมุนเวียน 60 เดือน"></svg></div>
+        <div class="notes3">
+          <div class="note"><b>330,000 ล้าน</b>หมุนเวียนตั้งแต่วันแรก (30%)</div>
+          <div class="note"><b>18,333 ล้าน / เดือน</b>ปลดสูงสุดต่อเดือน (เดือน 13–36)</div>
+          <div class="note"><b>เดือนที่ 60</b>ปลดครบ 1.1 ล้านล้านเหรียญ</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="buy">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">วิธีซื้อ</p>
+        <h2 class="h2">ซื้อ IDTC ได้ 3 ทาง <span class="grad">ด้วย USDT</span></h2>
+      </div>
+      <figure class="routes-hero reveal" style="margin:0 0 26px">
+        <img src="img/bridge.webp" alt="ภาพประกอบ: สะพานแสงเชื่อมสองเครือข่าย" loading="lazy">
+        <div class="overlay"><span class="chain-pill bsc">USDT บน BSC</span><span class="chain-pill tpix">IDTC บนเชน TPIX</span></div>
+      </figure>
+      <div class="routes">
+        <article class="route route-best reveal"><span class="step">1</span><h3>Presale ราคาคงที่</h3><p>จ่าย USDT บนเชน TPIX แล้วได้ IDTC ทันทีที่ $0.0000015 ไม่มี slippage ไม่ต้องรอเคลม</p><span class="meta">เหมาะกับคนที่ซื้อครั้งแรก</span></article>
+        <article class="route reveal"><span class="step">2</span><h3>แลกบน TPIX DEX</h3><p>คู่ IDTC/USDT และ IDTC/TPIX ซื้อขายได้ตลอด 24 ชั่วโมง ราคาเป็นไปตามสภาพคล่องในพูล</p><span class="meta">ค่าธรรมเนียมพูล 0.3% · ค่าแก๊ส 0</span></article>
+        <article class="route reveal"><span class="step">3</span><h3>มี USDT บนเชนอื่น</h3><p>ส่ง USDT จาก BSC ผ่านสะพานของ TPIX แล้วได้ USDT บนเชน TPIX 1:1 จากนั้นซื้อด้วยวิธีที่ 1 หรือ 2</p><span class="meta">รองรับ BSC ก่อน เชนอื่นตามมา</span></article>
+      </div>
+
+      <div class="addnet reveal" id="addnet">
+        <div>
+          <h3>เพิ่มเชน TPIX และเหรียญ IDTC ในคลิกเดียว</h3>
+          <p>บนคอมพิวเตอร์ ปุ่มนี้จะให้กระเป๋า (MetaMask, OKX, Rabby ฯลฯ) เพิ่มเชนก่อน แล้วเพิ่มเหรียญ IDTC ต่อให้ทันที</p>
+          <dl class="netinfo">
+            <dt>ชื่อเครือข่าย</dt><dd>TPIX Chain</dd>
+            <dt>Chain ID</dt><dd>4289 (0x10C1)</dd>
+            <dt>RPC</dt><dd>https://rpc1.tpix.online</dd>
+            <dt>Explorer</dt><dd>https://explorer.tpix.online</dd>
+            <dt>สกุลเงิน</dt><dd>TPIX · 18 ทศนิยม</dd>
+          </dl>
+          <button class="btn btn-primary" type="button" data-addnet><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>เพิ่มเชน + เหรียญ IDTC</button>
+          <p class="toast" id="addnetToast" role="status"></p>
+        </div>
+        <div>
+          <h3>บนมือถือ: เปิดในแอปกระเป๋า</h3>
+          <p>กดแอปที่คุณใช้ เว็บนี้จะเปิดในเบราว์เซอร์ของแอปนั้น แล้วกดปุ่มเพิ่มเชนได้ทันที</p>
+          <div class="wallets" id="walletLinks"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="roadmap">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Roadmap</p>
+        <h2 class="h2">ทำเสร็จแล้วอะไรบ้าง <span class="grad">และกำลังทำอะไร</span></h2>
+      </div>
+      <ol class="roadmap">
+        <li class="phase reveal"><span class="st st-done">✓ เสร็จแล้ว</span><h3>วางรากฐาน</h3><ul><li>เปิดตัวโครงการและเว็บไซต์ (เม.ย. 2569)</li><li>เชน TPIX ของตัวเอง ค่าแก๊ส 0</li><li>TPIX DEX และ Token Factory</li></ul></li>
+        <li class="phase phase-now reveal"><span class="st st-now">● กำลังทำ</span><h3>เปิดตัวบนเชน TPIX</h3><ul><li>สร้าง IDTC ผ่าน Token Factory</li><li>สัญญาล็อก 70% และ presale USDT</li><li>พูล IDTC/USDT และ IDTC/TPIX</li></ul></li>
+        <li class="phase reveal"><span class="st st-next">ถัดไป</span><h3>ขยายการเข้าถึง</h3><ul><li>สะพาน USDT จาก BSC แบบอัตโนมัติ</li><li>ยื่นลงทะเบียน CoinGecko และ CoinMarketCap</li><li>wIDTC บน BSC และ PancakeSwap</li></ul></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="whitepaper">
+    <div class="wrap wp">
+      <div class="wp-cover reveal">
+        <img src="img/cover.webp" alt="" loading="lazy">
+        <div class="t"><img src="img/logo-128.png" alt=""><b>IDTC<br>Whitepaper</b><span>Version 2.0 · 2569</span></div>
+      </div>
+      <div class="reveal">
+        <p class="kicker">ไวท์เปเปอร์ ฉบับที่ 2</p>
+        <h2 class="h2">เขียนใหม่ทั้งฉบับ ทุกตัวเลข <span class="grad">ชี้กลับไปที่สัญญาได้</span></h2>
+        <ol class="toc">
+          <li><b>01</b>บทสรุปสำหรับผู้บริหาร</li><li><b>02</b>ปัญหาและโอกาสในภาคพลังงาน</li><li><b>03</b>ทำไมต้องเชน TPIX</li><li><b>04</b>Tokenomics และการจัดสรร</li><li><b>05</b>สัญญาล็อกและตารางปลด</li><li><b>06</b>Presale และสภาพคล่อง</li><li><b>07</b>ธรรมาภิบาลและการใช้เงิน</li><li><b>08</b>Roadmap</li><li><b>09</b>ความเสี่ยงและข้อกฎหมาย</li><li><b>10</b>ที่อยู่สัญญาทั้งหมด</li>
+        </ol>
+        <div class="cta-row"><a class="btn btn-primary" href="#home" data-view="home">อ่านออนไลน์</a><a class="btn btn-ghost" href="#home" data-view="home">ดาวน์โหลด PDF</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="faq">
+    <div class="wrap">
+      <div class="section-head reveal"><p class="kicker">คำถามที่พบบ่อย</p><h2 class="h2">ก่อนซื้อ ควรรู้อะไรบ้าง</h2></div>
+      <div class="faq reveal">
+        <details open><summary>ทำไม IDTC ย้ายจาก Polygon มาเชน TPIX</summary><p>เชน TPIX ไม่เก็บค่าแก๊ส ผู้ถือจึงซื้อ ขาย และโอนได้โดยไม่ต้องมีเหรียญอื่นติดกระเป๋า สัญญา presale เดิมบน Polygon ยังไม่มีผู้ซื้อเลย การย้ายครั้งนี้จึงไม่กระทบใคร</p></details>
+        <details><summary>เหรียญที่ล็อกไว้ ใครถอนได้บ้าง</summary><p>ไม่มีใครถอนก่อนกำหนดได้ สัญญาล็อกไม่มีเจ้าของ ปลดตามเวลาไปที่กระเป๋าที่กำหนดไว้เท่านั้น และทุกคนเปิดดูยอดคงเหลือกับงวดถัดไปได้ในหน้าความโปร่งใส</p></details>
+        <details><summary>ราคา presale เปลี่ยนได้ไหม</summary><p>ไม่ได้ อัตรา 1 USDT = 666,666.67 IDTC ฝังไว้ตอนสร้างสัญญา ทีมงานหยุดการขายชั่วคราวได้ แต่ขึ้นหรือลดราคาไม่ได้</p></details>
+        <details><summary>ต้องใช้อะไรในการซื้อ</summary><p>กระเป๋าที่รองรับ EVM เช่น MetaMask และ USDT บนเชน TPIX ถ้ามี USDT บน BSC ให้ส่งผ่านสะพานก่อน ไม่ต้องมีเหรียญ TPIX เพื่อจ่ายค่าแก๊ส</p></details>
+        <details><summary>เงินที่ระดมได้ นำไปใช้อย่างไร</summary><p>USDT จาก presale เข้ากระเป๋าโครงการโดยตรง ส่วนหนึ่งใช้เติมสภาพคล่องในพูล ที่เหลือใช้ตามแผนที่ประกาศในไวท์เปเปอร์ การเคลื่อนไหวของกระเป๋าโครงการตรวจดูได้บน explorer</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="risk reveal">
+        <svg viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18v.5"/></svg>
+        <div><h3>คำเตือนความเสี่ยง</h3><p>IDTC เป็นสินทรัพย์ดิจิทัล ไม่ใช่เงินฝาก และไม่มีการรับประกันผลตอบแทน ราคาอาจผันผวนรุนแรงหรือลดลงจนไม่มีมูลค่า โปรดลงทุนเท่าที่รับความเสียหายได้ และศึกษากฎหมายในประเทศของคุณก่อน ในประเทศไทย การเสนอขายโทเคนดิจิทัลต่อประชาชนอยู่ภายใต้ พ.ร.ก. การประกอบธุรกิจสินทรัพย์ดิจิทัล พ.ศ. 2561</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap reveal">
+      <h2>เริ่มต้นที่ <span class="grad">$0.0000015</span> ต่อเหรียญ</h2>
+      <p>ราคาเดียวกันสำหรับทุกคนตลอดรอบ presale ซื้อขั้นต่ำ 1 USDT และได้เหรียญทันที</p>
+      <div class="cta-row"><a class="btn btn-primary" href="#presale" data-view="presale">ไปที่ Presale</a><button class="btn btn-ghost" type="button" data-addnet>เพิ่มเชน + เหรียญ</button></div>
+    </div>
+  </section>
+</main>
+
+<!-- ═════════════════════════ PRESALE ═════════════════════════ -->
+<main class="view" id="view-presale">
+  <div class="page-head"><div class="wrap"><p class="kicker">Presale</p><h1>ซื้อ IDTC ราคาคงที่ <span class="grad">ด้วย USDT</span></h1><p class="lead">ได้เหรียญทันทีในธุรกรรมเดียว ไม่มีรอเคลม · ค่าแก๊ส 0 บนเชน TPIX</p></div></div>
+  <div class="wrap presale-grid">
+    <div class="buy-card">
+      <div class="buy-inner">
+        <div class="buy-top"><span class="live"><span class="pulse"></span>เปิดขายอยู่</span><span class="tag-sample">ตัวอย่าง: ปิดรอบใน 23 วัน</span></div>
+        <div class="field">
+          <label for="payIn"><span>คุณจ่าย</span><span>ยอดในกระเป๋า: 250.00 USDT</span></label>
+          <div class="field-row"><input id="payIn" inputmode="decimal" value="100" aria-label="จำนวน USDT"><span class="coin"><span class="usdt">₮</span>USDT</span></div>
+          <div class="quick"><button type="button" data-q="10">10</button><button type="button" data-q="50">50</button><button type="button" data-q="100">100</button><button type="button" data-q="250">สูงสุด</button></div>
+        </div>
+        <div class="swap-arrow"><span><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></div>
+        <div class="field">
+          <label><span>คุณได้รับ</span><span>ทันทีหลังยืนยัน</span></label>
+          <div class="field-row"><output id="getOut">66,666,666.66</output><span class="coin"><img src="img/logo-64.png" alt="">IDTC</span></div>
+        </div>
+        <div class="kv">
+          <div><span>ราคา</span><b>1 USDT = 666,666.67 IDTC</b></div>
+          <div><span>ค่าแก๊ส</span><b>0 TPIX</b></div>
+          <div><span>เงินเข้ากระเป๋าโครงการ</span><b class="mono">0x7a3c…9F12</b></div>
+        </div>
+        <div class="steps2"><button class="btn btn-ghost" type="button">1 · อนุญาต USDT</button><button class="btn btn-primary" type="button">2 · ซื้อ IDTC</button></div>
+        <div class="meter" style="max-width:none;margin-top:20px;background:rgba(255,255,255,.03)">
+          <div class="meter-head"><span>ขายแล้ว <span class="tag-sample">ตัวอย่าง</span></span><b class="num">12,480,000,000</b></div>
+          <div class="bar"><i style="--w:12.48%" data-bar></i></div>
+          <div class="meter-foot"><span>เหลือ 87,520,000,000 IDTC</span><span>เพดานรวม 100,000 ล้าน</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="side-stack">
+      <div class="panel"><h3>กติกาที่สัญญาบังคับ</h3>
+        <ul class="rules">
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>ราคาคงที่ตลอดรอบ แก้ไม่ได้</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>ขายเกิน 100,000 ล้าน IDTC ไม่ได้</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>ได้เหรียญในธุรกรรมเดียวกับที่จ่าย</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>สัญญาไม่ถือเงินผู้ซื้อ USDT เข้ากระเป๋าโครงการทันที</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>ทีมงานถอนเหรียญที่เหลือได้หลังปิดรอบเท่านั้น</span></li>
+        </ul>
+      </div>
+      <div class="panel"><h3>ยังไม่มี USDT บนเชน TPIX?</h3><p style="color:var(--fg-2);font-size:14.5px;margin-bottom:14px">ส่ง USDT จาก BSC ผ่านสะพานแล้วรับ 1:1 บนเชน TPIX ภายในไม่กี่นาที</p><a class="btn btn-ghost btn-block" href="#home" data-view="home">ไปที่สะพาน USDT</a></div>
+      <div class="panel"><h3>ที่อยู่สัญญา <span class="wait-pill">รอ deploy</span></h3>
+        <div style="display:grid;gap:10px;font-size:14px;color:var(--fg-2)"><div>Presale <span class="addr">0x…</span></div><div>IDTC <span class="addr">0x…</span></div><div>USDT (TPIX) <span class="addr">0x0A4Ee87551eF041f3EecFBBfdcfFC1B46a4878f1</span></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════════════ TRANSPARENCY ═════════════════════════ -->
+<main class="view" id="view-lock">
+  <div class="page-head"><div class="wrap"><p class="kicker">ความโปร่งใส</p><h1>เหรียญที่ล็อกไว้ <span class="grad">เห็นได้ทุกวินาที</span></h1><p class="lead">ข้อมูลหน้านี้อ่านจากสัญญาบนเชนโดยตรง ไม่ผ่านฐานข้อมูลของเรา ตรวจทานได้เองบน explorer</p></div></div>
+  <div class="wrap">
+    <div class="panel" style="margin-top:30px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center">
+      <div><h3 style="margin-bottom:4px">งวดถัดไป: ก้อน "ล็อก 1 ปี" งวดที่ 1 <span class="tag-sample">ตัวอย่าง</span></h3><p style="color:var(--fg-2);font-size:14.5px">ปลด 18,333,333,333 IDTC ไปที่กระเป๋าโครงการ · ใครก็กดปลดได้เมื่อถึงเวลา</p></div>
+      <div class="countdown" id="countdown"><div><b>0</b><span>วัน</span></div><div><b>0</b><span>ชม.</span></div><div><b>0</b><span>นาที</span></div><div><b>0</b><span>วินาที</span></div></div>
+    </div>
+    <div class="lock-grid" id="trancheGrid"></div>
+    <div class="panel" style="margin-bottom:80px"><h3>สัญญาทั้งหมดของ IDTC</h3>
+      <div class="table-scroll"><table class="contracts">
+        <thead><tr><th>สัญญา</th><th>หน้าที่</th><th>ที่อยู่</th><th>สถานะ</th></tr></thead>
+        <tbody>
+          <tr><td><b>IDTC</b></td><td>เหรียญ ERC-20 · ไม่มี mint/pause/blacklist</td><td><span class="addr">รอ deploy</span></td><td><span class="wait-pill">รอ deploy</span></td></tr>
+          <tr><td><b>TrancheVesting</b></td><td>ล็อก 770,000 ล้าน · 4 ก้อน</td><td><span class="addr">รอ deploy</span></td><td><span class="wait-pill">รอ deploy</span></td></tr>
+          <tr><td><b>FixedPriceSale</b></td><td>Presale ราคาคงที่</td><td><span class="addr">รอ deploy</span></td><td><span class="wait-pill">รอ deploy</span></td></tr>
+          <tr><td><b>USDT (TPIX)</b></td><td>USDT บนเชน TPIX หนุน 1:1</td><td><span class="addr">0x0A4E…78f1</span></td><td><span class="ok-pill">✓ verified</span></td></tr>
+          <tr><td><b>TPIX DEX Router</b></td><td>แลกเปลี่ยนและสภาพคล่อง</td><td><span class="addr">TPIX DEX</span></td><td><span class="ok-pill">✓ verified</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════════════ ADMIN ═════════════════════════ -->
+<div class="view" id="view-admin">
+  <div class="admin">
+    <aside class="side" aria-label="เมนูหลังบ้าน">
+      <a class="brand" href="#admin"><img src="img/logo-64.png" alt=""><span>IDTC<small>Admin</small></span></a>
+      <a class="on" href="#admin"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>ภาพรวม</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>ยอดขาย</a>
+      <p class="grp">ควบคุมเหรียญ</p>
+      <a href="#admin"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Presale</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>สัญญาล็อก</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="5"/><circle cx="16" cy="12" r="5"/></svg>พูลสภาพคล่อง</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>กระเป๋าโครงการ</a>
+      <p class="grp">เว็บไซต์</p>
+      <a href="#admin"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 20V9"/></svg>เนื้อหาและประกาศ</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>ตั้งค่าเหรียญ</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>ผู้ดูแล</a>
+      <a href="#admin"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>บันทึกการทำงาน</a>
+      <div class="who"><div style="color:var(--fg-3)">เข้าระบบด้วยกระเป๋า</div><div class="mono" style="color:var(--fg)">0xD2eA…A67d7</div><div style="color:var(--lime);font-size:12px;margin-top:4px">● เจ้าของ (Owner)</div></div>
+    </aside>
+    <section class="main">
+      <div class="topbar">
+        <div><h1>ภาพรวม</h1><p style="color:var(--fg-3);font-size:13.5px">ข้อมูลจากเชน TPIX · อัปเดตทุก 15 วินาที <span class="tag-sample">ตัวอย่าง</span></p></div>
+        <div class="right"><span class="net-ok"><i></i>TPIX Chain · บล็อก 1,284,551</span><button class="btn btn-ghost btn-sm" type="button">ส่งออก CSV</button></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span>ขายวันนี้</span><b>1,240,000,000</b><em>▲ 18% จากเมื่อวาน</em></div>
+        <div class="kpi"><span>USDT ที่ได้ทั้งหมด</span><b>$18,720.00</b><em>▲ $1,860 วันนี้</em></div>
+        <div class="kpi"><span>ผู้ซื้อ</span><b>214</b><em>▲ 23 รายใหม่</em></div>
+        <div class="kpi"><span>IDTC เหลือใน presale</span><b>87.52B</b><em class="down">เหรียญในสัญญาพอขายถึงเพดาน</em></div>
+      </div>
+      <div class="admin-grid">
+        <div class="panel"><h3>ยอดขายรายวัน (USDT) <span style="font-size:12.5px;color:var(--fg-3);font-weight:500">14 วันล่าสุด</span></h3><svg class="spark" id="salesChart" viewBox="0 0 640 190" preserveAspectRatio="none" aria-label="กราฟยอดขาย"></svg></div>
+        <div class="panel"><h3>ควบคุม Presale <span class="ok-pill">● เปิดขาย</span></h3>
+          <div class="ctrl">
+            <div class="ctrl-row"><div><b>หยุดขายชั่วคราว</b><span>ผู้ซื้อจะกดซื้อไม่ได้จนกว่าจะเปิดใหม่</span></div><button class="toggle" type="button" aria-label="สถานะการขาย"></button></div>
+            <div class="ctrl-row"><div><b>ขั้นต่ำ / เพดานต่อกระเป๋า</b><span>1 USDT · 2,000,000,000 IDTC</span></div><button class="btn btn-ghost btn-sm" type="button">แก้ไข</button></div>
+            <div class="ctrl-row"><div><b>ช่วงเวลาขาย</b><span>1 พ.ย. 2569 → 30 พ.ย. 2569</span></div><button class="btn btn-ghost btn-sm" type="button">แก้ไข</button></div>
+            <div class="ctrl-row"><div><b>กระเป๋ารับเงิน</b><span class="mono">0x7a3c…9F12</span></div><button class="btn btn-ghost btn-sm" type="button">เปลี่ยน</button></div>
+          </div>
+          <p class="sig"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>ทุกคำสั่งเซ็นด้วยกระเป๋าแอดมินในเบราว์เซอร์ เซิร์ฟเวอร์ไม่ถือคีย์</p>
+        </div>
+        <div class="panel"><h3>รายการซื้อล่าสุด</h3>
+          <div class="table-scroll"><table class="tbl">
+            <thead><tr><th>เวลา</th><th>กระเป๋า</th><th class="r">จ่าย (USDT)</th><th class="r">ได้ (IDTC)</th><th>ธุรกรรม</th></tr></thead>
+            <tbody id="buysBody"></tbody>
+          </table></div>
+        </div>
+        <div style="display:grid;gap:16px;align-content:start">
+          <div class="panel"><h3>สัญญาล็อก <span class="ok-pill">✓ ฝากครบ</span></h3>
+            <div class="kv" style="margin:0 0 14px"><div><span>ล็อกอยู่</span><b>770,000,000,000</b></div><div><span>งวดถัดไป</span><b>1 ธ.ค. 2570</b></div><div><span>ปลดได้ตอนนี้</span><b>0</b></div></div>
+            <button class="btn btn-ghost btn-sm btn-block" type="button" disabled style="opacity:.55;cursor:not-allowed">ปลดงวดที่ถึงเวลา (ยังไม่ถึง)</button>
+          </div>
+          <div class="panel"><h3>พูลสภาพคล่อง</h3>
+            <div class="kv" style="margin:0"><div><span>IDTC/USDT</span><b>10.00 USDT · 6.67M IDTC</b></div><div><span>IDTC/TPIX</span><b>100 TPIX · 6.67M IDTC</b></div><div><span>ราคาในพูล</span><b>$0.0000015</b></div></div>
+          </div>
+          <div class="panel"><h3>บันทึกการทำงาน</h3>
+            <ul class="log"><li><time>10:42</time>Owner เปลี่ยนประกาศหน้าแรก</li><li><time>09:15</time>Owner ตั้งเพดานต่อกระเป๋า 2,000 ล้าน</li><li><time>08:03</time>Admin เข้าระบบ (ลายเซ็นถูกต้อง)</li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ═════════════════════════ BRAND ═════════════════════════ -->
+<main class="view" id="view-brand">
+  <div class="page-head"><div class="wrap"><p class="kicker">แบรนด์</p><h1>โลโก้ใหม่สำหรับ <span class="grad">กระดานเทรด</span></h1><p class="lead">ออกแบบให้อ่านออกตั้งแต่ขนาด 24 px ใช้ได้ทั้งพื้นขาวและพื้นดำ พื้นหลังโปร่งใสจริง พร้อมส่ง CoinGecko, CoinMarketCap และรายชื่อเหรียญของกระเป๋า</p></div></div>
+  <div class="wrap">
+    <div class="brand-grid">
+      <div class="logo-card">
+        <div class="stage">
+          <div class="light"><img src="img/logo.webp" alt="โลโก้แบบ A" width="120" height="120"><img src="img/logo.webp" alt="" width="40" height="40"><img src="img/logo.webp" alt="" width="24" height="24"></div>
+          <div class="dark"><img src="img/logo.webp" alt="" width="120" height="120"><img src="img/logo.webp" alt="" width="40" height="40"><img src="img/logo.webp" alt="" width="24" height="24"></div>
+        </div>
+        <div class="cap"><div><b>แบบ A · Night Leaf</b><br><span>พื้นกรมท่า วงแหวนมรกต ตัดกับทุกพื้นหลัง</span></div><span class="ok-pill">แนะนำ</span></div>
+      </div>
+      <div class="logo-card">
+        <div class="stage">
+          <div class="light"><img src="img/logo-b.webp" alt="โลโก้แบบ B" width="120" height="120"><img src="img/logo-b.webp" alt="" width="40" height="40"><img src="img/logo-b.webp" alt="" width="24" height="24"></div>
+          <div class="dark"><img src="img/logo-b.webp" alt="" width="120" height="120"><img src="img/logo-b.webp" alt="" width="40" height="40"><img src="img/logo-b.webp" alt="" width="24" height="24"></div>
+        </div>
+        <div class="cap"><div><b>แบบ B · Bright Leaf</b><br><span>พื้นเขียวไล่สี สดและเด่นบนกระดานพื้นมืด</span></div><span class="wait-pill">ทางเลือก</span></div>
+      </div>
+    </div>
+    <div class="board" aria-label="ตัวอย่างโลโก้บนกระดานเทรด">
+      <table>
+        <thead><tr><th>คู่เหรียญ</th><th>ราคา</th><th>24 ชม.</th><th>ปริมาณ</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tk"><img src="img/logo.webp" alt="">IDTC / USDT</span></td><td class="mono">0.0000015</td><td class="up">+4.20%</td><td class="mono">1.24B</td></tr>
+          <tr><td><span class="tk"><i style="background:#16a34a"></i>TPIX / USDT</span></td><td class="mono">0.1000</td><td class="up">+1.05%</td><td class="mono">48,210</td></tr>
+          <tr><td><span class="tk"><img src="img/logo-b.webp" alt="">IDTC / TPIX</span></td><td class="mono">0.000015</td><td class="dn">-0.80%</td><td class="mono">310M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="color:var(--fg-3);font-size:13px;margin-top:8px">ตัวอย่างการแสดงผลบนกระดาน ตัวเลขไม่ใช่ราคาจริง</p>
+    <div class="presenter"><img src="img/presenter.webp" alt="ผู้นำเสนอคลิปแนะนำ IDTC" loading="lazy"><span class="tag-illus">ผู้นำเสนอในคลิปแนะนำ (AI) · ติดเข็มกลัดโลโก้แบบ A</span></div>
+    <div style="height:80px"></div>
+  </div>
+</main>
+
+<footer class="footer" id="siteFooter">
+  <div class="wrap">
+    <div class="cols">
+      <div><a class="brand" href="#home" data-view="home"><img src="img/logo-64.png" alt=""><span>IDTC<small>Energy Capital</small></span></a><p style="margin-top:14px;max-width:34ch">เหรียญเพื่อการพัฒนาพลังงานบนเชน TPIX ล็อก 70% ตรวจสอบได้บนเชน</p></div>
+      <div><h4>เหรียญ</h4><ul><li><a href="#presale" data-view="presale">Presale</a></li><li><a href="#home" data-view="home" data-jump="tokenomics">Tokenomics</a></li><li><a href="#lock" data-view="lock">ความโปร่งใส</a></li></ul></div>
+      <div><h4>เอกสาร</h4><ul><li><a href="#home" data-view="home" data-jump="whitepaper">ไวท์เปเปอร์</a></li><li><a href="#home" data-view="home" data-jump="faq">คำถามที่พบบ่อย</a></li><li><a href="#home" data-view="home" data-jump="buy">วิธีซื้อ</a></li></ul></div>
+      <div><h4>เชน TPIX</h4><ul><li><a href="https://explorer.tpix.online" target="_blank" rel="noopener">Explorer</a></li><li><a href="https://tpix.online" target="_blank" rel="noopener">TPIX DEX</a></li><li><span class="mono" style="font-size:12.5px">Chain ID 4289</span></li></ul></div>
+    </div>
+    <div class="bottom"><span>© 2569 IDTC Energy Capital</span><span>ไม่ใช่คำแนะนำการลงทุน · โปรดอ่านคำเตือนความเสี่ยง</span></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const B = 1e9;
+  const fmt = (n, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const short = (n) => n >= 1e12 ? (n / 1e12).toFixed(n % 1e12 ? 2 : 1).replace(/\.0+$/, '') + 'T' : n >= 1e9 ? fmt(n / 1e9) + 'B' : fmt(n);
+
+  /* ── views ── */
+  const views = ['home', 'presale', 'lock', 'admin', 'brand'];
+  const siteNav = document.getElementById('siteNav'), footer = document.getElementById('siteFooter');
+  function show(v, jump) {
+    if (!views.includes(v)) v = 'home';
+    views.forEach((x) => document.getElementById('view-' + x).classList.toggle('is-on', x === v));
+    document.querySelectorAll('.proto nav a').forEach((a) => a.classList.toggle('is-on', a.dataset.view === v));
+    const app = v === 'admin';
+    siteNav.hidden = app; footer.hidden = app;
+    if (jump) requestAnimationFrame(() => document.getElementById(jump)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }));
+    else window.scrollTo(0, 0);
+    kick();
+  }
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-view]');
+    if (!a) return;
+    e.preventDefault();
+    show(a.dataset.view, a.dataset.jump);
+    try { history.replaceState(null, '', '#' + a.dataset.view); } catch (_) {}
+  });
+
+  /* ── counters + bars + reveal (content visible at rest; motion only adds) ── */
+  function countUp(el) {
+    if (el.dataset.done) return; el.dataset.done = 1;
+    const to = +el.dataset.count, isShort = 'short' in el.dataset;
+    if (reduce) { el.textContent = isShort ? short(to) : fmt(to); return; }
+    const t0 = performance.now(), dur = 1600;
+    const step = (t) => { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3), v = to * e;
+      el.textContent = isShort ? short(Math.round(v / B) * B || v) : fmt(Math.round(v)); if (p < 1) requestAnimationFrame(step); else el.textContent = isShort ? short(to) : fmt(to); };
+    requestAnimationFrame(step);
+  }
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((ents) => ents.forEach((en) => {
+    if (!en.isIntersecting) return;
+    const el = en.target; io.unobserve(el);
+    el.classList.remove('pre');
+    el.querySelectorAll?.('[data-count]').forEach(countUp);
+    if (el.matches('[data-count]')) countUp(el);
+    if (el.id === 'donut' || el.querySelector?.('#donut')) drawDonut(true);
+    if (el.querySelector?.('#unlockChart')) drawUnlock(true);
+  }), { rootMargin: '0px 0px -8% 0px' }) : null;
+  function kick() {
+    document.querySelectorAll('.view.is-on [data-count], .view.is-on .stat [data-count]').forEach((el) => io ? io.observe(el) : countUp(el));
+    document.querySelectorAll('.view.is-on .reveal').forEach((el) => {
+      if (!io || reduce) return;
+      const r = el.getBoundingClientRect();
+      if (r.top > innerHeight * .92) { el.classList.add('pre'); io.observe(el); } else io.observe(el);
+    });
+  }
+
+  /* ── hero energy flow (2D canvas) ── */
+  const cv = document.getElementById('flow'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, parts = [], paths = [];
+  function sizeFlow() {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paths = Array.from({ length: 7 }, (_, i) => {
+      const y0 = H * (.55 + i * .07), hx = W * .78, hy = H * .25;
+      return [[W * (.42 + i * .02), y0 + 40], [W * (.58 + i * .015), y0 - 30 - i * 6], [W * (.7 + i * .01), hy + 40 + i * 8], [hx, hy]];
+    });
+    parts = Array.from({ length: Math.round(W / 9) }, () => spawn());
+  }
+  function spawn() { return { p: Math.floor(Math.random() * 7), t: Math.random(), v: .0016 + Math.random() * .0028, s: .6 + Math.random() * 1.6, h: Math.random() < .25 ? 1 : 0 }; }
+  function bez(P, t) { const u = 1 - t; return [u*u*u*P[0][0] + 3*u*u*t*P[1][0] + 3*u*t*t*P[2][0] + t*t*t*P[3][0], u*u*u*P[0][1] + 3*u*u*t*P[1][1] + 3*u*t*t*P[2][1] + t*t*t*P[3][1]]; }
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const q of parts) {
+      q.t += q.v; if (q.t > 1) Object.assign(q, spawn(), { t: 0 });
+      const [x, y] = bez(paths[q.p], q.t), a = Math.sin(q.t * Math.PI) * .9;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, q.s * 5);
+      g.addColorStop(0, q.h ? `rgba(230,242,58,${a})` : `rgba(163,230,53,${a})`); g.addColorStop(1, 'rgba(16,185,129,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, q.s * 5, 0, 6.283); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    if (document.getElementById('view-home').classList.contains('is-on')) requestAnimationFrame(frame); else setTimeout(() => requestAnimationFrame(frame), 400);
+  }
+  if (!reduce) { sizeFlow(); addEventListener('resize', sizeFlow); requestAnimationFrame(frame); }
+
+  /* ── tokenomics donut ── */
+  const alloc = [
+    { g: 'ล็อก 70% · ปลดตามตาราง', items: [
+      { n: 'ล็อก 1 ปี', d: 'ปลดเดือนที่ 13–24', v: 220 * B, c: '#1e40af' },
+      { n: 'ล็อก 2 ปี', d: 'ปลดเดือนที่ 25–36', v: 220 * B, c: '#2563eb' },
+      { n: 'ล็อก 3 ปี', d: 'ปลดเดือนที่ 37–48', v: 165 * B, c: '#3b82f6' },
+      { n: 'ล็อก 4 ปี', d: 'ปลดเดือนที่ 49–60', v: 165 * B, c: '#60a5fa' } ] },
+    { g: 'หมุนเวียน 30% · ใช้ได้ตั้งแต่วันแรก', items: [
+      { n: 'Presale', d: 'ขายที่ $0.0000015 ด้วย USDT', v: 100 * B, c: '#a3e635' },
+      { n: 'ดำเนินงาน การตลาด และ listing', d: 'กระเป๋าโครงการ', v: 100 * B, c: '#10b981' },
+      { n: 'สำรองดูแลราคาและเติมพูล', d: 'ใช้ตามกติกาที่ประกาศ', v: 80 * B, c: '#2dd4bf' },
+      { n: 'สภาพคล่องเริ่มต้น', d: 'พูล IDTC/USDT และ IDTC/TPIX', v: 50 * B, c: '#e6f23a' } ] } ];
+  const TOTAL = 1100 * B, flat = alloc.flatMap((g) => g.items);
+  const tb = document.querySelector('#allocTable tbody');
+  alloc.forEach((g) => {
+    tb.insertAdjacentHTML('beforeend', `<tr class="group"><td colspan="3">${g.g}</td></tr>`);
+    g.items.forEach((it) => tb.insertAdjacentHTML('beforeend', `<tr data-seg="${flat.indexOf(it)}"><td><span class="sw" style="background:${it.c}"></span>${it.n}<small>${it.d}</small></td><td>${(it.v / TOTAL * 100).toFixed(2)}%</td><td>${fmt(it.v / B)}B</td></tr>`));
+  });
+  const svg = document.getElementById('donut'), R = 80, C = 2 * Math.PI * R; let acc = 0;
+  svg.innerHTML = `<circle cx="100" cy="100" r="${R}" stroke="rgba(255,255,255,.05)"></circle>` + flat.map((it, i) => {
+    const len = it.v / TOTAL * C, gap = 1.2, s = `<circle class="donut-seg" data-seg="${i}" cx="100" cy="100" r="${R}" stroke="${it.c}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${reduce ? -acc : -acc + len}" data-off="${-acc}"></circle>`; acc += len; return s; }).join('');
+  function drawDonut() { svg.querySelectorAll('.donut-seg').forEach((s, i) => setTimeout(() => s.setAttribute('stroke-dashoffset', s.dataset.off), i * 90)); }
+  const dv = document.getElementById('donutVal'), dl = document.getElementById('donutLbl');
+  function hi(i) { svg.querySelectorAll('.donut-seg').forEach((s) => s.classList.toggle('dim', i != null && s.dataset.seg != i));
+    if (i == null) { dv.textContent = '1.1T'; dl.textContent = 'IDTC ทั้งหมด'; } else { dv.textContent = (flat[i].v / TOTAL * 100).toFixed(1) + '%'; dl.textContent = flat[i].n; } }
+  document.querySelectorAll('[data-seg]').forEach((el) => { el.addEventListener('mouseenter', () => hi(el.dataset.seg)); el.addEventListener('mouseleave', () => hi(null)); });
+  if (!io || reduce) drawDonut();
+
+  /* ── unlock chart (to scale: y = billions circulating, x = months) ── */
+  function circ(m) { let v = 330; const tr = [[220, 12], [220, 24], [165, 36], [165, 48]];
+    for (const [a, c] of tr) { const e = Math.max(0, Math.min(12, m - c)); v += a * e / 12; } return v; }
+  function drawUnlock(animate) {
+    const el = document.getElementById('unlockChart'), L = 64, Rr = 880, T = 18, Bt = 286, X = (m) => L + (Rr - L) * m / 60, Y = (v) => Bt - (Bt - T) * v / 1100;
+    let s = `<defs><linearGradient id="lineGrad" x1="0" x2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#a3e635"/></linearGradient>
+      <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(163,230,53,.35)"/><stop offset="1" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>`;
+    [0, 275, 550, 825, 1100].forEach((v) => { s += `<line class="grid" x1="${L}" x2="${Rr}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end">${v ? fmt(v) + 'B' : '0'}</text>`; });
+    [0, 12, 24, 36, 48, 60].forEach((m) => { s += `<text x="${X(m)}" y="${Bt + 22}" text-anchor="middle">${m ? 'เดือน ' + m : 'เปิดตลาด'}</text>`; });
+    let d = '', area = `M${X(0)},${Bt}`;
+    for (let m = 0; m <= 60; m += .5) { const p = `${X(m).toFixed(1)},${Y(circ(m)).toFixed(1)}`; d += (m ? 'L' : 'M') + p; area += 'L' + p; }
+    area += `L${X(60)},${Bt}Z`;
+    s += `<rect x="${L}" y="${T}" width="${Rr - L}" height="${Bt - T}" fill="rgba(59,130,246,.07)"/>`;
+    s += `<path d="${area}" fill="url(#areaGrad)"/>`;
+    s += `<path class="line" id="uLine" d="${d}"/>`;
+    [[0, 330, 'หมุนเวียน 330B'], [24, 550, '550B'], [36, 770, '770B'], [48, 935, '935B'], [60, 1100, 'ครบ 1.1T']].forEach(([m, v, t]) => {
+      s += `<circle class="mark" cx="${X(m)}" cy="${Y(v)}" r="5"/><text class="ann" x="${X(m) + (m === 60 ? -10 : 10)}" y="${Y(v) - 12}" text-anchor="${m === 60 ? 'end' : 'start'}">${t}</text>`; });
+    el.innerHTML = s;
+    if (animate && !reduce) { const p = el.querySelector('#uLine'), len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(.3,.6,.2,1)'; p.style.strokeDashoffset = 0; }
+  }
+  drawUnlock(false);
+
+  /* ── presale quote (rate fixed in contract: 1 USDT = 2e18/3 per micro-USDT) ── */
+  const payIn = document.getElementById('payIn'), getOut = document.getElementById('getOut');
+  function quote() { const v = parseFloat((payIn.value || '0').replace(/,/g, '')); getOut.textContent = isFinite(v) && v > 0 ? fmt(Math.floor(v * 1e6) * 2 / 3, 2) : '0.00'; }
+  payIn.addEventListener('input', quote); document.querySelectorAll('[data-q]').forEach((b) => b.addEventListener('click', () => { payIn.value = b.dataset.q; quote(); }));
+  quote();
+
+  /* ── one-click add network + token ── */
+  const CHAIN = { chainId: '0x10c1', chainName: 'TPIX Chain', nativeCurrency: { name: 'TPIX', symbol: 'TPIX', decimals: 18 }, rpcUrls: ['https://rpc1.tpix.online'], blockExplorerUrls: ['https://explorer.tpix.online'] };
+  const IDTC = null; // ที่อยู่เหรียญจริงจะใส่หลัง deploy
+  const toast = document.getElementById('addnetToast');
+  function say(msg, cls) { if (!toast) return; toast.textContent = msg; toast.className = 'toast ' + (cls || ''); }
+  async function addNet() {
+    const eth = window.ethereum;
+    if (!eth) { document.getElementById('addnet')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); say('ไม่พบกระเป๋าในเบราว์เซอร์นี้ บนมือถือให้กดเปิดในแอปกระเป๋าด้านขวา', 'err'); return; }
+    try {
+      try { await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN.chainId }] }); }
+      catch (e) { if (e.code === 4902 || /Unrecognized|not added/i.test(e.message || '')) await eth.request({ method: 'wallet_addEthereumChain', params: [CHAIN] }); else throw e; }
+      if (IDTC) await eth.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: { address: IDTC, symbol: 'IDTC', decimals: 18, image: 'https://idtc.online/images/idtc-256.png' } } });
+      say(IDTC ? 'เพิ่มเชน TPIX และเหรียญ IDTC เรียบร้อย' : 'เพิ่มเชน TPIX เรียบร้อย · เหรียญ IDTC จะเพิ่มได้เมื่อ deploy แล้ว', 'ok');
+    } catch (e) { say(e.code === 4001 ? 'คุณยกเลิกในกระเป๋า กดอีกครั้งเมื่อพร้อม' : 'เพิ่มไม่สำเร็จ: ' + (e.message || 'ลองใหม่อีกครั้ง'), 'err'); }
+  }
+  document.querySelectorAll('[data-addnet]').forEach((b) => b.addEventListener('click', addNet));
+  const site = 'idtc.online/add-network', enc = encodeURIComponent('https://' + site);
+  const wallets = [
+    ['MetaMask', 'M', '#f6851b', `https://metamask.app.link/dapp/${site}`],
+    ['Trust Wallet', 'T', '#3375bb', `https://link.trustwallet.com/open_url?coin_id=60&url=${enc}`],
+    ['OKX Wallet', 'O', '#111', `https://www.okx.com/download?deeplink=${encodeURIComponent('okx://wallet/dapp/url?dappUrl=' + enc)}`],
+    ['Bitget Wallet', 'B', '#00f0ff', `https://bkcode.vip?action=dapp&url=${enc}`],
+    ['Coinbase Wallet', 'C', '#0052ff', `https://go.cb-w.com/dapp?cb_url=${enc}`],
+    ['TokenPocket', 'TP', '#2980fe', `tpoutside://pull.activity?param=${encodeURIComponent(JSON.stringify({ url: 'https://' + site }))}`] ];
+  document.getElementById('walletLinks').innerHTML = wallets.map(([n, l, c, u]) => `<a class="wallet" href="${u}" target="_blank" rel="noopener"><span class="wl" style="background:${c};color:${c === '#00f0ff' ? '#002' : '#fff'}">${l}</span>${n}</a>`).join('');
+
+  /* ── transparency: tranches + countdown (example start: 1 Nov 2026) ── */
+  const START = Date.UTC(2026, 10, 1), MONTH = 2629800e3, now = Date.now();
+  const tr = [['ล็อก 1 ปี', 220, 12], ['ล็อก 2 ปี', 220, 24], ['ล็อก 3 ปี', 165, 36], ['ล็อก 4 ปี', 165, 48]];
+  const elapsed = Math.max(0, (now - START) / MONTH);
+  document.getElementById('trancheGrid').innerHTML = tr.map(([n, a, cliff]) => {
+    const rel = Math.max(0, Math.min(12, Math.floor(elapsed) - cliff)), cells = Array.from({ length: 60 }, (_, m) => `<i class="${m < cliff ? 'lock' : m < cliff + rel ? 'rel' : ''}"></i>`).join('');
+    const first = new Date(START + (cliff + 1) * MONTH).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `<article class="tranche"><div class="tranche-top"><h3>${n}</h3><b>${fmt(a)}B</b></div>
+      <div class="meta"><span>ปลดแล้ว ${rel}/12 งวด</span><span>งวดแรก ${first}</span></div>
+      <div class="timeline" aria-label="60 เดือน">${cells}</div>
+      <div class="meta"><span>■ น้ำเงิน = ล็อกเต็ม · ■ เขียว = ปลดแล้ว</span><span>${fmt(a / 12, 2)}B ต่องวด</span></div></article>`; }).join('');
+  const target = START + 13 * MONTH, cd = document.querySelectorAll('#countdown b');
+  function tick() { let s = Math.max(0, Math.floor((target - Date.now()) / 1000)); const d = Math.floor(s / 86400); s -= d * 86400; const h = Math.floor(s / 3600); s -= h * 3600; const m = Math.floor(s / 60); s -= m * 60;
+    [d, h, m, s].forEach((v, i) => cd[i].textContent = i ? String(v).padStart(2, '0') : fmt(v)); }
+  tick(); setInterval(tick, 1000);
+
+  /* ── admin: sales chart + recent buys (example data) ── */
+  const sales = [620, 840, 760, 1120, 980, 1310, 1480, 1260, 1690, 1540, 1820, 2010, 1590, 1860];
+  (function () { const el = document.getElementById('salesChart'), w = 640, h = 190, pad = 22, max = 2200, X = (i) => pad + (w - pad * 2) * i / (sales.length - 1), Y = (v) => h - pad - (h - pad * 2) * v / max;
+    let d = '', a = `M${X(0)},${h - pad}`; sales.forEach((v, i) => { const p = `${X(i).toFixed(1)},${Y(v).toFixed(1)}`; d += (i ? 'L' : 'M') + p; a += 'L' + p; }); a += `L${X(sales.length - 1)},${h - pad}Z`;
+    let g = ''; [0, 1000, 2000].forEach((v) => g += `<line x1="${pad}" x2="${w - pad}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(220,255,240,.08)"/><text x="${pad}" y="${Y(v) - 4}">${fmt(v)}</text>`);
+    el.innerHTML = `<defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(163,230,53,.35)"/><stop offset="1" stop-color="rgba(163,230,53,0)"/></linearGradient></defs>${g}<path d="${a}" fill="url(#sg)"/><path d="${d}" fill="none" stroke="#a3e635" stroke-width="2.5" stroke-linejoin="round"/><circle cx="${X(sales.length - 1)}" cy="${Y(sales.at(-1))}" r="5" fill="#04080a" stroke="#a3e635" stroke-width="2.5"/>`; })();
+  const buys = [['10:41', '0x91c2…4e0A', 250], ['10:38', '0x3F7d…b19C', 40], ['10:30', '0xA0b8…77E1', 1200], ['10:22', '0x5c11…0d3F', 15], ['10:09', '0xE2a4…9a6B', 300], ['09:58', '0x7B03…c2D8', 75]];
+  document.getElementById('buysBody').innerHTML = buys.map(([t, w, u]) => `<tr><td class="mono">${t}</td><td class="mono">${w}</td><td class="r">${fmt(u, 2)}</td><td class="r">${fmt(u * 1e6 * 2 / 3)}</td><td><a href="#admin" class="mono" style="font-size:12.5px">ดู ↗</a></td></tr>`).join('');
+
+  /* ── boot ── */
+  const first = (location.hash || '#home').slice(1);
+  show(views.includes(first) ? first : 'home');
+})();
+</script>
