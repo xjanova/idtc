@@ -9,26 +9,31 @@ use App\Services\Admin\Audit;
 use App\Services\Auth\SiweAuth;
 use App\Services\Auth\SiweException;
 use App\Services\Chain\Address;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * เข้าหลังบ้านด้วยการเซ็นข้อความในกระเป๋า (EIP-4361) — ไม่มีรหัสผ่าน เซิร์ฟเวอร์ไม่เห็นคีย์
  */
 class AuthController extends Controller
 {
-    public function show(Request $request, AdminRegistry $registry): View|RedirectResponse
+    public function show(Request $request, AdminRegistry $registry): Response|RedirectResponse
     {
         $address = $request->session()->get('admin.address');
         if (is_string($address) && $registry->roleFor($address) !== null) {
             return redirect()->route('admin.dashboard');
         }
 
-        return view('admin.login', [
+        return response()->view('admin.login', [
             'title' => 'เข้าสู่หลังบ้าน',
             'bootstrapped' => $registry->hasAnyAdmin(),
+        ])->withHeaders([
+            'X-Frame-Options' => 'DENY',
+            'X-Robots-Tag' => 'noindex, nofollow',
+            'Cache-Control' => 'no-store, private',
+            'Referrer-Policy' => 'same-origin',
         ]);
     }
 
