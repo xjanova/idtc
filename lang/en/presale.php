@@ -11,6 +11,7 @@ return [
     'plan_note' => 'Figures use the planned price',
     'pending' => 'The presale contract is not on-chain yet (awaiting deployment). The buy button opens once the contract is ready. The price below is the same price that will be fixed in the contract.',
     'rate_mismatch' => 'The rate in the contract differs from the published plan. This page calculates with the contract’s rate.',
+    'token_mismatch' => 'This contract sells a different token from the announced IDTC. Do not buy yet; check the contract addresses on the Transparency page first.',
     'pay_mismatch' => 'This contract accepts a different payment token from the configured USDT. This page uses the token the contract specifies.',
 
     'you_pay' => 'You pay',

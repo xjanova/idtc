@@ -54,6 +54,7 @@ Alpine.data('presale', () => ({
     saleStock: null,
     rateMismatch: false,
     payMismatch: false,
+    tokenMismatch: false,
     now: chainNow(),
 
     // ช่องกรอก + ราคาจากสัญญา
@@ -134,7 +135,9 @@ Alpine.data('presale', () => ({
             this.rateMismatch = num * PLAN.den !== PLAN.num * den;
             this.payMismatch = !!this.payAddr && payToken.toLowerCase() !== this.payAddr.toLowerCase();
             this.payAddr = payToken;
-            if (!this.tokenAddr) this.tokenAddr = saleToken;
+            // เหรียญที่สัญญาขายจริงคือ saleToken — ถ้าไม่ใช่ IDTC ที่ตั้งค่าไว้ ต้องเตือนผู้ซื้อ (ยอดคงเหลือ/เพิ่มเหรียญใช้ตัวที่สัญญาขาย)
+            this.tokenMismatch = !!this.tokenAddr && saleToken.toLowerCase() !== this.tokenAddr.toLowerCase();
+            this.tokenAddr = saleToken;
             this.saleStock = await withTimeout(new Contract(saleToken, ERC20_ABI, readProvider()).balanceOf(this.saleAddr), 10000).catch(() => null);
             this.loaded = true;
             this.loadError = '';

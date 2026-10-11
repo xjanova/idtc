@@ -171,6 +171,42 @@ class SettingsTest extends TestCase
         $this->assertSame([['label' => 'การตลาด', 'address' => $this->eoa]], app(Settings::class)->projectWallets());
     }
 
+    public function test_presale_start_block_is_the_deploy_block_confirmed_by_rpc(): void
+    {
+        $tx = '0x'.str_repeat('ab', 32);
+        $this->explorerAddresses[strtolower($this->contract)] = ['creation_transaction_hash' => $tx];
+        $this->fakeRpc(fn (string $method, array $params) => match ($method) {
+            'eth_getCode' => strtolower($params[0]) === strtolower($this->contract) ? '0x6080604052' : '0x',
+            'eth_blockNumber' => '0x1f4', // 500
+            'eth_chainId' => '0x10c1',
+            'eth_getTransactionReceipt' => $params[0] === $tx ? ['contractAddress' => strtolower($this->contract), 'blockNumber' => '0x64'] : null,
+            default => ['__error' => 'not faked'],
+        });
+
+        $this->loginAsOwner()->post('/admin/settings/contracts', ['key' => 'presale', 'address' => $this->contract])->assertSessionHas('status');
+
+        // ซื้อก่อนแอดมินกรอกที่อยู่ก็ยังถูกนับ — เริ่มที่บล็อก deploy (100) ไม่ใช่บล็อกปัจจุบัน (500)
+        $this->assertSame(100, app(Settings::class)->indexerStartBlock());
+    }
+
+    public function test_presale_start_block_ignores_an_explorer_answer_the_rpc_does_not_confirm(): void
+    {
+        $tx = '0x'.str_repeat('cd', 32);
+        $this->explorerAddresses[strtolower($this->contract)] = ['creation_transaction_hash' => $tx];
+        $this->fakeRpc(fn (string $method, array $params) => match ($method) {
+            'eth_getCode' => strtolower($params[0]) === strtolower($this->contract) ? '0x6080604052' : '0x',
+            'eth_blockNumber' => '0x1f4',
+            'eth_chainId' => '0x10c1',
+            // tx นี้สร้างสัญญาอื่น — explorer ตอบผิด/ถูกแก้
+            'eth_getTransactionReceipt' => ['contractAddress' => $this->eoa, 'blockNumber' => '0x1'],
+            default => ['__error' => 'not faked'],
+        });
+
+        $this->loginAsOwner()->post('/admin/settings/contracts', ['key' => 'presale', 'address' => $this->contract])->assertSessionHas('status');
+
+        $this->assertSame(500, app(Settings::class)->indexerStartBlock());
+    }
+
     public function test_indexer_start_block_validation(): void
     {
         $this->loginAsOwner()->post('/admin/settings/indexer', ['start_block' => '-5'])->assertSessionHasErrors('start_block');

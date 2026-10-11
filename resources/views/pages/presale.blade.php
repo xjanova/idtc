@@ -47,6 +47,7 @@
                     <span><span x-text="loadError"></span> · <button type="button" class="link-btn" @click="refresh()">{{ __('site.retry') }}</button></span>
                 </p>
                 <p class="plan-note warn" x-show="rateMismatch" x-cloak><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>{{ __('presale.rate_mismatch') }}</span></p>
+                <p class="plan-note warn" x-show="tokenMismatch" x-cloak><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>{{ __('presale.token_mismatch') }}</span></p>
                 <p class="plan-note warn" x-show="payMismatch" x-cloak><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>{{ __('presale.pay_mismatch') }}</span></p>
 
                 <div class="field" :class="{ 'is-bad': problem }">

@@ -7,6 +7,7 @@ use App\Services\Admin\AdminContext;
 use App\Services\Admin\Audit;
 use App\Services\Chain\Address;
 use App\Services\Chain\ChainStatus;
+use App\Services\Chain\ContractOrigin;
 use App\Services\Chain\PoolReader;
 use App\Services\Chain\PresaleReader;
 use App\Services\Chain\RpcClient;
@@ -56,7 +57,7 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function contracts(Request $request, Settings $settings, RpcClient $rpc, PresaleReader $presale, VestingReader $vesting, PoolReader $pools, SalesIndexer $indexer): RedirectResponse
+    public function contracts(Request $request, Settings $settings, RpcClient $rpc, PresaleReader $presale, VestingReader $vesting, PoolReader $pools, SalesIndexer $indexer, ContractOrigin $origin): RedirectResponse
     {
         $key = (string) $request->input('key');
         if (! in_array($key, Settings::CONTRACT_KEYS, true)) {
@@ -110,10 +111,11 @@ class SettingsController extends Controller
         $settings->put('contracts', $next, $by);
         Audit::change('settings.contract', $old, $new, ['key' => $key]);
 
-        // ตั้งสัญญา presale ครั้งแรก: เริ่มดึงยอดจากบล็อกปัจจุบัน (แก้ย้อนหลังได้ในช่องบล็อกเริ่ม)
+        // ตั้งสัญญา presale ครั้งแรก: เริ่มดึงยอดจากบล็อกที่ deploy สัญญา (ไม่พลาดการซื้อที่เกิดก่อนกรอกที่อยู่)
+        // หาไม่ได้ (explorer ล่ม/สัญญาสร้างจาก factory) → บล็อกปัจจุบัน · แก้ย้อนหลังได้ในช่องบล็อกเริ่ม
         if ($key === 'presale' && $new !== null && $settings->indexerStartBlock() === null) {
             try {
-                $block = $rpc->blockNumber();
+                $block = $origin->creationBlock($new) ?? $rpc->blockNumber();
                 $settings->put('indexer.start_block', $block, $by);
                 Audit::change('settings.indexer', null, $block, ['key' => 'indexer.start_block']);
             } catch (RpcException) {

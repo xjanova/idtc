@@ -19,6 +19,13 @@ trait InteractsWithAdmin
 
     protected bool $rpcFaked = false;
 
+    /**
+     * คำตอบของ explorer (GET /api/v2/...) ตามที่อยู่ — ไม่ตั้ง = 404
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    protected array $explorerAddresses = [];
+
     protected function setUpAdmins(): void
     {
         config(['idtc.admin_wallets' => [$this->ownerAddress]]);
@@ -57,6 +64,14 @@ trait InteractsWithAdmin
         Http::fake(['*' => function (Request $request) {
             if ($this->rpcConnectionError !== null) {
                 return (Http::failedConnection($this->rpcConnectionError))($request);
+            }
+            // explorer (Blockscout REST) — ไม่ใช่ JSON-RPC
+            if ($request->method() === 'GET') {
+                $addr = strtolower((string) preg_replace('#^.*/api/v2/addresses/#', '', (string) parse_url($request->url(), PHP_URL_PATH)));
+
+                return isset($this->explorerAddresses[$addr])
+                    ? Http::response($this->explorerAddresses[$addr])
+                    : Http::response(['message' => 'Not found'], 404);
             }
             $body = json_decode($request->body(), true);
             $one = function (array $call) {
