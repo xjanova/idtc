@@ -20,9 +20,13 @@ All replies and progress lines go to the owner in Thai. Code, commits and logs s
   - USDT_TPIX (6 decimals) and TPIX DEX (Uniswap V2 fork).
 - All chain constants and plan numbers: `config/idtc.php`, read through `App\Support\Idtc` (Blade/PHP) and `window.IDTC` (JS, `resources/js/chain.js`).
   - Contract addresses may be empty (not deployed yet). Every page must show a clear "รอ deploy" state instead of breaking.
+- Two languages on the public site (admin stays Thai): Thai at the current URLs, English under `/en` (route names `en.*`).
+  - Every user-facing string lives in `lang/th/*.php` and `lang/en/*.php` (same keys, a test checks). Link with `lroute('presale')`, never `route()`.
+  - JavaScript text comes from `lang/*/js.php` via `window.IDTC.i18n` (`resources/js/i18n.js`): no Thai literals in JS.
+  - English pages must contain no Thai characters; `tests/Feature/LocalizationTest.php` scans them.
 - Design: the owner-approved mockup is in `design/mockup/index.html`, and the styles are ported to `resources/css/app.css`.
   - Keep the night-energy look: tokens on `:root`, Anuphan display, Noto Sans Thai body, JetBrains Mono for numbers.
-  - Illustrative AI images carry the label "ภาพประกอบ".
+  - Illustrative AI images carry the label "ภาพประกอบ" ("Illustration" on English pages).
 
 ## Hard rules
 - The server never holds a private key. Every on-chain write is signed in the user's or admin's own wallet in the browser (ethers v6 BrowserProvider).
