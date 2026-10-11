@@ -116,8 +116,8 @@ class SalesIndexer
             $behind = $head - (int) $state->last_block;
 
             return $this->result(true, $behind > 0 ? 'partial' : 'done', $behind > 0
-                ? "ดึงยอดได้ถึงบล็อก {$state->last_block} (ยังเหลือ {$behind} บล็อก ระบบจะดึงต่อรอบหน้า)"
-                : "ดึงยอดครบถึงบล็อก {$state->last_block} แล้ว", $inserted, $firstFrom, $state->last_block);
+                ? 'ดึงยอดได้ถึงบล็อก '.number_format((int) $state->last_block).' (ยังเหลือ '.number_format($behind).' บล็อก ระบบจะดึงต่อรอบหน้า)'
+                : 'ดึงยอดครบถึงบล็อก '.number_format((int) $state->last_block).' แล้ว', $inserted, $firstFrom, $state->last_block);
         } catch (RpcException $e) {
             $state->last_error = $e->getMessage();
             $state->save();
