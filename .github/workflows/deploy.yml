@@ -1,70 +1,80 @@
-name: Deploy to GitHub Pages
+name: Test & Deploy idtc.online
+
+# Push to main → tests + asset build → deploy over SSH (git reset on the server).
+# The server checkout lives at /home/admin/domains/idtc.online with public_html as
+# the Laravel web root (same layout as xmanstudio). SQLite data in database/ and the
+# .env are untracked and survive every deploy.
 
 on:
   push:
-    branches:
-      - main
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: idtc-production
+  cancel-in-progress: false
 
 jobs:
-  # Job 1: Deploy to GitHub Pages
-  deploy-pages:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  test:
+    name: Tests + build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
         with:
-          path: '.'
+          php-version: '8.3'
+          extensions: pdo_sqlite, gmp, bcmath, mbstring
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: npm
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: npm ci --no-audit --no-fund
+      - run: npx vite build
+      - name: PHPUnit
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  # Job 2: Deploy to idtc.online via SCP
-  deploy-server:
+  deploy:
+    name: Deploy to idtc.online
+    needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Prepare target directory
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          command_timeout: 10m
           script: |
             set -e
-            mkdir -p "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html"
-            mkdir -p "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html/assets"
-            echo "Dirs ready."
+            APP="/home/${{ secrets.SSH_USER }}/domains/idtc.online"
+            cd "$APP"
+            test -f .env || { echo "::error::$APP/.env missing — run the first-time setup"; exit 1; }
+            ( umask 077 && cp .env ".env.backup.$(date +%Y%m%d_%H%M%S)" )
+            ( umask 077 && test -f database/database.sqlite && cp database/database.sqlite "database/backup-$(date +%Y%m%d_%H%M%S).sqlite" ) || true
+            ls -1t database/backup-*.sqlite 2>/dev/null | tail -n +11 | xargs -r rm -f
+            ls -1t .env.backup.* 2>/dev/null | tail -n +11 | xargs -r rm -f
 
-      - name: Upload files via SCP
-        uses: appleboy/scp-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: "index.html,dashboard.html,sale.html,trade.html,addliquidity.html,whitepaper.html,logo.png,logo.jpg,logotoken.png,token-logo.png,bk1.png,bk2.png,bk3.png,bk4.png,bk5.png,assets/,manifest.json,sw.js"
-          target: "/home/${{ secrets.SSH_USER }}/domains/idtc.online/public_html"
-          strip_components: 0
-          overwrite: true
+            git fetch origin main
+            git reset --hard origin/main
+
+            composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+            php artisan migrate --force
+
+            npm ci --no-audit --no-fund
+            npm run build
+
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache || true
+
+            chmod -R ug+rwX storage bootstrap/cache database
+            chmod 600 .env
+            echo "deployed $(git log --oneline -1)"

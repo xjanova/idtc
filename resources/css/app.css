@@ -166,7 +166,8 @@
 .arrow:hover { border-color: var(--lime); color: var(--lime); }
 .arrow svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; }
 .slide-label { font-size: 12.5px; color: var(--fg-3); min-width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
-@media (max-width: 860px) { .hero-dock .wrap { grid-template-columns: 1fr; } .dock-card { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .hero-dock .wrap { grid-template-columns: minmax(0, 1fr); } .dock-card { grid-template-columns: minmax(0, 1fr); } .slider-ctrl { justify-content: space-between; } }
+.dock-card, .dock-card > div { min-width: 0; }
 
 /* ── stats ribbon ── */
 .stats { background: var(--bg-2); border-bottom: 1px solid var(--line); }
