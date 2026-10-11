@@ -43,7 +43,7 @@
 
 @section('content')
     {{-- ═════════ HERO SLIDER ═════════ --}}
-    <section class="hero" x-data="heroSlider({{ count($slides) }})" @mouseenter="hold(true)" @mouseleave="hold(false)" @focusin="hold(true)" @focusout="hold(false)" @touchstart.passive="touchStart($event)" @touchend.passive="touchEnd($event)" :class="{ 'is-paused': paused }" aria-roledescription="carousel" aria-label="ภาพเด่น">
+    <section class="hero" x-data="heroSlider({{ count($slides) }})" @focusin="$event.target.matches(':focus-visible') && hold(true)" @focusout="hold(false)" @touchstart.passive="touchStart($event)" @touchend.passive="touchEnd($event)" :class="{ 'is-paused': paused }" aria-roledescription="carousel" aria-label="ภาพเด่น">
         <div class="slides" aria-hidden="true">
             @foreach ($slides as $i => $s)
                 <div class="slide-bg {{ $i === 0 ? 'is-on' : '' }}" :class="{ 'is-on': index === {{ $i }} }"
@@ -117,6 +117,28 @@
             <div class="stat"><div class="stat-label">ล็อกในสัญญา</div><div class="stat-value"><span data-count="770000000000" data-short>770B</span><small>70%</small></div></div>
             <div class="stat"><div class="stat-label">มูลค่ารวมที่ราคา presale</div><div class="stat-value">$<span data-count="1650000">1,650,000</span></div></div>
             <div class="stat"><div class="stat-label">ค่าแก๊สบนเชน TPIX</div><div class="stat-value">0<small>TPIX</small></div></div>
+        </div>
+    </section>
+
+    {{-- ═════════ EXPLAINER VIDEO ═════════ --}}
+    <section class="section video-sec" id="video">
+        <div class="wrap">
+            <div class="section-head reveal">
+                <p class="kicker">คลิปแนะนำ</p>
+                <h2 class="h2">รู้จัก IDTC ใน <span class="grad">2 นาที</span></h2>
+                <p class="lead">เหรียญเพื่อการพัฒนาพลังงานบนเชน TPIX สัญญาล็อก 70% และ presale ราคาคงที่ อธิบายครบในคลิปเดียว · พากย์ภาษาอังกฤษ ซับไทย</p>
+            </div>
+            <figure class="video-frame reveal" x-data="explainer">
+                <video x-ref="v" controls playsinline preload="none" poster="{{ asset('images/video/poster.webp') }}" width="1920" height="1080"
+                       @play="playing = true" @pause="playing = false" @ended="playing = false; done = true">
+                    <source src="{{ asset('media/idtc-explainer-1080p.mp4') }}" type="video/mp4">
+                </video>
+                <button class="video-play" type="button" x-show="!playing" @click="play()" :aria-label="done ? 'เล่นคลิปอีกครั้ง' : 'เล่นคลิปแนะนำ IDTC'">
+                    <span class="video-play__ring"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+                    <span class="video-play__label" x-text="done ? 'ดูอีกครั้ง' : 'ดูคลิป · 2:14'">ดูคลิป · 2:14</span>
+                </button>
+                <figcaption>ผู้นำเสนอในคลิปสร้างด้วย AI · ตัวเลขทุกตัวในคลิปตรงกับสัญญาและไวท์เปเปอร์</figcaption>
+            </figure>
         </div>
     </section>
 

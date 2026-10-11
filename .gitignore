@@ -41,3 +41,6 @@ Thumbs.db
 /legacy/WHITEPAPER.docx
 /legacy/WHITEPAPER_temp.zip
 /legacy/*.jpg
+
+# Large media is served from public_html/media but published as GitHub release assets, not committed
+/public_html/media/*.mp4

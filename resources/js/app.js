@@ -130,6 +130,18 @@ Alpine.data('heroSlider', (count) => ({
     },
 }));
 
+/* ───────────── explainer video ───────────── */
+Alpine.data('explainer', () => ({
+    playing: false,
+    done: false,
+    play() {
+        const v = this.$refs.v;
+        if (this.done) v.currentTime = 0;
+        this.done = false;
+        v.play().catch(() => { v.controls = true; });
+    },
+}));
+
 /* ───────────── presale stats (อ่านสดจากสัญญา) ───────────── */
 Alpine.data('presaleStats', () => ({
     live: false,

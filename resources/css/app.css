@@ -622,3 +622,16 @@
     .wp-body code { background: none; border-color: #ccc; color: #111; }
     .grad { color: #000 !important; -webkit-text-fill-color: #000; background: none !important; }
 }
+
+/* ═════════ Home: explainer video ═════════ */
+.video-sec { background: radial-gradient(70% 90% at 50% 0%, rgba(16, 185, 129, .10), transparent 70%), var(--bg); }
+.video-frame { position: relative; margin: 0 auto; max-width: 1080px; padding: 1px; border-radius: 24px; background: linear-gradient(135deg, rgba(163, 230, 53, .7), rgba(16, 185, 129, .35) 45%, rgba(59, 130, 246, .5)); box-shadow: 0 50px 120px -50px rgba(16, 185, 129, .75); }
+.video-frame video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 23px; background: #000; object-fit: cover; }
+.video-play { position: absolute; inset: 1px 1px auto 1px; aspect-ratio: 16 / 9; display: grid; place-content: center; justify-items: center; gap: 14px; border: 0; border-radius: 23px; cursor: pointer; color: #fff; background: radial-gradient(60% 60% at 50% 50%, rgba(4, 8, 10, .15), rgba(4, 8, 10, .55)); font-family: var(--font-display); }
+.video-play__ring { width: clamp(64px, 9vw, 96px); height: clamp(64px, 9vw, 96px); border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--lime), var(--emerald)); box-shadow: 0 0 0 0 rgba(163, 230, 53, .55); animation: playPulse 2.4s ease-out infinite; transition: transform .2s ease; }
+.video-play:hover .video-play__ring, .video-play:focus-visible .video-play__ring { transform: scale(1.06); }
+.video-play__ring svg { width: 42%; height: 42%; fill: var(--on-accent); margin-left: 6%; }
+.video-play__label { padding: 6px 14px; border-radius: 999px; background: rgba(4, 8, 10, .7); border: 1px solid var(--line-2); font-size: 14.5px; font-weight: 600; backdrop-filter: blur(6px); }
+@keyframes playPulse { 70% { box-shadow: 0 0 0 22px rgba(163, 230, 53, 0); } 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); } }
+.video-frame figcaption { position: absolute; left: 0; right: 0; top: calc(100% + 12px); text-align: center; font-size: 13px; color: var(--fg-3); }
+.video-sec .wrap { padding-bottom: 28px; }
