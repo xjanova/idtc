@@ -1,9 +1,27 @@
 import Alpine from 'alpinejs';
 import { addNetworkAndToken, connectWallet, injected, isMobile, reader, short, units, walletError, fmt, CFG } from './chain';
+import './presale';
+import './transparency';
+import './whitepaper';
 
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const B = 1e9;
 const shortNum = (n) => (n >= 1e12 ? `${(n / 1e12).toFixed(2).replace(/\.?0+$/, '')}T` : n >= 1e9 ? `${fmt(n / 1e9)}B` : fmt(n));
+
+/**
+ * รอให้กระเป๋าฉีด window.ethereum — เบราว์เซอร์ในแอปกระเป๋าบางตัว (Trust, Coinbase, OKX บางรุ่น)
+ * ฉีดช้ากว่าตอนที่สคริปต์หน้าเว็บเริ่มทำงาน
+ */
+function whenEthereum(timeout = 3000) {
+    if (injected()) return Promise.resolve(injected());
+    return new Promise((resolve) => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; clearInterval(iv); clearTimeout(to); resolve(injected()); };
+        window.addEventListener('ethereum#initialized', finish, { once: true });
+        const iv = setInterval(() => injected() && finish(), 200);
+        const to = setTimeout(finish, timeout);
+    });
+}
 
 /* ───────────── site shell: wallet + add network ───────────── */
 Alpine.data('site', () => ({
@@ -13,12 +31,17 @@ Alpine.data('site', () => ({
     noticeKind: '',
     short,
     init() {
-        const eth = injected();
-        if (!eth) return;
-        eth.request({ method: 'eth_accounts' }).then((a) => { this.account = a?.[0] || null; }).catch(() => {});
-        eth.on?.('accountsChanged', (a) => { this.account = a?.[0] || null; window.dispatchEvent(new CustomEvent('idtc:account', { detail: this.account })); });
-        // ทางลัดจาก deep link ของแอปกระเป๋า: /add-network?auto=1 เพิ่มให้ทันทีที่เปิดในแอป
-        if (document.body.dataset.autoAdd === '1') setTimeout(() => this.addNetwork(), 600);
+        // หน้าอื่น (presale/ความโปร่งใส) เชื่อมกระเป๋าเองได้ — ให้ปุ่มบนแถบเมนูตามทัน
+        window.addEventListener('idtc:account', (e) => { this.account = e.detail || null; });
+        const auto = document.body.dataset.autoAdd === '1' && (isMobile() || new URLSearchParams(location.search).has('auto'));
+        whenEthereum(auto ? 4000 : 1500).then((eth) => {
+            if (!eth) return;
+            eth.request({ method: 'eth_accounts' }).then((a) => { this.account = a?.[0] || null; }).catch(() => {});
+            eth.on?.('accountsChanged', (a) => { this.account = a?.[0] || null; window.dispatchEvent(new CustomEvent('idtc:account', { detail: this.account })); });
+            // เปิด /add-network ในเบราว์เซอร์ของแอปกระเป๋า (deep link) → เพิ่มเชนให้ทันที
+            // บนคอมไม่เด้งเอง (ต้องเติม ?auto=1) — กระเป๋า extension เด้งถามโดยไม่ได้กดจะดูน่าตกใจ
+            if (auto) setTimeout(() => this.addNetwork(), 600);
+        });
     },
     say(msg, kind = '') {
         this.notice = msg; this.noticeKind = kind;

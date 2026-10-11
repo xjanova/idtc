@@ -16,7 +16,7 @@
         <p>บนคอมพิวเตอร์ ปุ่มนี้ให้กระเป๋า (MetaMask, OKX, Rabby ฯลฯ) เพิ่มเชนก่อน แล้วเพิ่มเหรียญ IDTC ต่อให้ทันที</p>
         <dl class="netinfo">
             <dt>ชื่อเครือข่าย</dt><dd>{{ config('idtc.chain.name') }}</dd>
-            <dt>Chain ID</dt><dd>{{ config('idtc.chain.id') }} ({{ strtoupper(str_replace('0x', '0x', config('idtc.chain.hex'))) }})</dd>
+            <dt>Chain ID</dt><dd>{{ config('idtc.chain.id') }} (0x{{ strtoupper(substr((string) config('idtc.chain.hex'), 2)) }})</dd>
             <dt>RPC</dt><dd>{{ config('idtc.chain.rpc_public') }}</dd>
             <dt>Explorer</dt><dd>{{ config('idtc.chain.explorer') }}</dd>
             <dt>สกุลเงิน</dt><dd>TPIX · 18 ทศนิยม</dd>
