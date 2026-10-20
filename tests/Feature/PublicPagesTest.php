@@ -154,7 +154,7 @@ class PublicPagesTest extends TestCase
             ->assertOk()
             ->assertSee('IDTC Whitepaper ฉบับที่ 2')
             ->assertSee('<h2 id="section-1">1. บทสรุปสำหรับผู้บริหาร</h2>', false)
-            ->assertSee('href="#section-10"', false)
+            ->assertSee('href="#section-11"', false)
             ->assertSee('ที่อยู่สัญญาทั้งหมด')
             ->assertSee('class="wp-table"', false)
             ->assertDontSee('{{contracts_table}}', false)
@@ -164,7 +164,7 @@ class PublicPagesTest extends TestCase
 
         // หัวเรื่อง # ไปอยู่บนปก ไม่ซ้ำเป็น h1 ในเนื้อหา
         $this->assertSame(1, substr_count($html, '<h1'));
-        $this->assertSame(11, substr_count($html, '<h2 id="section-'));
+        $this->assertSame(12, substr_count($html, '<h2 id="section-'));
     }
 
     public function test_whitepaper_contracts_table_uses_live_addresses(): void

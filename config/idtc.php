@@ -81,7 +81,7 @@ return [
         ['key' => 'lock_4y', 'group' => 'locked', 'name' => 'ล็อก 4 ปี', 'note' => 'ปลดเดือนที่ 49–60', 'amount' => '165000000000', 'color' => '#60a5fa'],
         ['key' => 'presale', 'group' => 'liquid', 'name' => 'Presale', 'note' => 'ขายที่ $0.0000015 ด้วย USDT', 'amount' => '100000000000', 'color' => '#a3e635'],
         ['key' => 'operations', 'group' => 'liquid', 'name' => 'ดำเนินงาน การตลาด และ listing', 'note' => 'กระเป๋าโครงการ', 'amount' => '100000000000', 'color' => '#10b981'],
-        ['key' => 'reserve', 'group' => 'liquid', 'name' => 'สำรองดูแลราคาและเติมพูล', 'note' => 'ใช้ตามกติกาที่ประกาศ', 'amount' => '80000000000', 'color' => '#2dd4bf'],
+        ['key' => 'reserve', 'group' => 'liquid', 'name' => 'สำรองสภาพคล่องและเติมพูล', 'note' => 'เติมความลึกพูลเท่านั้น ไม่ใช้พยุงราคา', 'amount' => '80000000000', 'color' => '#2dd4bf'],
         ['key' => 'liquidity', 'group' => 'liquid', 'name' => 'สภาพคล่องเริ่มต้น', 'note' => 'พูล IDTC/USDT และ IDTC/TPIX', 'amount' => '50000000000', 'color' => '#e6f23a'],
     ],
 

@@ -230,8 +230,8 @@ class LocalizationTest extends TestCase
             ->assertOk()
             ->assertSee('IDTC Whitepaper, Version 2')
             ->assertSee('<h2 id="section-1">1. Executive summary</h2>', false)
-            ->assertSee('<h2 id="section-10">10. All contract addresses</h2>', false)
-            ->assertSee('href="#section-10"', false)
+            ->assertSee('<h2 id="section-11">11. All contract addresses</h2>', false)
+            ->assertSee('href="#section-11"', false)
             ->assertSee('World Energy Investment 2025')
             ->assertSee('Emergency Decree on Digital Asset Businesses B.E. 2561 (2018)')
             ->assertSee('Address on TPIX Chain')
@@ -242,7 +242,7 @@ class LocalizationTest extends TestCase
             ->getContent();
 
         $this->assertSame(1, substr_count($html, '<h1'));
-        $this->assertSame(11, substr_count($html, '<h2 id="section-'));
+        $this->assertSame(12, substr_count($html, '<h2 id="section-'));
 
         $this->get('/whitepaper')->assertSee('<article class="wp-body" lang="th">', false)->assertSee('1. บทสรุปสำหรับผู้บริหาร');
     }
