@@ -92,6 +92,16 @@ class Idtc
             ],
             'contracts' => static::contracts(),
             'sale' => config('idtc.sale'),
+            'dex' => config('idtc.dex'),
+            // ค่าสาธารณะของสะพาน BSC ⇄ TPIX — ที่อยู่ vault ไม่ส่งจากตรงนี้ หน้าเว็บรับจาก /api/bridge/info หลังตรวจแล้วเท่านั้น
+            'bridge' => [
+                'chain' => config('idtc.bridge.chain'),
+                'usdt' => config('idtc.bridge.usdt'),
+                'usdt_decimals' => (int) config('idtc.bridge.usdt_decimals'),
+                'amount_decimals' => (int) config('idtc.bridge.amount_decimals'),
+                'api' => url('/api/bridge'),
+                'page' => config('idtc.bridge.page'),
+            ],
             // ชื่อก้อนล็อกตามภาษาของหน้า (Tokenomics) — ตัวเลขชุดเดียวกับ config/idtc.php
             'vesting' => ['period_seconds' => (int) config('idtc.vesting.period_seconds'), 'tranches' => Tokenomics::tranches()],
             'site' => url('/'),
@@ -101,6 +111,9 @@ class Idtc
             'urls' => [
                 'home' => SiteLocale::route('home'),
                 'addNetwork' => SiteLocale::route('add-network'),
+                'presale' => SiteLocale::route('presale'),
+                'trade' => SiteLocale::route('trade'),
+                'bridge' => SiteLocale::route('bridge'),
             ],
         ];
     }

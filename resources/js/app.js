@@ -2,6 +2,8 @@ import Alpine from 'alpinejs';
 import { addNetworkAndToken, connectWallet, injected, isMobile, reader, short, units, walletError, fmt, CFG } from './chain';
 import { chosenLocale, pageUrl, rememberLocale, t } from './i18n';
 import './presale';
+import './trade';
+import './bridge';
 import './transparency';
 import './whitepaper';
 

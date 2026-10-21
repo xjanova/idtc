@@ -70,7 +70,7 @@ class PublicPagesTest extends TestCase
             ->assertSee('66,666,666.66')       // ค่าเริ่มต้น 100 USDT
             ->assertSee('100,000 ล้าน')        // เพดานรวม
             ->assertSee('x-data="presale"', false)
-            ->assertSee('https://tpix.online/bridge', false)
+            ->assertSee('href="'.url('/bridge').'"', false)
             ->assertSee(config('idtc.contracts.usdt'));
     }
 

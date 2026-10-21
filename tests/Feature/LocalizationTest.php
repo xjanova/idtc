@@ -20,6 +20,8 @@ class LocalizationTest extends TestCase
     private const PAGES = [
         'home' => ['/', '/en'],
         'presale' => ['/presale', '/en/presale'],
+        'trade' => ['/trade', '/en/trade'],
+        'bridge' => ['/bridge', '/en/bridge'],
         'transparency' => ['/transparency', '/en/transparency'],
         'whitepaper' => ['/whitepaper', '/en/whitepaper'],
         'add-network' => ['/add-network', '/en/add-network'],

@@ -61,6 +61,39 @@ return [
         'min_purchase_usdt' => '1',
     ],
 
+    // หน้า /trade — ซื้อขายผ่าน TPIX DEX (Uniswap V2: ค่าธรรมเนียม 0.3% ไม่มี SupportingFeeOnTransfer)
+    'dex' => [
+        'fee_bps' => 30,
+        'slippage_bps' => 100,      // ค่าเริ่มต้น 1% — ผู้ใช้ปรับได้ไม่เกิน max_slippage_bps
+        'max_slippage_bps' => 1500,
+        'deadline_minutes' => 20,
+        'impact_warn_bps' => 300,   // ผลกระทบราคาเกิน 3% → เตือน
+        'impact_confirm_bps' => 1500, // เกิน 15% → ต้องติ๊กยืนยันก่อนกดได้
+    ],
+
+    // หน้า /bridge — เติม/ถอน USDT ระหว่าง BNB Chain กับเชน TPIX ผ่านสะพานของ tpix.online
+    // (ThaiXTrade app/Services/Bridge) · ผู้ใช้โอน USDT บน BSC เข้า vault ตรง ๆ แล้วได้ USDT_TPIX ที่ที่อยู่เดียวกัน
+    // ที่อยู่ vault และ USDT ของ BSC ตรึงไว้ที่นี่: ถ้า API ของสะพานตอบไม่ตรง หน้าเว็บปิดการเติมเงินทันที
+    'bridge' => [
+        'api' => env('IDTC_BRIDGE_API', 'https://tpix.online/api/v1/bridge'),
+        'page' => 'https://tpix.online/bridge',
+        'vault' => env('IDTC_BRIDGE_VAULT', '0xf46131C82819d7621163F482b3fe88a228A7807c'),
+        'chain' => [
+            'id' => 56,
+            'hex' => '0x38',
+            'name' => 'BNB Smart Chain',
+            'rpc' => 'https://bsc-rpc.publicnode.com',
+            'explorer' => 'https://bscscan.com',
+            'native' => ['name' => 'BNB', 'symbol' => 'BNB', 'decimals' => 18],
+        ],
+        'usdt' => '0x55d398326f99059fF775485246999027B3197955',
+        'usdt_decimals' => 18,
+        // USDT_TPIX มี 6 ทศนิยม — เศษที่ละเอียดกว่านี้ค้างใน vault เว็บจึงรับแค่ 6 ตำแหน่ง
+        'amount_decimals' => 6,
+        'cache_seconds' => 30,
+        'timeout_seconds' => 8,
+    ],
+
     // ล็อก 70% แบบ A: ครบล็อกแล้วทยอยปลด 12 งวด (TrancheVesting)
     'vesting' => [
         'period_seconds' => 2629800, // เดือนเฉลี่ย = 365.25 วัน / 12

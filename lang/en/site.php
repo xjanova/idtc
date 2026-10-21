@@ -12,6 +12,8 @@ return [
     'nav' => [
         'home' => 'Overview',
         'presale' => 'Presale',
+        'trade' => 'Trade',
+        'bridge' => 'Deposit USDT',
         'transparency' => 'Transparency',
         'whitepaper' => 'Whitepaper',
         'add-network' => 'Add network',
