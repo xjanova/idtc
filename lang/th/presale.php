@@ -86,7 +86,7 @@ return [
     'bridge' => [
         'title' => 'ยังไม่มี USDT บนเชน TPIX?',
         'text' => 'ส่ง USDT จาก BNB Chain ผ่านสะพานของ TPIX แล้วรับ USDT บนเชน TPIX ในอัตรา 1:1 จากนั้นกลับมาซื้อที่หน้านี้',
-        'cta' => 'ไปที่สะพาน USDT (tpix.online)',
+        'cta' => 'เติม USDT จาก BNB Chain',
     ],
 
     'contracts' => [

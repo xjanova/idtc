@@ -189,7 +189,7 @@
             <div class="panel">
                 <h3>{{ __('presale.bridge.title') }}</h3>
                 <p class="muted-p">{{ __('presale.bridge.text') }}</p>
-                <a class="btn btn-ghost btn-block" href="https://tpix.online/bridge" target="_blank" rel="noopener">
+                <a class="btn btn-ghost btn-block" href="{{ lroute('bridge') }}">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17h18M5 17V9a7 7 0 0 1 14 0v8M9 17v-4M15 17v-4"/></svg>{{ __('presale.bridge.cta') }}
                 </a>
             </div>

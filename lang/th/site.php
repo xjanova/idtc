@@ -12,6 +12,8 @@ return [
     'nav' => [
         'home' => 'ภาพรวม',
         'presale' => 'Presale',
+        'trade' => 'ซื้อขาย',
+        'bridge' => 'เติม USDT',
         'transparency' => 'ความโปร่งใส',
         'whitepaper' => 'ไวท์เปเปอร์',
         'add-network' => 'เพิ่มเชน',

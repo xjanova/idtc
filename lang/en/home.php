@@ -154,7 +154,7 @@ return [
         'version' => 'Version 2.0 · 2026',
         'kicker' => 'Whitepaper, version 2',
         'title' => 'Rewritten from scratch: every figure <span class="grad">traces back to the contracts</span>',
-        'toc' => ['Executive summary', 'The problem and the opportunity in energy', 'Why TPIX Chain', 'Tokenomics and allocation', 'Lock contract and unlock schedule', 'Presale and liquidity', 'Governance and use of funds', 'Roadmap', 'Risks and legal notice', 'All contract addresses'],
+        'toc' => ['Executive summary', 'The problem and the opportunity in energy', 'Why TPIX Chain', 'Tokenomics and allocation', 'Lock contract and unlock schedule', 'Presale and liquidity', 'Token use and how value is created', 'Governance and use of funds', 'Roadmap', 'Risks and legal notice', 'All contract addresses'],
         'cta' => 'Read the whitepaper',
     ],
 
@@ -166,7 +166,8 @@ return [
             ['Who can withdraw the locked tokens?', 'No one can withdraw them early. The lock contract has no owner and releases tokens on schedule only to the designated wallet. Anyone can view the remaining balance and the next unlock on the Transparency page.'],
             ['Can the presale price change?', 'No. The rate of 1 USDT = :rate IDTC is fixed when the contract is created. The team can pause the sale, but cannot raise or lower the price.'],
             ['What do I need to buy?', 'An EVM-compatible wallet such as MetaMask, and USDT on TPIX Chain. If your USDT is on BNB Chain, bridge it first. You do not need TPIX to pay gas fees.'],
-            ['How will the funds raised be used?', 'USDT from the presale goes directly to the project treasury. Part of it tops up pool liquidity; the rest is used according to the plan published in the whitepaper. Treasury movements can be checked on the explorer.'],
+            ['How will the funds raised be used?', 'USDT from the presale goes directly to the project treasury. 10% is planned to go into the pools, with the LP tokens locked for at least 12 months; the rest is used according to the plan published in the whitepaper. Treasury movements can be checked on the explorer.'],
+            ['Does IDTC pay a return?', 'No return is guaranteed and there is no staking interest or fixed dividend. The plan is that, once the energy projects earn net revenue, part of it buys IDTC back from the market and sends it to a burn address. That is a small support compared with the supply, and it depends on the projects actually earning revenue.'],
         ],
     ],
 

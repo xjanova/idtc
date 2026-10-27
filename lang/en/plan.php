@@ -18,7 +18,7 @@ return [
         'lock_4y' => ['name' => '4-year lock', 'note' => 'Unlocks in months 49–60'],
         'presale' => ['name' => 'Presale', 'note' => 'Sold at $:price for USDT'],
         'operations' => ['name' => 'Operations, marketing and listings', 'note' => 'Project treasury'],
-        'reserve' => ['name' => 'Price-support and pool top-up reserve', 'note' => 'Used under published rules'],
+        'reserve' => ['name' => 'Liquidity reserve and pool top-up', 'note' => 'Deepens the pools only, never props up the price'],
         'liquidity' => ['name' => 'Initial liquidity', 'note' => 'IDTC/USDT and IDTC/TPIX pools'],
     ],
 

@@ -6,7 +6,7 @@
     $description = $description ?? __('site.description', ['price' => config('idtc.sale.price_usd')]);
     $alternates = SiteLocale::alternates();
     $canonical = SiteLocale::page() !== null ? $alternates[$locale] : url()->current();
-    $nav = ['home', 'presale', 'transparency', 'whitepaper', 'add-network'];
+    $nav = ['home', 'presale', 'trade', 'bridge', 'transparency', 'whitepaper'];
     $langs = ['th' => 'TH', 'en' => 'EN'];
 @endphp
 <!doctype html>
@@ -104,6 +104,8 @@
                 </div>
                 <div><h4>{{ __('site.footer.token') }}</h4><ul>
                     <li><a href="{{ lroute('presale') }}">{{ __('site.nav.presale') }}</a></li>
+                    <li><a href="{{ lroute('trade') }}">{{ __('site.nav.trade') }}</a></li>
+                    <li><a href="{{ lroute('bridge') }}">{{ __('site.nav.bridge') }}</a></li>
                     <li><a href="{{ lroute('home') }}#tokenomics">Tokenomics</a></li>
                     <li><a href="{{ lroute('transparency') }}">{{ __('site.nav.transparency') }}</a></li>
                 </ul></div>

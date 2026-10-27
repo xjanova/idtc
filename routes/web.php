@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BridgeController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 $pages = function (): void {
     Route::get('/', [PageController::class, 'home'])->name('home');
     Route::get('/presale', [PageController::class, 'presale'])->name('presale');
+    Route::get('/trade', [PageController::class, 'trade'])->name('trade');
+    Route::get('/bridge', [PageController::class, 'bridge'])->name('bridge');
     Route::get('/transparency', [PageController::class, 'transparency'])->name('transparency');
     Route::get('/whitepaper', [PageController::class, 'whitepaper'])->name('whitepaper');
     Route::get('/add-network', [PageController::class, 'addNetwork'])->name('add-network');
@@ -21,6 +24,13 @@ $pages = function (): void {
 
 Route::middleware('site.locale:th')->group($pages);
 Route::prefix('en')->name('en.')->middleware('site.locale:en')->group($pages);
+
+// สถานะสะพาน USDT (BSC ⇄ TPIX) สำหรับหน้า /bridge — อ่านอย่างเดียว ผ่านเซิร์ฟเวอร์เพราะ tpix.online ไม่เปิด CORS ให้
+Route::prefix('api/bridge')->middleware('throttle:60,1')->group(function (): void {
+    Route::get('/info', [BridgeController::class, 'info'])->name('bridge.info');
+    Route::get('/deposit/{txHash}', [BridgeController::class, 'deposit'])->name('bridge.deposit');
+    Route::get('/withdrawal/{txHash}', [BridgeController::class, 'withdrawal'])->name('bridge.withdrawal');
+});
 
 // ที่อยู่เดิมของเว็บเก่า (static) — ลิงก์ที่ถูกแชร์ไว้ยังพาไปหน้าที่ถูก
 Route::redirect('/index.html', '/', 301);

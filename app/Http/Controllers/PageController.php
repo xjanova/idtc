@@ -24,6 +24,22 @@ class PageController extends Controller
         ]);
     }
 
+    public function trade(): View
+    {
+        return view('pages.trade', [
+            'title' => __('trade.title'),
+            'description' => __('trade.description'),
+        ]);
+    }
+
+    public function bridge(): View
+    {
+        return view('pages.bridge', [
+            'title' => __('bridge.title'),
+            'description' => __('bridge.description'),
+        ]);
+    }
+
     public function transparency(): View
     {
         return view('pages.transparency', [

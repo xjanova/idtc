@@ -86,7 +86,7 @@ return [
     'bridge' => [
         'title' => 'No USDT on TPIX Chain yet?',
         'text' => 'Send USDT from BNB Chain through the TPIX bridge to receive USDT on TPIX Chain at 1:1, then come back to buy on this page.',
-        'cta' => 'Go to the USDT bridge (tpix.online)',
+        'cta' => 'Deposit USDT from BNB Chain',
     ],
 
     'contracts' => [
