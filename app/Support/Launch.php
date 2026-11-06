@@ -14,6 +14,9 @@ class Launch
 {
     public const TIMEZONE = 'Asia/Bangkok';
 
+    /** LaunchpadFactory.DEFAULT_BAND_BPS */
+    public const DEFAULT_BAND_BPS = 300;
+
     /** วันในแผน: start / end (config idtc.sale) หรือ lp_unlock (config idtc.launchpad) */
     public static function at(string $key): ?CarbonImmutable
     {
@@ -60,9 +63,12 @@ class Launch
         return static::percent((int) config('idtc.launchpad.pool_share_bps', 0));
     }
 
+    /** LaunchpadFactory แทน bandBps 0 ด้วย DEFAULT_BAND_BPS (±3%) — หน้าเว็บแสดงค่าเดียวกับที่สัญญาใช้จริง */
     public static function bandPercent(): string
     {
-        return static::percent((int) config('idtc.launchpad.band_bps', 0));
+        $bps = (int) config('idtc.launchpad.band_bps', 0);
+
+        return static::percent($bps > 0 ? $bps : self::DEFAULT_BAND_BPS);
     }
 
     /**

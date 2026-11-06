@@ -147,7 +147,6 @@ return [
             'title' => 'Where the money goes',
             'text' => 'Every USDT paid goes straight to the pool feeder contract, which adds :share% of it to the IDTC/USDT pool together with IDTC at the sale price. The LP tokens stay locked in the contract until :lp_unlock; nobody can withdraw them earlier, the team included.',
             'band' => 'The feeder adds liquidity only while the pool price is within :band% of the sale price. If the pool price drifts outside, the USDT waits in the feeder until the price comes back, and it cannot leave before :lp_unlock.',
-            'band_exact' => 'The feeder adds liquidity only while the pool price equals the sale price. If the pool price drifts, the USDT waits in the feeder until the price is back, and it cannot leave before :lp_unlock.',
         ],
     ],
 
