@@ -75,6 +75,7 @@ class ContractList
             'token' => $row('token', 'FactoryERC20V2'),
             'vesting' => $row('vesting', 'TrancheVesting', ['amount' => SiteLocale::big($locked), 'count' => count($tranches)]),
             'presale' => $row('presale', 'FixedPriceSale', ['rate' => number_format($rate, 2)]),
+            'feeder' => $row('feeder', 'PoolFeeder', ['share' => Launch::poolSharePercent(), 'lp_unlock' => Launch::date('lp_unlock')]),
             'usdt' => $row('usdt', 'USDT_TPIX'),
             'wtpix' => $row('wtpix', 'WTPIX'),
             'dex_factory' => $row('dex_factory', 'TPIXDEXFactory'),

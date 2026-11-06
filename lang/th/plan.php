@@ -18,8 +18,8 @@ return [
         'lock_4y' => ['name' => 'ล็อก 4 ปี', 'note' => 'ปลดเดือนที่ 49–60'],
         'presale' => ['name' => 'Presale', 'note' => 'ขายที่ $:price ด้วย USDT'],
         'operations' => ['name' => 'ดำเนินงาน การตลาด และ listing', 'note' => 'กระเป๋าโครงการ'],
-        'reserve' => ['name' => 'สำรองดูแลราคาและเติมพูล', 'note' => 'ใช้ตามกติกาที่ประกาศ'],
-        'liquidity' => ['name' => 'สภาพคล่องเริ่มต้น', 'note' => 'พูล IDTC/USDT และ IDTC/TPIX'],
+        'pool' => ['name' => 'จับคู่เงินขายเข้าพูล', 'note' => 'ล็อกในสัญญา PoolFeeder ถึง :lp_unlock'],
+        'reserve' => ['name' => 'สำรอง', 'note' => 'กระเป๋าโครงการ'],
     ],
 
     'table' => [
@@ -31,7 +31,8 @@ return [
     'contracts' => [
         'token' => ['name' => 'เหรียญ IDTC', 'role' => 'ERC-20 · 18 ทศนิยม · ไม่มี mint, pause หรือ blacklist'],
         'vesting' => ['name' => 'สัญญาล็อก 70%', 'role' => 'ล็อก :amount IDTC :count ก้อน · ไม่มีเจ้าของ'],
-        'presale' => ['name' => 'Presale', 'role' => 'ขายราคาคงที่ 1 USDT = :rate IDTC · USDT เข้ากระเป๋าโครงการทันที'],
+        'presale' => ['name' => 'Presale', 'role' => 'ขายราคาคงที่ 1 USDT = :rate IDTC · USDT ส่งเข้าสัญญาเติมพูลทันที'],
+        'feeder' => ['name' => 'สัญญาเติมพูล', 'role' => 'เจ้าของถาวรของสัญญา presale · เอา USDT จากการขาย :share% เข้าพูล IDTC/USDT · LP ถอนไม่ได้ก่อน :lp_unlock'],
         'usdt' => ['name' => 'USDT บนเชน TPIX', 'role' => 'USDT 6 ทศนิยม · หนุน 1:1 กับ USDT บน BNB Chain'],
         'wtpix' => ['name' => 'Wrapped TPIX', 'role' => 'TPIX ในรูป ERC-20 สำหรับพูลบน TPIX DEX'],
         'dex_factory' => ['name' => 'TPIX DEX Factory', 'role' => 'สร้างพูลแลกเปลี่ยนแบบ Uniswap V2'],

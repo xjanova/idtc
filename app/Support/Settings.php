@@ -22,7 +22,7 @@ class Settings
     public const CACHE_KEY = 'idtc:settings:v1';
 
     /** ที่อยู่สัญญาที่หลังบ้านแก้ทับได้ (ที่เหลือใน config/idtc.php เป็นของเชน TPIX ที่ไม่เปลี่ยน) */
-    public const CONTRACT_KEYS = ['token', 'vesting', 'presale', 'pair_usdt', 'pair_tpix'];
+    public const CONTRACT_KEYS = ['token', 'vesting', 'presale', 'feeder', 'pair_usdt', 'pair_tpix'];
 
     /** @var array<string, mixed>|null */
     protected ?array $memo = null;

@@ -45,6 +45,7 @@ class LocalizationTest extends TestCase
             'idtc.contracts.token' => null,
             'idtc.contracts.vesting' => null,
             'idtc.contracts.presale' => null,
+            'idtc.contracts.feeder' => null,
             'idtc.contracts.pair_usdt' => null,
             'idtc.contracts.pair_tpix' => null,
         ]);

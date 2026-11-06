@@ -29,6 +29,7 @@ class SettingsController extends Controller
         'token' => ['เหรียญ IDTC (ERC-20)', 'FactoryERC20V2 จาก TPIX Token Factory'],
         'vesting' => ['สัญญาล็อก 70%', 'TrancheVesting'],
         'presale' => ['สัญญา presale', 'FixedPriceSale'],
+        'feeder' => ['สัญญาเติมพูล', 'PoolFeeder — เจ้าของสัญญา presale (จาก LaunchpadFactory)'],
         'pair_usdt' => ['พูล IDTC/USDT', 'คู่บน TPIX DEX'],
         'pair_tpix' => ['พูล IDTC/TPIX', 'คู่บน TPIX DEX'],
     ];

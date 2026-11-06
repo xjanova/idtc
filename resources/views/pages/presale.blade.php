@@ -3,6 +3,7 @@
 @php
     use App\Support\ContractList;
     use App\Support\Idtc;
+    use App\Support\Launch;
     use App\Support\SiteLocale;
 
     $saleAddr = Idtc::contract('presale');
@@ -13,7 +14,16 @@
     $cap = (float) $sale['cap'];
     $defaultPay = 100;
     $defaultOut = number_format(floor($defaultPay * $rate * 100) / 100, 2);
-    $contracts = ContractList::rows(['presale', 'token', 'usdt']);
+    $contracts = ContractList::rows(['presale', 'feeder', 'token', 'vesting', 'usdt', 'pair_usdt']);
+    $total = (float) config('idtc.token.total_supply');
+    $lpUnlock = Launch::date('lp_unlock');
+    $schedule = Launch::releaseSchedule();
+    $launchpadUrl = (string) config('idtc.launchpad.url');
+    $sourceUrl = 'https://github.com/xjanova/TPIX-Coin/tree/main/contracts/src/launch';
+    // ส่วนที่ล็อก = ผลรวมก้อนในสัญญาล็อก · ส่วนกระเป๋าโครงการ = ที่เหลือหลังหัก presale, ฝั่งพูล และส่วนล็อก
+    $locked = array_sum(array_column($schedule, 'amount'));
+    $poolSide = (float) config('idtc.launchpad.feeder_reserve');
+    $groups = ['presale' => $cap, 'pool' => $poolSide, 'locked' => $locked, 'free' => max(0, $total - $cap - $poolSide - $locked)];
     $tick = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
     $explorer = config('idtc.chain.explorer');
 @endphp
@@ -179,11 +189,11 @@
             <div class="panel">
                 <h3>{{ __('presale.rules.title') }}</h3>
                 <ul class="rules">
-                    @foreach (__('presale.rules.items', ['rate' => number_format($rate, 2), 'cap' => SiteLocale::big($cap)]) as $rule)
+                    @foreach (__('presale.rules.items', ['rate' => number_format($rate, 2), 'cap' => SiteLocale::big($cap), 'share' => Launch::poolSharePercent(), 'lp_unlock' => $lpUnlock]) as $rule)
                         <li>{!! $tick !!}<span>{{ $rule }}</span></li>
                     @endforeach
                 </ul>
-                <p class="muted-s" style="margin-top:12px">{{ __('presale.rules.note') }}</p>
+                <p class="muted-s" style="margin-top:12px">{{ __('presale.rules.note', ['end' => Launch::date('end')]) }}</p>
             </div>
 
             <div class="panel">
@@ -214,5 +224,100 @@
                 ]) !!}</p>
             </div>
         </aside>
+    </div>
+
+    <div class="wrap launch-info">
+        {{-- ═════════ กำหนดการ + ซื้อได้ 2 ทาง ═════════ --}}
+        <div class="launch-row">
+            <section class="panel" id="schedule" aria-labelledby="schedule-title">
+                <h3 id="schedule-title">{{ __('presale.schedule.title') }}</h3>
+                <dl class="kv kv-tight">
+                    <div><dt>{{ __('presale.schedule.open') }}</dt><dd><time datetime="{{ Launch::iso('start') }}">{{ Launch::dateTime('start') }}</time></dd></div>
+                    <div><dt>{{ __('presale.schedule.close') }}</dt><dd><time datetime="{{ Launch::iso('end') }}">{{ Launch::dateTime('end') }}</time></dd></div>
+                    <div><dt>{{ __('presale.schedule.length') }}</dt><dd>{{ __('presale.schedule.days', ['n' => Launch::durationDays()]) }}</dd></div>
+                    <div><dt>{{ __('presale.schedule.lp_unlock') }}</dt><dd><time datetime="{{ Launch::iso('lp_unlock') }}">{{ Launch::dateTime('lp_unlock') }}</time></dd></div>
+                    <div><dt>{{ __('presale.schedule.vesting') }}</dt><dd>{{ __('presale.schedule.vesting_same') }}</dd></div>
+                </dl>
+                <p class="muted-s">{{ __('presale.schedule.note') }}</p>
+            </section>
+
+            <section class="panel" id="how-to-buy" aria-labelledby="ways-title">
+                <h3 id="ways-title">{{ __('presale.ways.title') }}</h3>
+                <div class="ways">
+                    <div class="way">
+                        <b>{{ __('presale.ways.bsc.title') }}</b>
+                        <p class="muted-p">{{ __('presale.ways.bsc.text') }}</p>
+                        <a class="btn btn-primary btn-sm" href="{{ $launchpadUrl }}" target="_blank" rel="noopener" data-testid="launchpad-link">{{ __('presale.ways.bsc.cta') }} ↗</a>
+                        <span class="muted-s">{{ __('presale.ways.bsc.note') }}</span>
+                    </div>
+                    <div class="way">
+                        <b>{{ __('presale.ways.tpix.title') }}</b>
+                        <p class="muted-p">{{ __('presale.ways.tpix.text') }}</p>
+                        <a class="btn btn-ghost btn-sm" href="https://tpix.online/bridge" target="_blank" rel="noopener">{{ __('presale.ways.tpix.cta') }} ↗</a>
+                    </div>
+                </div>
+                <p class="muted-s" style="margin-top:14px">{{ __('presale.ways.same') }}</p>
+            </section>
+        </div>
+
+        {{-- ═════════ เงื่อนไขการปล่อยเหรียญ ═════════ --}}
+        <section class="panel" id="release" aria-labelledby="release-title">
+            <h3 id="release-title">{{ __('presale.release.title') }}</h3>
+            <p class="muted-p">{{ __('presale.release.lead', ['total' => SiteLocale::big($total)]) }}</p>
+
+            <div class="release-groups">
+                @foreach ($groups as $key => $amount)
+                    <div class="release-group" data-group="{{ $key }}">
+                        <b>{{ __("presale.release.groups.$key.title", ['amount' => SiteLocale::big($amount)]) }}</b>
+                        <p class="muted-s">{{ __("presale.release.groups.$key.text", ['lp_unlock' => $lpUnlock]) }}</p>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="release-lp">
+                <b>{{ __('presale.release.lp.title') }}</b>
+                <p class="muted-p">{{ __('presale.release.lp.text', ['share' => Launch::poolSharePercent(), 'lp_unlock' => $lpUnlock]) }}</p>
+                <p class="muted-s">{{ __(Launch::bandPercent() === '0' ? 'presale.release.lp.band_exact' : 'presale.release.lp.band', ['band' => Launch::bandPercent(), 'lp_unlock' => $lpUnlock]) }}</p>
+            </div>
+
+            <div class="table-scroll">
+                <table class="alloc release-table">
+                    <caption>{{ __('presale.release.table.caption', ['start' => Launch::date('start')]) }}</caption>
+                    <thead><tr>
+                        <th>{{ __('presale.release.table.tranche') }}</th>
+                        <th>{{ __('presale.release.table.amount') }}</th>
+                        <th>{{ __('presale.release.table.monthly') }}</th>
+                        <th>{{ __('presale.release.table.first') }}</th>
+                        <th>{{ __('presale.release.table.last') }}</th>
+                    </tr></thead>
+                    <tbody>
+                        @foreach ($schedule as $t)
+                            <tr>
+                                <td>{{ $t['name'] }}</td>
+                                <td class="num">{{ number_format($t['amount']) }}</td>
+                                <td class="num">{{ number_format($t['per_period']) }}</td>
+                                <td>{{ $t['first'] }}</td>
+                                <td>{{ $t['last'] }}</td>
+                            </tr>
+                        @endforeach
+                        <tr class="total"><td>{{ __('presale.release.table.total') }}</td><td class="num">{{ number_format(array_sum(array_column($schedule, 'amount'))) }}</td><td></td><td></td><td></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="muted-s" style="margin-top:12px">{!! __('presale.release.table_note', ['transparency' => '<a href="'.e(lroute('transparency')).'">'.e(__('site.nav.transparency')).'</a>']) !!}</p>
+        </section>
+
+        {{-- ═════════ เอกสารและลิงก์ ═════════ --}}
+        <section class="panel" id="documents" aria-labelledby="docs-title">
+            <h3 id="docs-title">{{ __('presale.docs.title') }}</h3>
+            <ul class="doc-links">
+                <li><a href="{{ lroute('whitepaper') }}">{{ __('presale.docs.whitepaper') }} →</a></li>
+                <li><a href="{{ lroute('transparency') }}">{{ __('presale.docs.transparency') }} →</a></li>
+                <li><a href="{{ $launchpadUrl }}" target="_blank" rel="noopener">{{ __('presale.docs.launchpad') }} ↗</a></li>
+                <li><a href="{{ $sourceUrl }}" target="_blank" rel="noopener">{{ __('presale.docs.source') }} ↗</a></li>
+                <li><a href="{{ $explorer }}" target="_blank" rel="noopener">{{ __('presale.docs.explorer') }} ↗</a></li>
+                <li><a href="{{ lroute('add-network') }}">{{ __('presale.docs.add_network') }} →</a></li>
+            </ul>
+        </section>
     </div>
 @endsection
