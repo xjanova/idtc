@@ -1,8 +1,10 @@
 @extends('layouts.site')
 
 @php
+    use App\Support\Launch;
     use App\Support\SiteLocale;
     use App\Support\Tokenomics;
+    $launch = ['lp_unlock' => Launch::date('lp_unlock'), 'start' => Launch::dateTime('start'), 'end' => Launch::dateTime('end'), 'days' => Launch::durationDays(), 'share' => Launch::poolSharePercent()];
     $total = (float) config('idtc.token.total_supply');
     $price = config('idtc.sale.price_usd');
     $sale = config('idtc.sale');
@@ -155,7 +157,7 @@
                 <h2 class="h2">{!! __('home.trust.title') !!}</h2>
                 <p class="lead" style="margin-top:14px">{{ __('home.trust.lead') }}</p>
                 <ul class="guard-list">
-                    @foreach (__('home.trust.items') as [$b, $s])
+                    @foreach (__('home.trust.items', $launch) as [$b, $s])
                         <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></span><div><b>{{ $b }}</b><span>{{ $s }}</span></div></li>
                     @endforeach
                 </ul>
@@ -282,7 +284,7 @@
         <div class="wrap">
             <div class="section-head reveal"><p class="kicker">{{ __('home.faq.kicker') }}</p><h2 class="h2">{{ __('home.faq.title') }}</h2></div>
             <div class="faq reveal">
-                @foreach (__('home.faq.items', ['rate' => $rate]) as $i => [$q, $a])
+                @foreach (__('home.faq.items', ['rate' => $rate] + $launch) as $i => [$q, $a])
                     <details @if ($i === 0) open @endif><summary>{{ $q }}</summary><p>{{ $a }}</p></details>
                 @endforeach
             </div>

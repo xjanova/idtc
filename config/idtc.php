@@ -40,6 +40,8 @@ return [
         'token' => env('IDTC_TOKEN_ADDRESS'),
         'vesting' => env('IDTC_VESTING_ADDRESS'),
         'presale' => env('IDTC_PRESALE_ADDRESS'),
+        // PoolFeeder — เจ้าของถาวรของสัญญา presale และกระเป๋ารับเงินขาย: เอา USDT ไปเติมพูล IDTC/USDT แล้วล็อก LP
+        'feeder' => env('IDTC_FEEDER_ADDRESS'),
         'usdt' => env('IDTC_USDT_ADDRESS', '0x0A4Ee87551eF041f3EecFBBfdcfFC1B46a4878f1'),
         'wtpix' => env('IDTC_WTPIX_ADDRESS', '0x0A3dB168aF6b85e61D81CA78C608BDadAC832DFF'),
         'dex_factory' => env('IDTC_DEX_FACTORY', '0x94b1254acE355559611890D4EB2d07332eD1fB8A'),
@@ -59,6 +61,21 @@ return [
         'rate_den' => '3',
         'cap' => '100000000000',
         'min_purchase_usdt' => '1',
+        'max_per_wallet' => '0', // หน่วยเต็ม IDTC · 0 = ไม่จำกัด
+        // กำหนดการตามแผน (เจ้าของตัดสิน 2026-11-06) — เมื่อสัญญาขึ้นเชน หน้าเว็บนับถอยหลังจากเวลาในสัญญา
+        'start' => '2026-12-01T10:00:00+07:00',
+        'end' => '2027-03-01T10:00:00+07:00',
+    ],
+
+    // เปิดขายผ่าน TPIX Launchpad (LaunchpadFactory บนเชน TPIX) — ค่าเดียวกับ TPIX-Coin contracts/scripts/launch-plans/idtc.json
+    'launchpad' => [
+        // จ่าย USDT บน BNB Chain ครั้งเดียว ระบบส่ง IDTC เข้ากระเป๋าบนเชน TPIX ให้
+        'url' => 'https://tpix.online/launchpad/IDTC',
+        'pool_share_bps' => 10000,   // เงินขายเข้าพูล IDTC/USDT 100%
+        'band_bps' => 0,             // เติมพูลได้เมื่อราคาในพูลห่างจากราคาขายไม่เกินค่านี้
+        'feeder_reserve' => '100000000000', // IDTC ที่ล็อกไว้จับคู่กับเงินขายเข้าพูล
+        'seed_usdt' => '10',         // พูลเปิดพร้อมสัญญาขาย ด้วย USDT จากทีมงาน
+        'lp_unlock' => '2028-02-29T10:00:00+07:00',
     ],
 
     // ล็อก 70% แบบ A: ครบล็อกแล้วทยอยปลด 12 งวด (TrancheVesting)
@@ -73,6 +90,7 @@ return [
     ],
 
     // การจัดสรร 1.1T (ล็อก 70% + หมุนเวียน 30%) — เจ้าของเลือกแบบ "สมดุล" 2026-10-11
+    // ส่วนหมุนเวียนแบ่งตามเชนจริงของ launchpad (เจ้าของเลือก 2026-11-06): 100B จับคู่พูลอยู่ในสัญญา PoolFeeder
     // name/note คือข้อความภาษาไทย (หลังบ้านใช้) · หน้าเว็บแปลตาม key จาก lang/{th,en}/plan.php
     'allocation' => [
         ['key' => 'lock_1y', 'group' => 'locked', 'name' => 'ล็อก 1 ปี', 'note' => 'ปลดเดือนที่ 13–24', 'amount' => '220000000000', 'color' => '#1e40af'],
@@ -81,8 +99,8 @@ return [
         ['key' => 'lock_4y', 'group' => 'locked', 'name' => 'ล็อก 4 ปี', 'note' => 'ปลดเดือนที่ 49–60', 'amount' => '165000000000', 'color' => '#60a5fa'],
         ['key' => 'presale', 'group' => 'liquid', 'name' => 'Presale', 'note' => 'ขายที่ $0.0000015 ด้วย USDT', 'amount' => '100000000000', 'color' => '#a3e635'],
         ['key' => 'operations', 'group' => 'liquid', 'name' => 'ดำเนินงาน การตลาด และ listing', 'note' => 'กระเป๋าโครงการ', 'amount' => '100000000000', 'color' => '#10b981'],
-        ['key' => 'reserve', 'group' => 'liquid', 'name' => 'สำรองดูแลราคาและเติมพูล', 'note' => 'ใช้ตามกติกาที่ประกาศ', 'amount' => '80000000000', 'color' => '#2dd4bf'],
-        ['key' => 'liquidity', 'group' => 'liquid', 'name' => 'สภาพคล่องเริ่มต้น', 'note' => 'พูล IDTC/USDT และ IDTC/TPIX', 'amount' => '50000000000', 'color' => '#e6f23a'],
+        ['key' => 'pool', 'group' => 'liquid', 'name' => 'จับคู่เงินขายเข้าพูล', 'note' => 'ล็อกในสัญญา PoolFeeder ถึง 29 ก.พ. 2571', 'amount' => '100000000000', 'color' => '#2dd4bf'],
+        ['key' => 'reserve', 'group' => 'liquid', 'name' => 'สำรอง', 'note' => 'กระเป๋าโครงการ', 'amount' => '30000000000', 'color' => '#e6f23a'],
     ],
 
     // กระเป๋าที่เข้าหลังบ้านได้ (เซ็นข้อความด้วยกระเป๋า) — คั่นด้วยจุลภาค · ตัวแรกคือเจ้าของ

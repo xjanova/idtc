@@ -662,3 +662,22 @@
 @keyframes playPulse { 70% { box-shadow: 0 0 0 22px rgba(163, 230, 53, 0); } 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); } }
 .video-frame figcaption { position: absolute; left: 0; right: 0; top: calc(100% + 12px); text-align: center; font-size: 13px; color: var(--fg-3); }
 .video-sec .wrap { padding-bottom: 28px; }
+
+/* presale — กำหนดการ, ซื้อได้ 2 ทาง, เงื่อนไขการปล่อยเหรียญ, เอกสาร */
+.launch-info { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; padding-bottom: 80px; margin-top: -48px; }
+.launch-row { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 24px; align-items: start; min-width: 0; }
+.launch-info .panel { min-width: 0; }
+.ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.way { display: grid; gap: 10px; align-content: start; justify-items: start; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }
+.release-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+.release-group { display: grid; gap: 6px; align-content: start; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }
+.release-lp { display: grid; gap: 6px; padding: 16px; margin-bottom: 18px; border: 1px solid rgba(163, 230, 53, .3); border-radius: 14px; background: rgba(163, 230, 53, .05); }
+.release-table caption { caption-side: top; text-align: left; color: var(--fg-2); font-size: 14px; padding-bottom: 12px; }
+.release-table td:nth-child(4), .release-table td:nth-child(5) { white-space: nowrap; }
+.release-table .total td { font-weight: 700; }
+.doc-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 20px; list-style: none; padding: 0; margin: 0; }
+.doc-links a { color: var(--lime); text-decoration: none; font-weight: 600; font-size: 14.5px; }
+.doc-links a:hover { text-decoration: underline; }
+@media (max-width: 1000px) { .release-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .launch-info { margin-top: -40px; padding-bottom: 64px; } .launch-row { grid-template-columns: minmax(0, 1fr); } .doc-links { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .ways, .release-groups, .doc-links { grid-template-columns: 1fr; } }

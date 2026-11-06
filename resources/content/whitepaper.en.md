@@ -1,6 +1,6 @@
 # IDTC Whitepaper, Version 2
 
-**Invest Energy-Development Coin (IDTC)** · IDTC Energy Capital · October 2026
+**Invest Energy-Development Coin (IDTC)** · IDTC Energy Capital · October 2026 · updated November 2026 (presale on TPIX Launchpad)
 
 > This document replaces the first whitepaper (April 2026) in full. Every figure in it can be verified from the contracts on TPIX Chain or from the sources cited. Anything that is still a plan is always labelled “plan”.
 
@@ -61,11 +61,11 @@ Trade-offs holders should know: compared with large public chains, TPIX Chain is
 | **Total locked** | **770,000,000,000** | **70.00%** | Held in the TrancheVesting contract |
 | Presale | 100,000,000,000 | 9.09% | Sold at USD 0.0000015 for USDT |
 | Operations, marketing and listings | 100,000,000,000 | 9.09% | Project treasury |
-| Price-support and pool top-up reserve | 80,000,000,000 | 7.27% | Used under published rules |
-| Initial liquidity | 50,000,000,000 | 4.55% | IDTC/USDT and IDTC/TPIX pools |
+| Paired with sale proceeds in the pool | 100,000,000,000 | 9.09% | Locked in the PoolFeeder contract until 29 Feb 2028 · paired with presale USDT in the IDTC/USDT pool |
+| Reserve | 30,000,000,000 | 2.73% | Project treasury |
 | **Total circulating** | **330,000,000,000** | **30.00%** | Available from day one |
 
-The 30% circulating portion does not all enter the market at once. The presale portion is released only as buyers actually purchase, the liquidity portion sits in the pools, and the reserve and operations portions are held in project wallets that anyone can inspect.
+The 30% circulating portion does not all enter the market at once. The presale portion is released only as buyers actually purchase, the pool-paired portion leaves only together with sale proceeds going into the pool (anything unused can be withdrawn only after 29 Feb 2028), and the reserve and operations portions are held in project wallets that anyone can inspect.
 
 ## 5. Lock contract and unlock schedule
 
@@ -92,19 +92,23 @@ No month unlocks more than 1.67% of the total supply. This spreads out any selli
 
 ## 6. Presale and liquidity
 
-The presale uses the **FixedPriceSale** contract, which has the following properties:
+The presale runs on **TPIX Launchpad** (the LaunchpadFactory contract on TPIX Chain), which creates two contracts in one transaction: **FixedPriceSale**, which sells the tokens, and **PoolFeeder** (the pool feeder), which permanently owns the sale contract and receives all sale proceeds. Their properties:
 
+- **Schedule.** The sale opens on 1 Dec 2026 at 10:00 and closes on 1 Mar 2027 at 10:00 Bangkok time (UTC+7), 90 days in total, or earlier if it sells out (the contract’s own times apply once it is on-chain).
 - **Fixed, unchangeable price.** The contract rate is 1 USDT = 666,666.67 IDTC (USD 0.0000015 per IDTC), and there is no function to change the price.
-- **Total cap of 100 billion IDTC.** The contract cannot sell more than this.
+- **Total cap of 100 billion IDTC.** The contract cannot sell more than this. The minimum is 1 USDT per purchase, with no per-wallet limit.
 - **Instant delivery.** Buyers receive IDTC in the same transaction in which they pay USDT; there is no claim step.
-- **The contract does not hold buyers’ funds.** The USDT paid goes to the project treasury in the same transaction.
-- **What the operator can do:** pause the sale, adjust the minimum purchase and the per-wallet limit, adjust the sale window, and withdraw unsold tokens only after the round closes or while the sale is paused. Every such action is recorded on-chain and can be audited.
+- **Two ways to buy.** Pay with USDT on BNB Chain at tpix.online/launchpad/IDTC and the system delivers IDTC to your wallet on TPIX Chain, or pay with USDT on TPIX Chain on this website’s Presale page. Both buy from the same contract.
+- **100% of proceeds go to the pool.** The USDT paid goes straight to the pool feeder, which adds it to the IDTC/USDT pool together with IDTC from the “paired with sale proceeds” allocation, at the sale price. The project treasury’s share is 0%, and where the proceeds go cannot be changed.
+- **Pool deposits at the sale price only.** The feeder can add liquidity only while the pool price is inside the band fixed around the sale price. If the pool price drifts outside, the USDT waits in the feeder until the price comes back.
+- **Locked until 29 Feb 2028 at 10:00.** Before then nobody can take the pool LP, unsold tokens, unpaired pool-side IDTC or USDT not yet in the pool out of the contracts, the team included.
+- **What the operator can do:** pause the sale, adjust the minimum purchase and the per-wallet limit, and move or shorten the sale window, but never close it later than the original end. Every such action is recorded on-chain and can be audited.
 
-**Liquidity.** The project opens IDTC/USDT and IDTC/TPIX pools at the presale price with small seed capital (about 10 USDT per side), then adds to them gradually from presale proceeds. Buyers should understand that small pools allow the DEX price to swing widely when large amounts are traded. While the presale remains open, its fixed price is the option without slippage.
+**Liquidity.** The IDTC/USDT pool opens in the same transaction that creates the sale, seeded with 10 USDT at the presale price, and grows with sales. The IDTC/TPIX pool will open later. Buyers should understand that small pools allow the DEX price to swing widely when large amounts are traded. While the presale remains open, its fixed price is the option without slippage.
 
 ## 7. Governance and use of funds
 
-Planned use of funds raised (the same plan published in version 1):
+This presale sends all sale proceeds to the IDTC/USDT pool (section 6); the project treasury’s share is 0%. The table below is the use-of-funds plan published in version 1, kept for reference:
 
 | Category | Share |
 |---|---:|
@@ -130,7 +134,7 @@ What is still a plan:
 | Phase | Status | Details |
 |---|---|---|
 | Foundations | Done | Project and website launched (April 2026) · TPIX Chain · TPIX DEX · Token Factory |
-| Launch on TPIX Chain | In progress | IDTC created through the Token Factory · 70% lock contract · USDT presale · IDTC/USDT and IDTC/TPIX pools · new website |
+| Launch on TPIX Chain | In progress | IDTC created through the Token Factory · 70% lock contract · USDT presale on TPIX Launchpad (opens 1 Dec 2026) · IDTC/USDT pool · IDTC/TPIX pool · new website |
 | Wider access | Plan | Automated USDT bridge from BNB Chain · applications for CoinGecko and CoinMarketCap listings · wIDTC on BNB Chain and PancakeSwap |
 | Energy projects | Plan | First project announced with documentation · quarterly reports on the use of funds · multisig |
 
@@ -159,7 +163,7 @@ Verify every address at explorer.tpix.online · Chain ID 4289 · RPC https://rpc
 |---|---|---|
 | Chain | Polygon (137) | TPIX Chain (4289) |
 | Supply | 100,000,000 IDTC | 1,100,000,000,000 IDTC |
-| Sale | 3 rounds at USD 0.03–0.05, paid in POL | A single round at a fixed USD 0.0000015, paid in USDT |
+| Sale | 3 rounds at USD 0.03–0.05, paid in POL | A single round at a fixed USD 0.0000015, paid in USDT · 100% of proceeds go to the pool |
 | Lock | Stated in text | 70% locked in an ownerless contract, fully unlocked within 60 months |
 | Token delivery | After the round, under a vesting schedule | Immediately, in the same transaction as payment |
 | Staking returns / dividends | Stated | Removed until there is a real project and a legally compliant structure to support them |

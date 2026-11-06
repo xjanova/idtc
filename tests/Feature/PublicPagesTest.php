@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Support\ContractList;
 use App\Support\Idtc;
+use App\Support\Launch;
 use App\Support\Whitepaper;
 use Tests\TestCase;
 
@@ -24,6 +25,7 @@ class PublicPagesTest extends TestCase
             'idtc.contracts.token' => null,
             'idtc.contracts.vesting' => null,
             'idtc.contracts.presale' => null,
+            'idtc.contracts.feeder' => null,
             'idtc.contracts.pair_usdt' => null,
             'idtc.contracts.pair_tpix' => null,
         ]);
@@ -138,10 +140,66 @@ class PublicPagesTest extends TestCase
             ->assertSee('x-for="(t, i) in tranches"', false);
     }
 
+    public function test_presale_shows_the_schedule_two_ways_to_buy_and_release_conditions(): void
+    {
+        $this->get('/presale')
+            ->assertOk()
+            // กำหนดการที่เจ้าของตัดสิน 2026-11-06 (เวลาไทย)
+            ->assertSee('1 ธ.ค. 2569 เวลา 10:00 น.')
+            ->assertSee('1 มี.ค. 2570 เวลา 10:00 น.')
+            ->assertSee('90 วัน')
+            ->assertSee('29 ก.พ. 2571 เวลา 10:00 น.')
+            ->assertSee('datetime="2026-12-01T10:00:00+07:00"', false)
+            // ซื้อด้วย USDT บน BNB Chain ผ่าน launchpad
+            ->assertSee('data-testid="launchpad-link"', false)
+            ->assertSee('https://tpix.online/launchpad/IDTC', false)
+            // เงินขายเข้าพูล 100% และ LP ล็อก
+            ->assertSee('เติมเข้าพูล IDTC/USDT 100%')
+            ->assertDontSee('USDT เข้ากระเป๋าโครงการทันที')
+            // 4 ส่วนรวมกันเท่าจำนวนเหรียญทั้งหมด: presale 100B + พูล 100B + ล็อก 770B + กระเป๋าโครงการ 130B
+            ->assertSee('Presale 100,000 ล้าน')
+            ->assertSee('จับคู่เข้าพูล 100,000 ล้าน')
+            ->assertSee('ล็อก 70% 770,000 ล้าน')
+            ->assertSee('กระเป๋าโครงการ 130,000 ล้าน')
+            // ตารางปลด: ก้อน 1 ปีปลดงวดแรก 13 งวดหลังวันเปิดขาย · ก้อน 4 ปีปลดครบ 60 งวด
+            ->assertSee('1 ม.ค. 2571')
+            ->assertSee('1 ธ.ค. 2574')
+            ->assertSee('18,333,333,333')
+            ->assertSee('770,000,000,000')
+            // เอกสาร
+            ->assertSee('https://github.com/xjanova/TPIX-Coin/tree/main/contracts/src/launch', false)
+            ->assertSee('data-contract="feeder"', false);
+    }
+
+    public function test_release_schedule_follows_the_vesting_formula(): void
+    {
+        $rows = Launch::releaseSchedule();
+        $this->assertCount(4, $rows);
+        // 24 งวด = 730.5 วัน และปี 2571 มี 29 ก.พ. → งวดสุดท้ายของก้อน 1 ปีตก 30 พ.ย. 2571
+        $this->assertSame(['1 ม.ค. 2571', '30 พ.ย. 2571'], [$rows[0]['first'], $rows[0]['last']]);
+        $this->assertSame('1 ธ.ค. 2574', $rows[3]['last']);
+        $this->assertEqualsWithDelta(220e9 / 12, $rows[0]['per_period'], 1.0);
+
+        // ส่วนที่ระบุในการจัดสรรรวมกันได้ 1.1 ล้านล้านพอดี
+        $sum = array_sum(array_map(fn ($a) => (float) $a['amount'], config('idtc.allocation')));
+        $this->assertSame((float) config('idtc.token.total_supply'), $sum);
+    }
+
+    public function test_home_states_where_the_proceeds_go_and_when_the_sale_opens(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('1 ธ.ค. 2569 เวลา 10:00 น.')
+            ->assertSee('29 ก.พ. 2571')
+            ->assertDontSee('เข้ากระเป๋าโครงการโดยตรง')
+            ->assertDontSee(':lp_unlock')
+            ->assertDontSee(':start');
+    }
+
     public function test_contract_table_lists_core_and_dex_contracts_and_hides_unset_pairs(): void
     {
         $keys = array_column(ContractList::rows(), 'key');
-        $this->assertSame(['token', 'vesting', 'presale', 'usdt', 'wtpix', 'dex_factory', 'dex_router'], $keys);
+        $this->assertSame(['token', 'vesting', 'presale', 'feeder', 'usdt', 'wtpix', 'dex_factory', 'dex_router'], $keys);
 
         config(['idtc.contracts.pair_usdt' => '0x4444444444444444444444444444444444444444']);
         $this->assertContains('pair_usdt', array_column(ContractList::rows(), 'key'));

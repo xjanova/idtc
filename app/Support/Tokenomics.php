@@ -21,7 +21,7 @@ class Tokenomics
             $key = $item['key'] ?? null;
             if (is_string($key) && Lang::has("plan.alloc.$key.name")) {
                 $item['name'] = __("plan.alloc.$key.name");
-                $item['note'] = __("plan.alloc.$key.note", ['price' => $price]);
+                $item['note'] = __("plan.alloc.$key.note", ['price' => $price, 'lp_unlock' => Launch::date('lp_unlock')]);
             }
 
             return $item;

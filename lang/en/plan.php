@@ -18,8 +18,8 @@ return [
         'lock_4y' => ['name' => '4-year lock', 'note' => 'Unlocks in months 49–60'],
         'presale' => ['name' => 'Presale', 'note' => 'Sold at $:price for USDT'],
         'operations' => ['name' => 'Operations, marketing and listings', 'note' => 'Project treasury'],
-        'reserve' => ['name' => 'Price-support and pool top-up reserve', 'note' => 'Used under published rules'],
-        'liquidity' => ['name' => 'Initial liquidity', 'note' => 'IDTC/USDT and IDTC/TPIX pools'],
+        'pool' => ['name' => 'Paired with sale proceeds in the pool', 'note' => 'Locked in the PoolFeeder contract until :lp_unlock'],
+        'reserve' => ['name' => 'Reserve', 'note' => 'Project treasury'],
     ],
 
     'table' => [
@@ -31,7 +31,8 @@ return [
     'contracts' => [
         'token' => ['name' => 'IDTC token', 'role' => 'ERC-20 · 18 decimals · no mint, pause or blacklist'],
         'vesting' => ['name' => '70% lock contract', 'role' => 'Locks :amount IDTC in :count tranches · ownerless'],
-        'presale' => ['name' => 'Presale', 'role' => 'Fixed price 1 USDT = :rate IDTC · USDT goes straight to the treasury'],
+        'presale' => ['name' => 'Presale', 'role' => 'Fixed price 1 USDT = :rate IDTC · USDT goes straight to the pool feeder'],
+        'feeder' => ['name' => 'Pool feeder', 'role' => 'Permanent owner of the presale contract · puts :share% of sale USDT into the IDTC/USDT pool · LP cannot leave before :lp_unlock'],
         'usdt' => ['name' => 'USDT on TPIX Chain', 'role' => '6-decimal USDT · backed 1:1 by USDT on BNB Chain'],
         'wtpix' => ['name' => 'Wrapped TPIX', 'role' => 'TPIX as an ERC-20 for TPIX DEX pools'],
         'dex_factory' => ['name' => 'TPIX DEX Factory', 'role' => 'Creates Uniswap V2-style swap pools'],
