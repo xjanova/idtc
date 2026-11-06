@@ -155,6 +155,8 @@ class PublicPagesTest extends TestCase
             ->assertSee('https://tpix.online/launchpad/IDTC', false)
             // เงินขายเข้าพูล 100% และ LP ล็อก
             ->assertSee('เติมเข้าพูล IDTC/USDT 100%')
+            ->assertSee('ห่างจากราคาขายไม่เกิน 5%')
+            ->assertDontSee('เท่ากับราคาขาย')
             ->assertDontSee('USDT เข้ากระเป๋าโครงการทันที')
             // 4 ส่วนรวมกันเท่าจำนวนเหรียญทั้งหมด: presale 100B + พูล 100B + ล็อก 770B + กระเป๋าโครงการ 130B
             ->assertSee('Presale 100,000 ล้าน')
@@ -178,6 +180,11 @@ class PublicPagesTest extends TestCase
         // 24 งวด = 730.5 วัน และปี 2571 มี 29 ก.พ. → งวดสุดท้ายของก้อน 1 ปีตก 30 พ.ย. 2571
         $this->assertSame(['1 ม.ค. 2571', '30 พ.ย. 2571'], [$rows[0]['first'], $rows[0]['last']]);
         $this->assertSame('1 ธ.ค. 2574', $rows[3]['last']);
+
+        // กรอบราคาของสัญญาเติมพูล: 500 = ±5% · 0 ในสัญญา = ค่าปริยายของ LaunchpadFactory ±3%
+        $this->assertSame('5', Launch::bandPercent());
+        config(['idtc.launchpad.band_bps' => 0]);
+        $this->assertSame('3', Launch::bandPercent());
         $this->assertEqualsWithDelta(220e9 / 12, $rows[0]['per_period'], 1.0);
 
         // ส่วนที่ระบุในการจัดสรรรวมกันได้ 1.1 ล้านล้านพอดี

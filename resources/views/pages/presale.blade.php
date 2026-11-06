@@ -277,7 +277,7 @@
             <div class="release-lp">
                 <b>{{ __('presale.release.lp.title') }}</b>
                 <p class="muted-p">{{ __('presale.release.lp.text', ['share' => Launch::poolSharePercent(), 'lp_unlock' => $lpUnlock]) }}</p>
-                <p class="muted-s">{{ __(Launch::bandPercent() === '0' ? 'presale.release.lp.band_exact' : 'presale.release.lp.band', ['band' => Launch::bandPercent(), 'lp_unlock' => $lpUnlock]) }}</p>
+                <p class="muted-s">{{ __('presale.release.lp.band', ['band' => Launch::bandPercent(), 'lp_unlock' => $lpUnlock]) }}</p>
             </div>
 
             <div class="table-scroll">

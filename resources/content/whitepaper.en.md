@@ -100,7 +100,7 @@ The presale runs on **TPIX Launchpad** (the LaunchpadFactory contract on TPIX Ch
 - **Instant delivery.** Buyers receive IDTC in the same transaction in which they pay USDT; there is no claim step.
 - **Two ways to buy.** Pay with USDT on BNB Chain at tpix.online/launchpad/IDTC and the system delivers IDTC to your wallet on TPIX Chain, or pay with USDT on TPIX Chain on this website’s Presale page. Both buy from the same contract.
 - **100% of proceeds go to the pool.** The USDT paid goes straight to the pool feeder, which adds it to the IDTC/USDT pool together with IDTC from the “paired with sale proceeds” allocation, at the sale price. The project treasury’s share is 0%, and where the proceeds go cannot be changed.
-- **Pool deposits at the sale price only.** The feeder can add liquidity only while the pool price is inside the band fixed around the sale price. If the pool price drifts outside, the USDT waits in the feeder until the price comes back.
+- **Pool deposits at the sale price only.** The feeder can add liquidity only while the pool price is within ±5% of the sale price (fixed in the contract). If the pool price drifts outside, the USDT waits in the feeder until the price comes back.
 - **Locked until 29 Feb 2028 at 10:00.** Before then nobody can take the pool LP, unsold tokens, unpaired pool-side IDTC or USDT not yet in the pool out of the contracts, the team included.
 - **What the operator can do:** pause the sale, adjust the minimum purchase and the per-wallet limit, and move or shorten the sale window, but never close it later than the original end. Every such action is recorded on-chain and can be audited.
 
