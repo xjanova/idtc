@@ -8,6 +8,7 @@ use App\Services\Admin\Audit;
 use App\Services\Chain\Address;
 use App\Services\Chain\ChainStatus;
 use App\Services\Chain\ContractOrigin;
+use App\Services\Chain\FeederReader;
 use App\Services\Chain\PoolReader;
 use App\Services\Chain\PresaleReader;
 use App\Services\Chain\RpcClient;
@@ -58,7 +59,7 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function contracts(Request $request, Settings $settings, RpcClient $rpc, PresaleReader $presale, VestingReader $vesting, PoolReader $pools, SalesIndexer $indexer, ContractOrigin $origin): RedirectResponse
+    public function contracts(Request $request, Settings $settings, RpcClient $rpc, PresaleReader $presale, FeederReader $feeder, VestingReader $vesting, PoolReader $pools, SalesIndexer $indexer, ContractOrigin $origin): RedirectResponse
     {
         $key = (string) $request->input('key');
         if (! in_array($key, Settings::CONTRACT_KEYS, true)) {
@@ -125,6 +126,7 @@ class SettingsController extends Controller
         }
 
         $presale->forget();
+        $feeder->forget();
         $vesting->forget();
         $pools->forget();
 

@@ -43,6 +43,42 @@ export const ADMIN_ABI = {
         'error ReentrancyGuardReentrantCall()',
         'error SafeERC20FailedOperation(address token)',
     ],
+    // PoolFeeder (TPIX Launchpad) — เจ้าของถาวรของ presale; error ของ presale ส่งต่อออกมาทางนี้ด้วย
+    feeder: [
+        'function owner() view returns (address)',
+        'function pendingOwner() view returns (address)',
+        'function sale() view returns (address)',
+        'function projectTreasury() view returns (address)',
+        'function lpUnlockTime() view returns (uint64)',
+        'function saleEndLimit() view returns (uint64)',
+        'function pauseSale()',
+        'function unpauseSale()',
+        'function setSaleWindow(uint64 startTime_, uint64 endTime_)',
+        'function setSaleLimits(uint256 minPurchase_, uint256 maxPerWallet_)',
+        'function withdrawUnsold(address to)',
+        'function feed() returns (uint256 quoteToPool, uint256 tokenToPool, uint256 liquidity)',
+        'function setProjectTreasury(address treasury_)',
+        'function withdrawLiquidity(address to)',
+        'function withdrawReserve(address to)',
+        'function withdrawLeftoverQuote(address to)',
+        'function transferOwnership(address newOwner)',
+        'function acceptOwnership()',
+        'error ZeroAddress()',
+        'error BadConfig()',
+        'error NothingToFeed()',
+        'error OutOfBand(uint256 poolTokenPerQuoteBps)',
+        'error StillLocked()',
+        'error NotBound()',
+        'error QuotePending(uint256 amount)',
+        'error ProtectedToken()',
+        'error SaleNotOver()',
+        'error OwnableUnauthorizedAccount(address account)',
+        'error OwnableInvalidOwner(address owner)',
+        'error EnforcedPause()',
+        'error ExpectedPause()',
+        'error ReentrancyGuardReentrantCall()',
+        'error SafeERC20FailedOperation(address token)',
+    ],
     vesting: [
         ...ABI.vesting,
         'function pendingBeneficiary() view returns (address)',
@@ -65,7 +101,7 @@ const REVERTS = {
     OwnableUnauthorizedAccount: 'กระเป๋านี้ไม่ใช่เจ้าของสัญญา (owner) — สลับไปกระเป๋าเจ้าของแล้วลองใหม่',
     OwnableInvalidOwner: 'ที่อยู่เจ้าของใหม่ไม่ถูกต้อง',
     SaleNotOver: 'ยังถอนไม่ได้: ต้องรอปิดรอบ หรือกดหยุดขายชั่วคราวก่อน',
-    BadConfig: 'ค่าไม่ถูกต้อง: เวลาปิดขายต้องอยู่หลังเวลาเปิด',
+    BadConfig: 'ค่าไม่ถูกต้อง: เวลาปิดขายต้องอยู่หลังเวลาเปิด (ถ้าขายผ่าน launchpad ต้องไม่เกินวันปิดที่ล็อกไว้ตอนสร้างการขาย)',
     ZeroAddress: 'ที่อยู่ปลายทางเป็นที่อยู่ว่าง (0x000…) ไม่ได้',
     EnforcedPause: 'สัญญาหยุดชั่วคราวอยู่แล้ว',
     ExpectedPause: 'สัญญาไม่ได้หยุดอยู่ (เปิดขายอยู่แล้ว)',
@@ -75,6 +111,12 @@ const REVERTS = {
     NoExcess: 'ไม่มีเหรียญส่วนเกินให้คืน',
     SafeERC20FailedOperation: 'โอนเหรียญไม่สำเร็จ (เหรียญในสัญญาไม่พอหรือเหรียญปฏิเสธการโอน)',
     ReentrancyGuardReentrantCall: 'สัญญาปฏิเสธการเรียกซ้อน',
+    StillLocked: 'ยังทำไม่ได้ — สัญญาเติมพูลล็อกไว้จนถึงวันปลดล็อก LP (ไม่มีใครถอนก่อนได้ รวมถึงเจ้าของ)',
+    NotBound: 'สัญญาเติมพูลยังไม่ได้ผูกกับสัญญา presale',
+    OutOfBand: 'ราคาในพูลห่างจากราคาขายเกินกรอบที่สัญญายอมให้ — เติมพูลได้เมื่อราคากลับเข้ากรอบ (USDT รออยู่ในสัญญา ไม่หาย)',
+    NothingToFeed: 'ไม่มียอดให้ทำรายการ — ยอดเป็น 0 หรือ USDT ที่รอยังไม่ถึงขั้นต่ำที่เติมพูลได้',
+    QuotePending: 'ยังมี USDT รอเข้าพูลอยู่ — กด "เติมพูล" หรือถอน USDT ที่ค้างก่อน แล้วค่อยถอน IDTC สำรอง',
+    ProtectedToken: 'สัญญาเติมพูลไม่ยอมให้ถอนเหรียญนี้ด้วยคำสั่งนี้',
 };
 
 /** error ใด ๆ → ข้อความไทยที่บอกว่าเกิดอะไรและต้องทำอะไรต่อ */
@@ -108,7 +150,7 @@ function address(value, label) {
     if (!isAddress(s)) fail(`${label}ไม่ถูกต้อง — ต้องเป็น 0x ตามด้วยตัวอักษรฐานสิบหก 40 ตัว (ถ้าตัวพิมพ์ผสม ต้องตรง checksum)`);
     const a = getAddress(s);
     if (a === ZeroAddress) fail(`${label}เป็นที่อยู่ว่างไม่ได้`);
-    for (const key of ['presale', 'vesting', 'token', 'pair_usdt', 'pair_tpix']) {
+    for (const key of ['presale', 'feeder', 'vesting', 'token', 'pair_usdt', 'pair_tpix']) {
         if (contractAddress(key) === a) fail(`${label}เป็นที่อยู่ของสัญญาโครงการเอง (${key}) — เหรียญจะติดอยู่ในสัญญา ใช้ไม่ได้`);
     }
     return a;
@@ -129,6 +171,38 @@ export function thaiTime(unix) {
     return `${d.getUTCDate()} ${TH_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear() + 543} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} น.`;
 }
 
+/** ค่าที่กรอกและกล่องยืนยันของการตั้งเพดาน/ช่วงเวลาขาย — ใช้ทั้งสั่ง presale ตรงและสั่งผ่านสัญญาเติมพูล */
+const SALE = {
+    limits: {
+        args: (f) => [amount(f.min, 6, 'ยอดซื้อขั้นต่ำ'), amount(f.max === '' || f.max == null ? '0' : f.max, 18, 'เพดานต่อกระเป๋า')],
+        params: ([min, max]) => ({ minPurchase: min.toString(), maxPerWallet: max.toString() }),
+        confirm: (f, [min, max]) => ({
+            title: 'ตั้งยอดซื้อขั้นต่ำ / เพดานต่อกระเป๋า',
+            lines: [
+                min === 0n ? 'ไม่กำหนดยอดซื้อขั้นต่ำ' : `ซื้อขั้นต่ำ ${f.min} USDT ต่อครั้ง`,
+                max === 0n ? 'ไม่จำกัดจำนวนที่ซื้อได้ต่อกระเป๋า' : `แต่ละกระเป๋าซื้อรวมได้ไม่เกิน ${fmt(Number(String(f.max).replace(/,/g, '')))} IDTC`,
+                'มีผลกับการซื้อครั้งถัดไปทันที (ไม่กระทบรายการที่ซื้อไปแล้ว)',
+            ],
+        }),
+    },
+    window: {
+        args: (f) => {
+            const start = bangkokTime(f.start, 'เวลาเปิดขาย');
+            const end = bangkokTime(f.end, 'เวลาปิดขาย');
+            if (end <= start) fail('เวลาปิดขายต้องอยู่หลังเวลาเปิดขาย');
+            return [BigInt(start), BigInt(end)];
+        },
+        params: ([s, e]) => ({ startTime: s.toString(), endTime: e.toString() }),
+        confirm: (f, [s, e]) => {
+            const now = Date.now() / 1000;
+            const warnings = [];
+            if (Number(e) <= now) warnings.push('เวลาปิดอยู่ในอดีต — การขายจะปิดทันทีหลังยืนยัน');
+            else if (Number(s) <= now) warnings.push('เวลาเปิดอยู่ในอดีต — ถ้าไม่ได้หยุดชั่วคราว การขายจะเปิดทันที');
+            return { title: 'ตั้งช่วงเวลาขาย', lines: [`เปิดขาย ${thaiTime(Number(s))}`, `ปิดขาย ${thaiTime(Number(e))}`, 'เวลาไทย (UTC+7)'], warnings };
+        },
+    },
+};
+
 /* ───────────── รายการคำสั่ง ─────────────
  * args(f)    → อาร์กิวเมนต์ของฟังก์ชัน (โยน AdminError ถ้ากรอกผิด)
  * params(a)  → ค่าที่ส่งไปบันทึก (ชื่อตรงกับ ChainActions::ALL[...]['params'])
@@ -148,33 +222,15 @@ export const ACTIONS = {
     },
     'presale.setLimits': {
         contract: 'presale', abi: 'sale', fn: 'setLimits', guard: 'owner',
-        args: (f) => [amount(f.min, 6, 'ยอดซื้อขั้นต่ำ'), amount(f.max === '' || f.max == null ? '0' : f.max, 18, 'เพดานต่อกระเป๋า')],
-        params: ([min, max]) => ({ minPurchase: min.toString(), maxPerWallet: max.toString() }),
-        confirm: (f, [min, max]) => ({
-            title: 'ตั้งยอดซื้อขั้นต่ำ / เพดานต่อกระเป๋า',
-            lines: [
-                min === 0n ? 'ไม่กำหนดยอดซื้อขั้นต่ำ' : `ซื้อขั้นต่ำ ${f.min} USDT ต่อครั้ง`,
-                max === 0n ? 'ไม่จำกัดจำนวนที่ซื้อได้ต่อกระเป๋า' : `แต่ละกระเป๋าซื้อรวมได้ไม่เกิน ${fmt(Number(String(f.max).replace(/,/g, '')))} IDTC`,
-                'มีผลกับการซื้อครั้งถัดไปทันที (ไม่กระทบรายการที่ซื้อไปแล้ว)',
-            ],
-        }),
+        args: (f) => SALE.limits.args(f),
+        params: (a) => SALE.limits.params(a),
+        confirm: (f, a) => SALE.limits.confirm(f, a),
     },
     'presale.setWindow': {
         contract: 'presale', abi: 'sale', fn: 'setWindow', guard: 'owner',
-        args: (f) => {
-            const start = bangkokTime(f.start, 'เวลาเปิดขาย');
-            const end = bangkokTime(f.end, 'เวลาปิดขาย');
-            if (end <= start) fail('เวลาปิดขายต้องอยู่หลังเวลาเปิดขาย');
-            return [BigInt(start), BigInt(end)];
-        },
-        params: ([s, e]) => ({ startTime: s.toString(), endTime: e.toString() }),
-        confirm: (f, [s, e]) => {
-            const now = Date.now() / 1000;
-            const warnings = [];
-            if (Number(e) <= now) warnings.push('เวลาปิดอยู่ในอดีต — การขายจะปิดทันทีหลังยืนยัน');
-            else if (Number(s) <= now) warnings.push('เวลาเปิดอยู่ในอดีต — ถ้าไม่ได้หยุดชั่วคราว การขายจะเปิดทันที');
-            return { title: 'ตั้งช่วงเวลาขาย', lines: [`เปิดขาย ${thaiTime(Number(s))}`, `ปิดขาย ${thaiTime(Number(e))}`, 'เวลาไทย (UTC+7)'], warnings };
-        },
+        args: (f) => SALE.window.args(f),
+        params: (a) => SALE.window.params(a),
+        confirm: (f, a) => SALE.window.confirm(f, a),
     },
     'presale.setTreasury': {
         contract: 'presale', abi: 'sale', fn: 'setTreasury', guard: 'owner', destructive: true, checkTarget: true,
@@ -209,6 +265,92 @@ export const ACTIONS = {
     'presale.acceptOwnership': {
         contract: 'presale', abi: 'sale', fn: 'acceptOwnership', guard: 'pendingOwner',
         confirm: () => ({ title: 'รับสิทธิ์เจ้าของสัญญา presale', lines: ['กระเป๋าที่เชื่อมอยู่จะเป็นเจ้าของ presale คนใหม่ทันที', 'เจ้าของเดิมจะหมดสิทธิ์สั่งงาน'] }),
+    },
+    'feeder.pauseSale': {
+        contract: 'feeder', abi: 'feeder', fn: 'pauseSale', guard: 'owner', destructive: true,
+        confirm: () => ({
+            title: 'หยุดขาย presale ชั่วคราว (ผ่านสัญญาเติมพูล)',
+            lines: ['ผู้ซื้อทุกคนจะกดซื้อไม่ได้ทันที จนกว่าจะกด "เปิดขายต่อ"', 'ขายผ่าน launchpad: หยุดขายแล้วก็ถอนเหรียญที่เหลือไม่ได้จนถึงวันปลดล็อก LP — ใช้เมื่อมีเหตุผิดปกติเท่านั้น'],
+        }),
+    },
+    'feeder.unpauseSale': {
+        contract: 'feeder', abi: 'feeder', fn: 'unpauseSale', guard: 'owner',
+        confirm: () => ({ title: 'เปิดขาย presale ต่อ (ผ่านสัญญาเติมพูล)', lines: ['ผู้ซื้อกลับมากดซื้อได้ทันที (ถ้าอยู่ในช่วงเวลาขายและยังไม่ครบเพดาน)'] }),
+    },
+    'feeder.setSaleLimits': {
+        contract: 'feeder', abi: 'feeder', fn: 'setSaleLimits', guard: 'owner',
+        args: (f) => SALE.limits.args(f),
+        params: (a) => SALE.limits.params(a),
+        confirm: (f, a) => ({ ...SALE.limits.confirm(f, a), title: 'ตั้งยอดซื้อขั้นต่ำ / เพดานต่อกระเป๋า (ผ่านสัญญาเติมพูล)' }),
+    },
+    'feeder.setSaleWindow': {
+        contract: 'feeder', abi: 'feeder', fn: 'setSaleWindow', guard: 'owner',
+        args: (f) => {
+            const a = SALE.window.args(f);
+            const limit = Number(f.endLimit || 0);
+            if (limit > 0 && Number(a[1]) > limit) fail(`เวลาปิดขายต้องไม่เกิน ${thaiTime(limit)} — ล็อกไว้ตอนสร้างการขาย ขยายไม่ได้`);
+            return a;
+        },
+        params: (a) => SALE.window.params(a),
+        confirm: (f, a) => {
+            const box = SALE.window.confirm(f, a);
+            return { ...box, title: 'ตั้งช่วงเวลาขาย (ผ่านสัญญาเติมพูล)', lines: [...box.lines, ...(f.endLimitText ? [`ปิดได้ไม่เกิน ${f.endLimitText}`] : [])] };
+        },
+    },
+    'feeder.withdrawUnsold': {
+        contract: 'feeder', abi: 'feeder', fn: 'withdrawUnsold', guard: 'owner', destructive: true, checkTarget: true,
+        args: (f) => [address(f.to, 'ที่อยู่ปลายทาง')],
+        params: ([a]) => ({ to: a }),
+        confirm: (f, [a]) => ({
+            title: 'ถอนเหรียญ IDTC ที่ขายไม่หมด (ผ่านสัญญาเติมพูล)',
+            lines: [`IDTC ทั้งหมดที่เหลือในสัญญา presale (${f.balanceText || 'ทั้งหมด'}) จะโอนไปที่ปลายทาง`, 'หลังถอน presale จะไม่มีเหรียญให้ขาย', 'ผู้ที่ซื้อไปแล้วไม่ได้รับผลกระทบ (ได้เหรียญไปตั้งแต่ตอนซื้อ)'],
+            target: a, targetLabel: 'ปลายทางที่จะได้รับ IDTC',
+        }),
+    },
+    'feeder.feed': {
+        contract: 'feeder', abi: 'feeder', fn: 'feed', guard: 'anyone',
+        confirm: (f) => ({
+            title: 'เติมพูล',
+            lines: [
+                `USDT ที่รออยู่ (${f.pendingText || 'ทั้งหมด'}) ส่วน ${f.shareText || 'ที่กำหนด'} จะเข้าพูล IDTC/USDT พร้อม IDTC สำรองของสัญญา ตามราคาในพูล`,
+                `LP ที่ได้ล็อกอยู่ในสัญญาเติมพูลจนถึง ${f.unlockText || 'วันปลดล็อก'}`,
+                'ใครกดก็ได้ — ส่วนที่ไม่เข้าพูล (ถ้ามี) ไปที่กระเป๋าโครงการเท่านั้น',
+            ],
+        }),
+    },
+    'feeder.setProjectTreasury': {
+        contract: 'feeder', abi: 'feeder', fn: 'setProjectTreasury', guard: 'owner', destructive: true, checkTarget: true,
+        args: (f) => [address(f.address, 'ที่อยู่กระเป๋าโครงการใหม่')],
+        params: ([a]) => ({ treasury: a }),
+        confirm: (f, [a]) => ({
+            title: 'เปลี่ยนกระเป๋าโครงการของสัญญาเติมพูล',
+            lines: ['ส่วนแบ่งโครงการจากการเติมพูลครั้งถัดไป (ถ้ามี) จะไปที่กระเป๋าใหม่', 'ไม่กระทบเงินที่เข้าพูลและ LP ที่ล็อกอยู่', 'ตรวจให้แน่ว่าโครงการควบคุมกระเป๋านี้ได้จริง'],
+            target: a, targetLabel: 'กระเป๋าโครงการใหม่',
+        }),
+    },
+    ...Object.fromEntries([
+        ['withdrawLiquidity', 'ถอน LP ออกจากสัญญาเติมพูล', 'ปลายทางที่จะได้รับ LP', 'ผู้ถือ LP ถอนสภาพคล่องออกจากพูลได้ — ถ้าถอนจริง ราคาในพูลจะแกว่งแรงและผู้ซื้อขายได้ยาก'],
+        ['withdrawLeftoverQuote', 'ถอน USDT ที่ค้างในสัญญาเติมพูล', 'ปลายทางที่จะได้รับ USDT', 'USDT นี้จะไม่เข้าพูลอีก'],
+        ['withdrawReserve', 'ถอน IDTC สำรองของสัญญาเติมพูล', 'ปลายทางที่จะได้รับ IDTC', 'หลังถอน สัญญาเติมพูลจะไม่มี IDTC จับคู่กับเงินขายอีก'],
+    ].map(([fn, title, targetLabel, note]) => [`feeder.${fn}`, {
+        contract: 'feeder', abi: 'feeder', fn, guard: 'owner', destructive: true, checkTarget: true,
+        args: (f) => [address(f.to, 'ที่อยู่ปลายทาง')],
+        params: ([a]) => ({ to: a }),
+        confirm: (f, [a]) => ({ title, lines: [`${f.whatText || 'ยอดทั้งหมด'} จะโอนไปที่ปลายทาง`, note, 'ทำได้เพราะเลยวันปลดล็อก LP แล้ว'], target: a, targetLabel }),
+    }])),
+    'feeder.transferOwnership': {
+        contract: 'feeder', abi: 'feeder', fn: 'transferOwnership', guard: 'owner', destructive: true, checkTarget: true,
+        args: (f) => [address(f.address, 'ที่อยู่เจ้าของใหม่')],
+        params: ([a]) => ({ newOwner: a }),
+        confirm: (f, [a]) => ({
+            title: 'เริ่มโอนสิทธิ์เจ้าของสัญญาเติมพูล',
+            lines: ['ขั้นที่ 1 จาก 2 — กระเป๋าใหม่ต้องเข้ามากด "รับสิทธิ์เจ้าของ" เองอีกครั้ง', 'เมื่อรับแล้ว กระเป๋าใหม่สั่งงาน presale (หยุดขาย ตั้งค่า) และถอน LP หลังวันปลดล็อกได้ — กระเป๋าปัจจุบันหมดสิทธิ์ทั้งหมด', 'ก่อนกระเป๋าใหม่รับ คุณยกเลิกได้ด้วยการโอนซ้ำไปที่กระเป๋าตัวเอง'],
+            target: a, targetLabel: 'เจ้าของใหม่ (ต้องกดรับเอง)',
+        }),
+    },
+    'feeder.acceptOwnership': {
+        contract: 'feeder', abi: 'feeder', fn: 'acceptOwnership', guard: 'pendingOwner',
+        confirm: () => ({ title: 'รับสิทธิ์เจ้าของสัญญาเติมพูล', lines: ['กระเป๋าที่เชื่อมอยู่จะเป็นเจ้าของสัญญาเติมพูลคนใหม่ทันที (สั่งงาน presale ผ่านสัญญานี้)', 'เจ้าของเดิมจะหมดสิทธิ์สั่งงาน'] }),
     },
     'vesting.release': {
         contract: 'vesting', abi: 'vesting', fn: 'release', guard: 'anyone',

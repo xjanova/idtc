@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Services\Admin\Audit;
 use App\Services\Admin\ChainActions;
 use App\Services\Chain\Address;
+use App\Services\Chain\FeederReader;
 use App\Services\Chain\PoolReader;
 use App\Services\Chain\PresaleReader;
 use App\Services\Chain\RpcException;
@@ -58,7 +59,7 @@ class TxController extends Controller
         return response()->json($this->payload($log), 201);
     }
 
-    public function check(AuditLog $log, TxTracker $tracker, PresaleReader $presale, VestingReader $vesting, PoolReader $pools): JsonResponse
+    public function check(AuditLog $log, TxTracker $tracker, PresaleReader $presale, FeederReader $feeder, VestingReader $vesting, PoolReader $pools): JsonResponse
     {
         if (! $log->tx_hash) {
             return response()->json(['message' => 'รายการนี้ไม่ใช่ธุรกรรมบนเชน'], 422);
@@ -72,6 +73,7 @@ class TxController extends Controller
         if ($log->tx_status === AuditLog::CONFIRMED) {
             // ค่าบนเชนเปลี่ยนแล้ว — ล้างแคชให้หน้าถัดไปเห็นค่าใหม่ทันที
             $presale->forget();
+            $feeder->forget();
             $vesting->forget();
             $pools->forget();
         }

@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Services\Chain\Address;
 use App\Services\Chain\ChainStatus;
+use App\Services\Chain\FeederReader;
 use App\Services\Chain\PoolReader;
 use App\Services\Chain\PresaleReader;
 use App\Services\Chain\VestingReader;
+use App\Support\Idtc;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
@@ -17,13 +20,22 @@ use Illuminate\Support\Collection;
  */
 class ChainController extends Controller
 {
-    public function presale(PresaleReader $reader, ChainStatus $chain): View
+    public function presale(PresaleReader $reader, FeederReader $feeder, ChainStatus $chain): View
     {
+        $p = $reader->read();
+        $feederAddress = Idtc::contract('feeder');
+        $owner = ($p['ok'] ?? false) ? ($p['v']['owner'] ?? null) : null;
+
         return view('admin.presale', [
             'title' => 'Presale',
-            'p' => $reader->read(),
+            'p' => $p,
+            'fd' => $feeder->read(),
+            // ขายผ่าน TPIX Launchpad: เจ้าของ presale คือสัญญาเติมพูล → คำสั่งเจ้าของต้องส่งผ่านสัญญานั้น
+            'viaFeeder' => $feederAddress !== null && $owner !== null && Address::same($owner, $feederAddress),
+            // ตั้งสัญญาเติมพูลไว้ แต่ไม่ใช่เจ้าของ presale ตัวนี้ — ที่อยู่ในหน้าตั้งค่าน่าจะผิด
+            'feederMismatch' => $feederAddress !== null && $owner !== null && ! Address::same($owner, $feederAddress),
             'head' => $chain->head(),
-            'txs' => $this->recentTx('presale.'),
+            'txs' => $this->recentTx('presale.', 'feeder.'),
         ]);
     }
 
@@ -47,8 +59,14 @@ class ChainController extends Controller
     }
 
     /** @return Collection<int, AuditLog> */
-    protected function recentTx(string $prefix)
+    protected function recentTx(string ...$prefixes)
     {
-        return AuditLog::query()->where('action', 'like', $prefix.'%')->whereNotNull('tx_hash')->latest('id')->limit(6)->get();
+        return AuditLog::query()
+            ->where(function ($q) use ($prefixes) {
+                foreach ($prefixes as $prefix) {
+                    $q->orWhere('action', 'like', $prefix.'%');
+                }
+            })
+            ->whereNotNull('tx_hash')->latest('id')->limit(6)->get();
     }
 }

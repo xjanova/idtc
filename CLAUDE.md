@@ -18,6 +18,7 @@ All replies and progress lines go to the owner in Thai. Code, commits and logs s
   - `TrancheVesting`: the 70% lock, schedule A. Owner-less; anyone can call `release()`.
   - `FixedPriceSale`: the presale. Immutable rate 2e18/3 per micro-USDT, i.e. 1 USDT = 666,666.67 IDTC.
   - `PoolFeeder` (`contracts.feeder`): created with the sale by TPIX `LaunchpadFactory`. It is the sale's permanent owner and its `treasury`: sale USDT goes into the IDTC/USDT pool and the LP is locked until `launchpad.lp_unlock`. Owner-only sale calls (pause, window, limits, unsold) must go through the feeder (`pauseSale`, `setSaleWindow`, `setSaleLimits`, `withdrawUnsold`). Calling them on the sale directly reverts.
+    - Admin: when the presale's on-chain owner is `contracts.feeder`, `/admin/presale` switches to the `feeder.*` actions (`App\Services\Admin\ChainActions` + `resources/js/admin-chain.js`, kept in sync by `FeederActionsTest`) and hides setTreasury / transferOwnership of the sale (the feeder has neither). Feeder state comes from `App\Services\Chain\FeederReader`. LP, reserve, leftover USDT and unsold tokens can only leave after `lpUnlockTime`.
   - Sale dates, pool share and LP unlock: `config/idtc.php` → `sale.start/end` and `launchpad.*`, formatted by `App\Support\Launch`. They must match TPIX-Coin `contracts/scripts/launch-plans/idtc.json`.
   - USDT_TPIX (6 decimals) and TPIX DEX (Uniswap V2 fork).
 - All chain constants and plan numbers: `config/idtc.php`, read through `App\Support\Idtc` (Blade/PHP) and `window.IDTC` (JS, `resources/js/chain.js`).
