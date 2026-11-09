@@ -104,6 +104,24 @@
                     </div>
                     <p class="plan-note warn" x-show="me.rewards.held > 0" x-cloak>{!! $icon !!}<span>{{ __('grid.me.held') }} · <b x-text="idtc(me.rewards.held)"></b> IDTC</span></p>
 
+                    <div class="grid-box grid-claim" x-show="me.claims && me.claims.contract && me.claims.items.length" x-cloak>
+                        <h4>{{ __('grid.me.claim_title') }}</h4>
+                        <div class="kv">
+                            <div><span>{{ __('grid.me.claim_now') }}</span><b class="num" x-text="fmtIdtc(sumIdtc(claimable)) + ' IDTC'"></b></div>
+                            <div x-show="claimLocked.length"><span>{{ __('grid.me.claim_locked') }}</span><b class="num" x-text="fmtIdtc(sumIdtc(claimLocked)) + ' IDTC'"></b></div>
+                            <div x-show="claimLocked.length"><span>{{ __('grid.me.claim_unlock') }}</span><b x-text="claimLocked.length ? when(claimLocked[0].unlock_at) : ''"></b></div>
+                            <div x-show="claimedTotal > 0"><span>{{ __('grid.me.claim_done') }}</span><b class="num" x-text="fmtIdtc(claimedTotal) + ' IDTC'"></b></div>
+                        </div>
+                        <p class="plan-note warn" x-show="me.claims.error" x-cloak>{!! $icon !!}<span>{{ __('grid.me.claim_read_error') }}</span></p>
+                        <div class="grid-claim-act">
+                            <button class="btn btn-primary" type="button" @click="claim()" :disabled="claiming || busy || !claimable.length">{{ __('grid.me.claim_button') }}</button>
+                            <span class="muted small">{{ __('grid.me.claim_note') }}</span>
+                        </div>
+                        <p class="plan-note" x-show="claimMsg" x-cloak role="status">{!! $icon !!}<span x-text="claimMsg"></span></p>
+                        <p class="plan-note warn" x-show="claimErr" x-cloak role="alert">{!! $icon !!}<span x-text="claimErr"></span></p>
+                        <p class="muted small" x-show="claimHash" x-cloak><a :href="explorerTx(claimHash)" target="_blank" rel="noopener">{{ __('grid.me.claim_tx') }} ↗</a></p>
+                    </div>
+
                     <div class="grid-two">
                         <div class="grid-box">
                             <h4>{{ __('grid.me.next') }}</h4>
@@ -166,7 +184,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="muted small">{{ __('grid.me.estimate') }} {{ __('grid.me.payout_note') }}</p>
+                    <p class="muted small">{{ __('grid.me.estimate') }} <span x-text="me.claims && me.claims.contract ? @js(__('grid.me.payout_live')) : @js(__('grid.me.payout_note'))">{{ __('grid.me.payout_note') }}</span></p>
                 </div>
             </template>
         </section>

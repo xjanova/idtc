@@ -95,6 +95,33 @@ export const ADMIN_ABI = {
         'error ReentrancyGuardReentrantCall()',
         'error SafeERC20FailedOperation(address token)',
     ],
+    rewards: [
+        'function owner() view returns (address)',
+        'function pendingOwner() view returns (address)',
+        'function token() view returns (address)',
+        'function paused() view returns (bool)',
+        'function outstanding() view returns (uint256)',
+        'function excess() view returns (uint256)',
+        'function roundCount() view returns (uint256)',
+        'function addRound(uint256 id, bytes32 root, uint256 total, uint64 unlockAt)',
+        'function revokeRound(uint256 id)',
+        'function withdrawExcess(address to, uint256 amount)',
+        'function pause()',
+        'function unpause()',
+        'error OwnableUnauthorizedAccount(address account)',
+        'error EnforcedPause()',
+        'error ExpectedPause()',
+        'error ZeroAddress()',
+        'error WrongRoundId(uint256 expected, uint256 given)',
+        'error EmptyRound()',
+        'error AmountTooLarge()',
+        'error Underfunded(uint256 balance, uint256 needed)',
+        'error UnknownRound(uint256 round)',
+        'error RoundRevokedError(uint256 round)',
+        'error ExceedsExcess(uint256 excess, uint256 amount)',
+        'error ReentrancyGuardReentrantCall()',
+        'error SafeERC20FailedOperation(address token)',
+    ],
 };
 
 const REVERTS = {
@@ -117,6 +144,13 @@ const REVERTS = {
     NothingToFeed: 'ไม่มียอดให้ทำรายการ — ยอดเป็น 0 หรือ USDT ที่รอยังไม่ถึงขั้นต่ำที่เติมพูลได้',
     QuotePending: 'ยังมี USDT รอเข้าพูลอยู่ — กด "เติมพูล" หรือถอน USDT ที่ค้างก่อน แล้วค่อยถอน IDTC สำรอง',
     ProtectedToken: 'สัญญาเติมพูลไม่ยอมให้ถอนเหรียญนี้ด้วยคำสั่งนี้',
+    WrongRoundId: 'เลขรอบไม่ตรงกับรอบถัดไปบนสัญญา — มีรอบอื่นประกาศไปก่อนแล้ว รีเฟรชหน้า แล้วทิ้งรอบนี้และสร้างใหม่',
+    EmptyRound: 'รอบนี้ไม่มียอด (root หรือยอดรวมเป็น 0)',
+    AmountTooLarge: 'ยอดเกินที่สัญญารับได้',
+    Underfunded: 'IDTC ในสัญญาจ่ายรางวัลไม่พอ — โอน IDTC เข้าสัญญาให้ครบยอดค้างจ่าย + รอบนี้ก่อน แล้วลองใหม่',
+    UnknownRound: 'ไม่มีรอบนี้บนสัญญา',
+    RoundRevokedError: 'รอบนี้ถูกยกเลิกไปแล้ว',
+    ExceedsExcess: 'ถอนเกินส่วนเกิน — ถอนได้เฉพาะเหรียญที่เกินยอดค้างจ่ายของทุกรอบ',
 };
 
 /** error ใด ๆ → ข้อความไทยที่บอกว่าเกิดอะไรและต้องทำอะไรต่อ */
@@ -150,7 +184,7 @@ function address(value, label) {
     if (!isAddress(s)) fail(`${label}ไม่ถูกต้อง — ต้องเป็น 0x ตามด้วยตัวอักษรฐานสิบหก 40 ตัว (ถ้าตัวพิมพ์ผสม ต้องตรง checksum)`);
     const a = getAddress(s);
     if (a === ZeroAddress) fail(`${label}เป็นที่อยู่ว่างไม่ได้`);
-    for (const key of ['presale', 'feeder', 'vesting', 'token', 'pair_usdt', 'pair_tpix']) {
+    for (const key of ['presale', 'feeder', 'vesting', 'rewards', 'token', 'pair_usdt', 'pair_tpix']) {
         if (contractAddress(key) === a) fail(`${label}เป็นที่อยู่ของสัญญาโครงการเอง (${key}) — เหรียญจะติดอยู่ในสัญญา ใช้ไม่ได้`);
     }
     return a;
@@ -381,6 +415,66 @@ export const ACTIONS = {
         }),
     },
 };
+
+/* ───────────── สัญญาจ่ายรางวัล Grid ───────────── */
+
+const BYTES32 = /^0x[0-9a-f]{64}$/;
+
+function uintArg(value, label) {
+    const s = String(value ?? '').trim();
+    if (!/^\d+$/.test(s)) fail(`${label}ไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่`);
+    return BigInt(s);
+}
+
+Object.assign(ACTIONS, {
+    'rewards.addRound': {
+        contract: 'rewards', abi: 'rewards', fn: 'addRound', guard: 'owner',
+        args: (f) => {
+            const root = String(f.root ?? '').toLowerCase();
+            if (!BYTES32.test(root) || /^0x0+$/.test(root)) fail('root ของรอบไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่');
+            const total = uintArg(f.total, 'ยอดรวมของรอบ');
+            if (total === 0n) fail('รอบนี้ไม่มียอด');
+            return [uintArg(f.id, 'เลขรอบ'), root, total, uintArg(f.unlockAt ?? '0', 'เวลาปลด')];
+        },
+        params: ([id, root, total, unlockAt]) => ({ id: id.toString(), root, total: total.toString(), unlockAt: unlockAt.toString() }),
+        confirm: (f, [id]) => ({
+            title: `ประกาศรอบจ่ายรางวัลที่ ${id}`,
+            lines: [
+                `${fmt(Number(f.items || 0))} กระเป๋า รวม ${f.totalText || ''}`,
+                `รับได้ตั้งแต่ ${f.unlockText || 'ทันที'}`,
+                'หลังประกาศ แก้รายชื่อไม่ได้ — ถ้าผิด ทำได้แค่ยกเลิกทั้งรอบ (คนที่รับไปแล้วไม่ถูกดึงคืน)',
+                'สัญญาจะตรวจเองว่ามี IDTC พอจ่ายทุกรอบ ถ้าไม่พอจะปฏิเสธ',
+            ],
+        }),
+    },
+    'rewards.revokeRound': {
+        contract: 'rewards', abi: 'rewards', fn: 'revokeRound', guard: 'owner', destructive: true,
+        args: (f) => [uintArg(f.id, 'เลขรอบ')],
+        params: ([id]) => ({ id: id.toString() }),
+        confirm: (f, [id]) => ({
+            title: `ยกเลิกรอบจ่ายรางวัลที่ ${id}`,
+            lines: ['คนที่ยังไม่รับจะรับรอบนี้ไม่ได้อีก (ย้อนกลับไม่ได้)', 'ส่วนที่ยังไม่มีใครรับกลายเป็นส่วนเกินในสัญญา ถอนออกได้', 'คนที่รับไปแล้วไม่ถูกดึงคืน · ยอดของคนที่ยังไม่รับจะกลับไปรอรอบถัดไป'],
+        }),
+    },
+    'rewards.pause': {
+        contract: 'rewards', abi: 'rewards', fn: 'pause', guard: 'owner', destructive: true,
+        confirm: () => ({ title: 'หยุดรับรางวัล Grid ชั่วคราว', lines: ['สมาชิกกดรับรางวัลไม่ได้จนกว่าจะเปิดต่อ', 'ยอดของทุกคนยังอยู่ครบ ไม่มีอะไรหาย'] }),
+    },
+    'rewards.unpause': {
+        contract: 'rewards', abi: 'rewards', fn: 'unpause', guard: 'owner',
+        confirm: () => ({ title: 'เปิดรับรางวัล Grid ต่อ', lines: ['สมาชิกกดรับรางวัลในรอบที่ประกาศแล้วได้ทันที'] }),
+    },
+    'rewards.withdrawExcess': {
+        contract: 'rewards', abi: 'rewards', fn: 'withdrawExcess', guard: 'owner', destructive: true, checkTarget: true,
+        args: (f) => [address(f.to, 'ที่อยู่ปลายทาง'), amount(f.amount, 18, 'จำนวน IDTC', { allowZero: false })],
+        params: ([to, a]) => ({ to, amount: a.toString() }),
+        confirm: (f, [to]) => ({
+            title: 'ถอนเหรียญส่วนเกินจากสัญญาจ่ายรางวัล',
+            lines: [`${f.amount} IDTC จะโอนไปที่ปลายทาง`, 'ถอนได้เฉพาะส่วนที่เกินยอดค้างจ่าย — ยอดที่สมาชิกยังรับได้ สัญญากันไว้เอง'],
+            target: to, targetLabel: 'ปลายทางที่จะได้รับ IDTC',
+        }),
+    },
+});
 
 const GUARDS = {
     owner: ['owner', 'เจ้าของ (owner)'],

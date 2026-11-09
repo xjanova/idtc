@@ -12,6 +12,7 @@
 @endsection
 
 @section('actions')
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', ['root' => $n['wallet']]) }}"><x-admin.icon name="users"/>ดูบนผัง</a>
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.ledger', ['wallet' => $n['wallet']]) }}"><x-admin.icon name="chart"/>รางวัลของกระเป๋านี้</a>
 @endsection
 
@@ -20,9 +21,15 @@
         <div class="flash err" role="alert"><b>พักรางวัลอยู่</b> — {{ $row?->held_reason }} · โดย {{ F::addr($row?->held_by) }} เมื่อ {{ F::dateTime($row?->held_at) }}</div>
     @endif
 
+    @if (! empty($n['gap']))
+        <div class="flash warn" role="note"><b>ประวัติการโอนไม่ครบ</b> — กระเป๋านี้โอนออกมากกว่าที่ระบบเห็นว่าเข้า (มีเหรียญก่อนบล็อกเริ่มดึง) ระบบจึงไม่ตัดรางวัลจากการขาย/โอนออก ตรวจใน explorer ก่อนจ่าย</div>
+    @elseif (($n['cut_idtc'] ?? 0) > 0)
+        <div class="flash info" role="note">ขาย/โอนออกก่อนครบระยะถือ {{ number_format($n['cut_idtc']) }} IDTC — รางวัลของส่วนนั้นคืนเข้างบแล้ว</div>
+    @endif
+
     <div class="kpis">
         <div class="kpi"><span>ระดับ</span><b class="gr {{ $rk }}">{{ G::RANKS[$rk] }}</b><em class="muted">เพื่อนตรง {{ number_format($n['directs']) }} · ทีม {{ number_format($n['team_count']) }} คน</em></div>
-        <div class="kpi"><span>ซื้อเอง / ยอดทีม</span><b>${{ number_format($n['own_usdt'], 2) }}</b><em class="muted">ทีม ${{ number_format($n['team_usdt'], 2) }}</em></div>
+        <div class="kpi"><span>ซื้อเอง (ยังถือ) / ยอดทีม</span><b>${{ number_format($n['own_usdt'], 2) }}</b><em class="muted">ซื้อทั้งหมด ${{ number_format($n['bought_usdt'] ?? $n['own_usdt'], 2) }} · ทีม ${{ number_format($n['team_usdt'], 2) }}</em></div>
         <div class="kpi"><span>ครบระยะ / รอ</span><b>{{ number_format($n['ready']) }}</b><em class="muted">รอ {{ number_format($n['wait']) }} IDTC</em></div>
         <div class="kpi"><span>พักไว้ / Sprint</span><b>{{ number_format($n['held_amt']) }}</b><em class="muted">Sprint {{ number_format($n['sprint']) }} IDTC</em></div>
     </div>

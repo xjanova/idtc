@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ChainController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GridController;
+use App\Http\Controllers\Admin\GridRoundsController;
 use App\Http\Controllers\Admin\SalesController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TxController;
@@ -43,9 +44,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('grid', [GridController::class, 'index'])->name('grid');
         Route::get('grid/members', [GridController::class, 'members'])->name('grid.members');
         Route::get('grid/members/{wallet}', [GridController::class, 'member'])->where('wallet', '0x[0-9a-fA-F]{40}')->name('grid.member');
+        Route::get('grid/map', [GridController::class, 'map'])->name('grid.map');
         Route::get('grid/ledger', [GridController::class, 'ledger'])->name('grid.ledger');
         Route::get('grid/ledger/export', [GridController::class, 'export'])->name('grid.export');
         Route::get('grid/plan', [GridController::class, 'plan'])->name('grid.plan');
+        Route::get('grid/rounds', [GridRoundsController::class, 'index'])->name('grid.rounds');
+        Route::get('grid/rounds/{round}', [GridRoundsController::class, 'show'])->whereNumber('round')->name('grid.round');
+        Route::get('grid/rounds/{round}/export', [GridRoundsController::class, 'export'])->whereNumber('round')->name('grid.round.export');
 
         Route::middleware('admin.role:admin')->group(function () {
             Route::post('sales/sync', [SalesController::class, 'sync'])->name('sales.sync');
@@ -56,6 +61,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('tx', [TxController::class, 'store'])->name('tx.store');
             Route::post('tx/{log}/check', [TxController::class, 'check'])->whereNumber('log')->name('tx.check');
             Route::post('grid/plan', [GridController::class, 'planStore'])->name('grid.plan.store');
+            Route::post('grid/rounds', [GridRoundsController::class, 'build'])->name('grid.rounds.build');
+            Route::post('grid/rounds/{round}/discard', [GridRoundsController::class, 'discard'])->whereNumber('round')->name('grid.round.discard');
             Route::post('grid/members/{wallet}/hold', [GridController::class, 'hold'])->where('wallet', '0x[0-9a-fA-F]{40}')->name('grid.hold');
             Route::post('grid/members/{wallet}/unhold', [GridController::class, 'unhold'])->where('wallet', '0x[0-9a-fA-F]{40}')->name('grid.unhold');
         });

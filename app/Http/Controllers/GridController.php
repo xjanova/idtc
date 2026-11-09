@@ -9,6 +9,7 @@ use App\Services\Chain\Address;
 use App\Services\Grid\GridBinder;
 use App\Services\Grid\GridLedger;
 use App\Services\Grid\GridPlan;
+use App\Services\Grid\GridRounds;
 use App\Support\Idtc;
 use App\Support\SiteLocale;
 use Illuminate\Contracts\View\View;
@@ -137,7 +138,7 @@ class GridController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function me(Request $request, GridLedger $ledger, GridBinder $binder): JsonResponse
+    public function me(Request $request, GridLedger $ledger, GridBinder $binder, GridRounds $rounds): JsonResponse
     {
         $this->access($request) ?? abort(404);
         $address = $request->session()->get(self::SESSION);
@@ -189,6 +190,8 @@ class GridController extends Controller
         };
 
         $referrer = $n['referrer'] ?? null;
+        // รางวัลในรอบที่ประกาศบนเชนแล้ว + proof — กดรับเองด้วยกระเป๋า (สถานะรับแล้วอ่านสดจากเชน)
+        $claims = $rounds->claimsFor($address);
 
         return response()->json([
             'address' => Address::checksum($address),
@@ -211,6 +214,14 @@ class GridController extends Controller
                 'mine' => $mine,
             ],
             'hold_days' => $plan['hold_days'],
+            'claims' => [
+                'contract' => $claims['contract'] ? Address::checksum($claims['contract']) : null,
+                'error' => $claims['error'] !== null,
+                'items' => array_map(fn ($c) => [
+                    'round' => $c['round'], 'kind' => $c['kind'], 'amount' => $c['amount'], 'idtc' => $c['idtc'],
+                    'unlock_at' => $c['unlock_at'], 'claimed' => $c['claimed'], 'proof' => $c['proof'],
+                ], $claims['items']),
+            ],
         ])->header('Cache-Control', 'no-store, private');
     }
 

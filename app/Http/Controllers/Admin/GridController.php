@@ -30,6 +30,7 @@ class GridController extends Controller
         GridLedger::HELD => 'พักไว้ (ตรวจโกง)',
         GridLedger::RANK => 'ระดับไม่ถึง คืนงบ',
         GridLedger::NONE => 'ไม่มีสายบน คืนงบ',
+        GridLedger::SOLD => 'ขาย/โอนออกก่อนครบ คืนงบ',
     ];
 
     public const RANKS = ['none' => 'ยังไม่ซื้อ', 'spark' => 'สปาร์ก', 'cell' => 'เซลล์', 'grid' => 'กริด', 'core' => 'คอร์'];
@@ -91,6 +92,27 @@ class GridController extends Controller
             'rings' => $book->rings($wallet, 3, 100),
             'rewards' => $book->rewardsTo($wallet, 200),
             'purchases' => Purchase::query()->where('buyer', $wallet)->orderByDesc('block_time')->limit(100)->get(),
+        ]);
+    }
+
+    /** ผังสายงาน (canvas) — ทั้งระบบ หรือเริ่มจากกระเป๋าที่เลือก */
+    public function map(Request $request): View
+    {
+        $book = $this->ledger->book();
+        $root = strtolower(trim((string) $request->query('root', '')));
+        if ($root !== '' && (! Address::isValid($root) || $book->node($root) === null)) {
+            abort(404);
+        }
+        $depth = min(8, max(1, (int) $request->query('depth', 6)));
+        $root = $root !== '' ? $root : null;
+
+        return view('admin.grid.map', [
+            'title' => 'ผังสายงาน Grid',
+            'book' => $book,
+            'root' => $root,
+            'depth' => $depth,
+            'slice' => $book->slice($root, $depth, 2500),
+            'upline' => $root !== null ? array_reverse($book->upline($root, 12)) : [],
         ]);
     }
 

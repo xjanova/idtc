@@ -166,7 +166,7 @@ return [
     ],
 
     'grid' => [
-        'status' => ['ready' => 'Hold done', 'wait' => 'Holding', 'held' => 'On hold', 'rank' => 'Rank not reached (returned)', 'none' => 'No upline (returned)'],
+        'status' => ['ready' => 'Hold done', 'wait' => 'Holding', 'held' => 'On hold', 'rank' => 'Rank not reached (returned)', 'none' => 'No upline (returned)', 'sold' => 'Sold or moved before the hold ended (returned)'],
         'kind_ring' => 'Ring :n',
         'kind_buyer' => 'Buyer share',
         'need_own' => 'Own purchases :have / :need USDT',
@@ -179,5 +179,22 @@ return [
         'phase' => ['connect' => 'Open your wallet to connect…', 'sign' => 'Sign the message in your wallet (no gas)…', 'check' => 'Checking signature…'],
         'share_text' => 'Buy the IDTC presale through my link',
         'ends' => 'Pool closes in :d d :h h',
+        'claim' => [
+            'connect' => 'Open your wallet to claim…',
+            'check' => 'Checking with the reward contract…',
+            'sign' => 'Confirm the transaction in your wallet (gas 0)…',
+            'pending' => 'Sent, waiting for on-chain confirmation…',
+            'done' => 'Claimed :n IDTC — the tokens are in your wallet',
+            'timeout' => 'Confirmation is taking too long — check the explorer, then refresh the page',
+            'other_account' => 'The selected wallet is not the one you signed in with — switch to :a and try again',
+            'err' => [
+                'AlreadyClaimed' => 'This round was already claimed',
+                'NotUnlocked' => 'This round is not unlocked yet',
+                'InvalidProof' => 'The reward data does not match the on-chain round — please contact the team',
+                'RoundRevokedError' => 'This round was cancelled; the amount returns to the next round',
+                'EnforcedPause' => 'Claiming is paused by the team for now; please try again later',
+                'UnknownRound' => 'This round is not on-chain yet; refresh the page and try again',
+            ],
+        ],
     ],
 ];

@@ -122,4 +122,64 @@ final class GridBook
 
         return $out;
     }
+
+    /**
+     * สายงานสำหรับผัง: ไล่ทีละวงจาก $root (null = ทั้งระบบ: กระเป๋าที่ไม่มีผู้แนะนำเป็นวง 1)
+     * ไม่เกิน $depth วงและ $max กระเป๋า — กระเป๋าที่สายล่างถูกตัด บอกจำนวนที่ซ่อนไว้ใน fold
+     *
+     * node = [wallet, parent|null, วง, rank, own_usdt, team_usdt, team_count, held, fold]
+     *
+     * @return array{root: string|null, nodes: list<array{0: string, 1: string|null, 2: int, 3: int, 4: float, 5: float, 6: int, 7: bool, 8: int}>, total: int, shown: int}
+     */
+    public function slice(?string $root, int $depth = 6, int $max = 2500): array
+    {
+        $root = $root !== null ? strtolower($root) : null;
+        if ($root !== null) {
+            $front = $this->nodes[$root]['children'] ?? [];
+            $total = (int) ($this->nodes[$root]['team_count'] ?? 0);
+        } else {
+            $front = [];
+            $total = 0;
+            foreach ($this->nodes as $w => $n) {
+                if ($n['referrer'] === null) {
+                    $front[] = $w;
+                    $total += 1 + $n['team_count'];
+                }
+            }
+            // ทีมใหญ่ก่อน — ถ้าถูกตัด ส่วนที่หายเป็นกระเป๋าเดี่ยว ๆ
+            usort($front, fn ($a, $b) => $this->nodes[$b]['team_count'] <=> $this->nodes[$a]['team_count'] ?: strcmp($a, $b));
+        }
+
+        $out = [];
+        $index = [];
+        for ($d = 1; $d <= $depth && $front !== []; $d++) {
+            $next = [];
+            foreach ($front as $w) {
+                $n = $this->nodes[$w];
+                $parent = $d === 1 ? null : $n['referrer'];
+                if (count($out) >= $max) {
+                    if ($parent !== null && isset($index[$parent])) {
+                        $out[$index[$parent]][8] += 1 + $n['team_count'];
+                    }
+
+                    continue;
+                }
+                $index[$w] = count($out);
+                $out[] = [$w, $parent, $d, (int) $n['rank'], round((float) $n['own_usdt'], 2), round((float) $n['team_usdt'], 2), (int) $n['team_count'], (bool) $n['held'], 0];
+                foreach ($n['children'] as $c) {
+                    $next[] = $c;
+                }
+            }
+            $front = $next;
+        }
+        // วงสุดท้ายที่แสดง: สายล่างที่ลึกกว่านั้นพับไว้
+        foreach ($front as $w) {
+            $p = $this->nodes[$w]['referrer'];
+            if ($p !== null && isset($index[$p])) {
+                $out[$index[$p]][8] += 1 + $this->nodes[$w]['team_count'];
+            }
+        }
+
+        return ['root' => $root, 'nodes' => $out, 'total' => $total, 'shown' => count($out)];
+    }
 }

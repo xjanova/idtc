@@ -47,6 +47,8 @@ class AuditLog extends Model
         'grid.plan' => 'แก้แผนรางวัล Grid',
         'grid.hold' => 'พักรางวัล Grid ของกระเป๋า',
         'grid.unhold' => 'ปลดการพักรางวัล Grid',
+        'grid.round.build' => 'สร้างรอบจ่ายรางวัล Grid',
+        'grid.round.discard' => 'ทิ้งรอบจ่ายรางวัล Grid ที่ยังไม่ประกาศ',
     ];
 
     protected $guarded = ['id'];

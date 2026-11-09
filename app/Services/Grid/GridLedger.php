@@ -5,9 +5,11 @@ namespace App\Services\Grid;
 use App\Models\GridMember;
 use App\Models\GridPlanVersion;
 use App\Models\Purchase;
+use App\Support\Idtc;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * คำนวณรางวัล IDTC Grid จากยอดซื้อจริง (ตาราง purchases) และการผูกผู้แนะนำ (grid_members)
@@ -17,6 +19,8 @@ use Illuminate\Support\Facades\Cache;
  *  - วง L จ่ายเมื่อสายบนมีระดับ >= L (สปาร์กปลดวง 1 · เซลล์วง 2 · กริดวง 3) · ผู้ซื้อที่มาจากลิงก์ได้ส่วนผู้ซื้อ
  *  - อัตราตามสัปดาห์ขายของการซื้อนั้น (แผนเวอร์ชันที่มีผลสัปดาห์นั้น) · วง 1 ได้โบนัสขั้นบันไดช่วงเปิดตัว
  *  - รางวัลนับเมื่อผู้ซื้อถือครบ hold_days (ก่อนหน้านั้น = รอ) · การซื้อก่อนผูกผู้แนะนำไม่นับให้สายบน
+ *  - ขาย/โอนออกก่อนครบระยะ (HoldCheck จาก event Transfer) → ส่วนที่ออกไปไม่นับรางวัล คืนเข้างบ (sold)
+ *    และไม่นับเป็นยอดซื้อของตัวเอง/ยอดทีม · ตั้งสัญญาเหรียญแล้ว = พร้อมจ่ายเมื่อดึงการโอนครบถึงวันครบระยะเท่านั้น
  *  - Sprint: กองรายสัปดาห์ = sprint × IDTC ที่ขายสัปดาห์นั้น แบ่งให้ระดับกริดขึ้นไปตามยอดทีมสัปดาห์นั้น
  *    (คอร์ ×2) คนเดียวไม่เกิน sprint_cap ของกอง ส่วนเกินแบ่งให้คนอื่น ที่แจกไม่หมดคืนเข้างบ
  *  - ระดับคิดจากยอด ณ ตอนคำนวณ · ตัวเลขทั้งหมดเป็นประมาณการจนกว่าจะสร้างรอบจ่าย (ช่วงถัดไป)
@@ -33,9 +37,11 @@ final class GridLedger
 
     public const NONE = 'none';     // ไม่มีสายบนวงนี้ → คืนงบ
 
+    public const SOLD = 'sold';     // ผู้ซื้อขาย/โอนออกก่อนครบระยะถือ → คืนงบ
+
     public const RANKS = ['none', 'spark', 'cell', 'grid', 'core'];
 
-    public function __construct(protected GridPlan $plans) {}
+    public function __construct(protected GridPlan $plans, protected HoldCheck $holds) {}
 
     /** คำนวณ (แคช 60 วินาที ตามลายนิ้วมือข้อมูล) */
     public function book(?CarbonInterface $now = null, bool $fresh = false): GridBook
@@ -48,6 +54,7 @@ final class GridLedger
             Purchase::query()->count(), (int) Purchase::query()->max('id'),
             GridMember::query()->count(), (string) GridMember::query()->max('updated_at'),
             GridPlanVersion::query()->count(), (string) GridPlanVersion::query()->max('updated_at'),
+            DB::table('token_transfers')->count(), (int) DB::table('token_transfers')->max('id'), (string) $this->holds->coveredUntil(), (string) Idtc::contract('token'),
             intdiv($now->getTimestamp(), 60),
         ]);
 
@@ -69,7 +76,7 @@ final class GridLedger
         $nodes = [];
         $blank = fn (string $w) => [
             'wallet' => $w, 'referrer' => null, 'bound_at' => null, 'member' => false, 'held' => false,
-            'own_usdt' => 0.0, 'own_idtc' => 0.0, 'buys' => 0, 'first_at' => null,
+            'own_usdt' => 0.0, 'own_idtc' => 0.0, 'bought_usdt' => 0.0, 'cut_idtc' => 0.0, 'gap' => false, 'buys' => 0, 'first_at' => null,
             'children' => [], 'directs' => 0, 'team_usdt' => 0.0, 'team_count' => 0, 'rank' => 0, 'depth' => 0,
             'week_team' => [], 'ready' => 0.0, 'wait' => 0.0, 'held_amt' => 0.0, 'sprint' => 0.0,
         ];
@@ -86,12 +93,27 @@ final class GridLedger
         }
 
         $purchases = Purchase::query()->orderBy('block_time')->orderBy('id')->toBase()
-            ->get(['id', 'tx_hash', 'log_index', 'buyer', 'pay_usdt', 'tokens_idtc', 'block_time']);
+            ->get(['id', 'tx_hash', 'log_index', 'buyer', 'pay_usdt', 'tokens_idtc', 'block_number', 'block_time']);
+
+        // ---- ถือครบจริงไหม (event Transfer) ----
+        $hold = $this->holds->evaluate($purchases->map(fn ($p) => [
+            'id' => (int) $p->id, 'buyer' => strtolower($p->buyer), 'idtc' => (float) $p->tokens_idtc,
+            'block' => (int) $p->block_number, 'log' => (int) $p->log_index,
+            'at' => $p->block_time ? CarbonImmutable::parse($p->block_time)->getTimestamp() : $nowTs,
+        ])->all(), $holdSec);
+        $kept = fn ($p): float => (float) ($hold['lots'][(int) $p->id]['kept'] ?? 1.0);
+        // ครบระยะแล้ว และ (ไม่ได้เปิดตรวจ หรือ ดึงการโอนครบถึงวันครบระยะแล้ว)
+        $settled = fn (int $until): bool => $until <= $nowTs && (! $hold['enabled'] || ($hold['covered'] !== null && $until <= $hold['covered']));
+
         foreach ($purchases as $p) {
             $w = strtolower($p->buyer);
             $nodes[$w] ??= $blank($w);
-            $nodes[$w]['own_usdt'] += (float) $p->pay_usdt;
-            $nodes[$w]['own_idtc'] += (float) $p->tokens_idtc;
+            $f = $kept($p);
+            $nodes[$w]['own_usdt'] += (float) $p->pay_usdt * $f;
+            $nodes[$w]['own_idtc'] += (float) $p->tokens_idtc * $f;
+            $nodes[$w]['bought_usdt'] += (float) $p->pay_usdt;
+            $nodes[$w]['cut_idtc'] += (float) $p->tokens_idtc * (1 - $f);
+            $nodes[$w]['gap'] = isset($hold['gaps'][$w]);
             $nodes[$w]['buys']++;
             $ts = $p->block_time ? CarbonImmutable::parse($p->block_time)->getTimestamp() : $nowTs;
             $nodes[$w]['first_at'] ??= $ts;
@@ -130,7 +152,7 @@ final class GridLedger
         foreach ($purchases as $p) {
             $w = strtolower($p->buyer);
             $k = GridPlan::purchaseWeek($p->block_time ? CarbonImmutable::parse($p->block_time)->getTimestamp() : $nowTs);
-            $ownWeek[$w][$k] = ($ownWeek[$w][$k] ?? 0) + (float) $p->pay_usdt;
+            $ownWeek[$w][$k] = ($ownWeek[$w][$k] ?? 0) + (float) $p->pay_usdt * $kept($p);
         }
 
         $order = array_keys($nodes);
@@ -165,13 +187,13 @@ final class GridLedger
         unset($subWeek);
 
         // ---- events ----
-        $totals = [self::READY => 0.0, self::WAIT => 0.0, self::HELD => 0.0, self::RANK => 0.0, self::NONE => 0.0];
+        $totals = [self::READY => 0.0, self::WAIT => 0.0, self::HELD => 0.0, self::RANK => 0.0, self::NONE => 0.0, self::SOLD => 0.0];
         $weeks = [];
         $events = [];
         $maxWeek = max($nowWeek, 0);
         $weekRow = fn () => [
             'usdt' => 0.0, 'idtc' => 0.0, 'buys' => 0, 'first' => 0, 'ring' => [1 => 0.0, 2 => 0.0, 3 => 0.0], 'buyer' => 0.0,
-            'status' => [self::READY => 0.0, self::WAIT => 0.0, self::HELD => 0.0, self::RANK => 0.0, self::NONE => 0.0],
+            'status' => [self::READY => 0.0, self::WAIT => 0.0, self::HELD => 0.0, self::RANK => 0.0, self::NONE => 0.0, self::SOLD => 0.0],
             'sprint_pool' => 0.0, 'sprint_paid' => 0.0, 'sprint_status' => self::WAIT,
         ];
         $seen = [];
@@ -192,7 +214,8 @@ final class GridLedger
                 $seen[$buyer] = true;
                 $w['first']++;
             }
-            $confirmed = $ts + $holdSec <= $nowTs;
+            $confirmed = $settled($ts + $holdSec);
+            $f = $kept($p);
             $bn = $nodes[$buyer];
             // ผูกหลังซื้อ (ตัวดึงยอดช้ากว่า) → การซื้อนี้ไม่นับให้สายบน
             $linked = $bn['referrer'] !== null && $bn['bound_at'] !== null && $bn['bound_at'] <= $ts;
@@ -208,24 +231,29 @@ final class GridLedger
                     ! $confirmed => self::WAIT,
                     default => self::READY,
                 };
-                $rewards[] = ['kind' => 'ring', 'ring' => $L, 'to' => $a, 'rate' => $rate, 'amount' => $amt, 'status' => $status];
-                $this->tally($nodes, $totals, $w, $a, $amt, $status);
-                if ($status !== self::RANK && $status !== self::NONE) {
-                    $w['ring'][$L] += $amt;
+                foreach ($this->split($amt, $f, $status) as [$part, $st]) {
+                    $rewards[] = ['kind' => 'ring', 'ring' => $L, 'to' => $a, 'rate' => $rate, 'amount' => $part, 'status' => $st];
+                    $this->tally($nodes, $totals, $w, $a, $part, $st);
+                    if ($st !== self::RANK && $st !== self::NONE && $st !== self::SOLD) {
+                        $w['ring'][$L] += $part;
+                    }
                 }
                 $a = $a === null ? null : $nodes[$a]['referrer'];
             }
             $bAmt = $idtc * $plan['buyer'];
             $bStatus = ! $linked ? self::NONE : ($bn['held'] ? self::HELD : ($confirmed ? self::READY : self::WAIT));
-            $rewards[] = ['kind' => 'buyer', 'ring' => 0, 'to' => $linked ? $buyer : null, 'rate' => $plan['buyer'], 'amount' => $bAmt, 'status' => $bStatus];
-            $this->tally($nodes, $totals, $w, $linked ? $buyer : null, $bAmt, $bStatus);
-            if ($bStatus !== self::NONE) {
-                $w['buyer'] += $bAmt;
+            foreach ($this->split($bAmt, $f, $bStatus) as [$part, $st]) {
+                $rewards[] = ['kind' => 'buyer', 'ring' => 0, 'to' => $linked ? $buyer : null, 'rate' => $plan['buyer'], 'amount' => $part, 'status' => $st];
+                $this->tally($nodes, $totals, $w, $linked ? $buyer : null, $part, $st);
+                if ($st !== self::NONE && $st !== self::SOLD) {
+                    $w['buyer'] += $part;
+                }
             }
             unset($w);
             $events[] = [
                 'id' => (int) $p->id, 'tx' => $p->tx_hash, 'log' => (int) $p->log_index, 'buyer' => $buyer, 'at' => $ts,
                 'week' => $k, 'usdt' => $usdt, 'idtc' => $idtc, 'confirm_at' => $ts + $holdSec, 'linked' => $linked, 'rewards' => $rewards,
+                'kept' => $f, 'cut_at' => $hold['lots'][(int) $p->id]['cut_at'] ?? null,
             ];
         }
 
@@ -249,7 +277,7 @@ final class GridLedger
             $rows = self::capSplit($pool, $rows, $cap);
             usort($rows, fn ($x, $y) => $y['share'] <=> $x['share']);
             $weekEnd = GridPlan::weekStart($k + 1)->getTimestamp();
-            $state = $nowTs < $weekEnd ? 'live' : ($weekEnd + $holdSec <= $nowTs ? self::READY : self::WAIT);
+            $state = $nowTs < $weekEnd ? 'live' : ($settled($weekEnd + $holdSec) ? self::READY : self::WAIT);
             $given = 0.0;
             foreach ($rows as $r) {
                 $status = $nodes[$r['wallet']]['held'] ? self::HELD : ($state === self::READY ? self::READY : self::WAIT);
@@ -276,8 +304,9 @@ final class GridLedger
             'ready' => $totals[self::READY],
             'wait' => $totals[self::WAIT],
             'held' => $totals[self::HELD],
-            'returned' => $totals[self::RANK] + $totals[self::NONE] + $sprintReturned,
+            'returned' => $totals[self::RANK] + $totals[self::NONE] + $totals[self::SOLD] + $sprintReturned,
             'returned_rank' => $totals[self::RANK],
+            'returned_sold' => $totals[self::SOLD],
             'returned_none' => $totals[self::NONE],
             'returned_sprint' => $sprintReturned,
             'committed' => $committed,
@@ -290,6 +319,7 @@ final class GridLedger
             'max_rate' => $maxRate,
             'worst' => $worst,
             'ranks' => array_count_values(array_map(fn ($n) => self::RANKS[$n['rank']], $nodes)),
+            'hold' => ['enabled' => $hold['enabled'], 'covered' => $hold['covered'], 'gaps' => array_keys($hold['gaps'])],
         ], $nowWeek, $nowTs);
     }
 
@@ -331,6 +361,26 @@ final class GridLedger
         }
 
         return $rows;
+    }
+
+    /**
+     * แยกรางวัลเป็นส่วนที่ยังนับ (ตามสถานะเดิม) กับส่วนที่ผู้ซื้อขาย/โอนออกไปแล้ว (sold)
+     * สถานะที่คืนงบอยู่แล้ว (rank/none) ไม่ต้องแยก
+     *
+     * @return list<array{0: float, 1: string}>
+     */
+    private function split(float $amt, float $kept, string $status): array
+    {
+        if ($kept >= 1.0 || $status === self::RANK || $status === self::NONE) {
+            return [[$amt, $status]];
+        }
+        $out = [];
+        if ($kept > 0) {
+            $out[] = [$amt * $kept, $status];
+        }
+        $out[] = [$amt * (1 - $kept), self::SOLD];
+
+        return $out;
     }
 
     /** @param array<string, array<string, mixed>> $nodes */

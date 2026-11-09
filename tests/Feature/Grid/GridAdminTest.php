@@ -5,12 +5,15 @@ namespace Tests\Feature\Grid;
 use App\Models\AuditLog;
 use App\Models\GridMember;
 use App\Models\GridPlanVersion;
+use App\Models\IndexerState;
 use App\Models\Purchase;
 use App\Services\Chain\Address;
+use App\Services\Grid\GridLedger;
 use App\Services\Grid\GridPlan;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\InteractsWithAdmin;
 use Tests\TestCase;
 
@@ -80,6 +83,23 @@ class GridAdminTest extends TestCase
         $this->post('/admin/grid/toggle', ['enabled' => 1])->assertForbidden();
     }
 
+    public function test_overview_says_whether_holding_is_checked_on_chain(): void
+    {
+        $this->loginAs(self::VIEWER, 'viewer');
+        config(['idtc.contracts.token' => null]);
+        $this->get('/admin/grid')->assertOk()->assertSee('ยังไม่ตรวจการถือจริง');
+
+        config(['idtc.contracts.token' => '0x7777777777777777777777777777777777777777']);
+        $this->get('/admin/grid')->assertOk()->assertSee('รอดึงการโอนเหรียญ');
+
+        IndexerState::query()->create(['key' => 'transfers', 'contract' => '0x7777777777777777777777777777777777777777', 'last_block' => 9, 'last_block_time' => '2026-12-16 04:00:00']);
+        // B โอนออกมากกว่าที่เห็นว่าเข้า → ประวัติไม่ครบ ไม่ตัดรางวัล แต่แจ้งแอดมิน
+        DB::table('token_transfers')->insert(['contract' => '0x7777777777777777777777777777777777777777', 'tx_hash' => '0x'.str_repeat('9', 64), 'log_index' => 0,
+            'from' => self::B, 'to' => self::A, 'value' => '0', 'amount' => 1e12, 'block_number' => 5, 'block_time' => '2026-12-03 00:00:00']);
+        $this->get('/admin/grid')->assertOk()->assertSee('ตรวจการถือจากการโอนบนเชน')->assertSee('ประวัติการโอนก่อนบล็อกเริ่มดึงไม่ครบ');
+        $this->get('/admin/grid/members/'.self::B)->assertOk()->assertSee('ประวัติการโอนไม่ครบ');
+    }
+
     public function test_only_the_owner_turns_the_grid_on_and_off(): void
     {
         $this->loginAs(self::ADMIN, 'admin')->post('/admin/grid/toggle', ['enabled' => 1])->assertForbidden();
@@ -145,5 +165,38 @@ class GridAdminTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBFtime_utc,week,tx_hash", $csv);
         $this->assertStringContainsString(self::B, $csv);
         $this->assertStringContainsString(',ring,1,'.self::A.',0.070000,', $csv);
+    }
+
+    public function test_network_map_slices_the_line_and_folds_what_it_cuts(): void
+    {
+        // สาย A → B → C → D
+        $c = '0xcccccccccccccccccccccccccccccccccccccccc';
+        $d = '0xdddddddddddddddddddddddddddddddddddddddd';
+        GridMember::query()->create(['wallet' => $c, 'referrer' => self::B, 'bound_at' => '2026-12-03 00:00:00']);
+        GridMember::query()->create(['wallet' => $d, 'referrer' => $c, 'bound_at' => '2026-12-04 00:00:00']);
+        $book = app(GridLedger::class)->book(null, true);
+
+        $all = $book->slice(null, 6);
+        $this->assertSame(4, $all['total']);
+        $this->assertSame([self::A, null, 1], array_slice($all['nodes'][0], 0, 3));
+        $this->assertSame([self::B, self::A, 2], array_slice($all['nodes'][1], 0, 3));
+
+        // ลึก 2 วงจาก A: เห็น B, C · D พับไว้ที่ C
+        $two = $book->slice(self::A, 2);
+        $this->assertSame([self::B, $c], array_column($two['nodes'], 0));
+        $this->assertSame(1, $two['nodes'][1][8]);
+        $this->assertSame(3, $two['total']);
+
+        // จำกัดจำนวน: เห็นแค่ B · ที่เหลือพับไว้ที่ B
+        $cap = $book->slice(self::A, 6, 1);
+        $this->assertSame([self::B], array_column($cap['nodes'], 0));
+        $this->assertSame(2, $cap['nodes'][0][8]);
+
+        $this->loginAs(self::VIEWER, 'viewer');
+        $this->get('/admin/grid/map')->assertOk()->assertSee('ทั้งระบบ')->assertSee('data-map', false)->assertSee('แสดง 4 จาก 4 กระเป๋า');
+        $this->get('/admin/grid/map?root='.self::B.'&depth=1')->assertOk()->assertSee('แสดง 1 จาก 2 กระเป๋า');
+        $this->get('/admin/grid/map?root='.$d)->assertOk()->assertSee('กระเป๋านี้ยังไม่มีสายล่าง');
+        $this->get('/admin/grid/map?root=0x'.str_repeat('e', 40))->assertNotFound();
+        $this->get('/admin/grid/map?root=nope')->assertNotFound();
     }
 }
