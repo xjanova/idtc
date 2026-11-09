@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
  * @property string $key
  * @property string|null $contract
  * @property int|null $last_block
+ * @property Carbon|null $last_block_time
  * @property int|null $head_block
  * @property string|null $last_error
  * @property Carbon|null $last_run_at
@@ -33,6 +34,7 @@ class IndexerState extends Model
         return [
             'last_block' => 'integer',
             'head_block' => 'integer',
+            'last_block_time' => 'datetime',
             'last_run_at' => 'datetime',
             'last_success_at' => 'datetime',
         ];

@@ -101,7 +101,7 @@ return [
         'sprint_text' => 'Each week a pool of :sprint% of the IDTC sold that week is split among Grid rank and above by that week\'s team volume (Core counts double). Nobody receives more than :cap% of a pool.',
         'rules_title' => 'Rules that prevent overpaying',
         'rule_budget' => 'The whole reward budget is :budget IDTC, set aside from the operations and marketing allocation — never buyers\' money — and the plan cannot be changed so that its worst case exceeds the budget.',
-        'rule_hold' => 'A purchase counts once the buyer has held the tokens for :days days.',
+        'rule_hold' => 'A purchase counts once the buyer has held the tokens for :days days. Any part sold or moved out before then earns no reward (checked from on-chain transfers).',
         'rule_nocomp' => 'A ring with nobody in it, or whose upline has not reached the rank, does not pass up further; that share returns to the budget.',
         'rule_bind' => 'An inviter can be bound only once, before the first purchase. You cannot invite yourself.',
         'rule_rate' => 'Each purchase uses the rates of the week it was made. A changed plan takes effect the following week, never retroactively.',

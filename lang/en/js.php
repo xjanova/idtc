@@ -166,7 +166,7 @@ return [
     ],
 
     'grid' => [
-        'status' => ['ready' => 'Hold done', 'wait' => 'Holding', 'held' => 'On hold', 'rank' => 'Rank not reached (returned)', 'none' => 'No upline (returned)'],
+        'status' => ['ready' => 'Hold done', 'wait' => 'Holding', 'held' => 'On hold', 'rank' => 'Rank not reached (returned)', 'none' => 'No upline (returned)', 'sold' => 'Sold or moved before the hold ended (returned)'],
         'kind_ring' => 'Ring :n',
         'kind_buyer' => 'Buyer share',
         'need_own' => 'Own purchases :have / :need USDT',

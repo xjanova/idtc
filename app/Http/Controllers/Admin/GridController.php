@@ -30,6 +30,7 @@ class GridController extends Controller
         GridLedger::HELD => 'พักไว้ (ตรวจโกง)',
         GridLedger::RANK => 'ระดับไม่ถึง คืนงบ',
         GridLedger::NONE => 'ไม่มีสายบน คืนงบ',
+        GridLedger::SOLD => 'ขาย/โอนออกก่อนครบ คืนงบ',
     ];
 
     public const RANKS = ['none' => 'ยังไม่ซื้อ', 'spark' => 'สปาร์ก', 'cell' => 'เซลล์', 'grid' => 'กริด', 'core' => 'คอร์'];

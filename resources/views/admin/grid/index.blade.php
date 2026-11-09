@@ -2,6 +2,7 @@
 @php
     use App\Http\Controllers\Admin\GridController as G;
     use App\Services\Grid\GridPlan;
+    use App\Support\AdminFormat as F;
     $t = $book->totals;
     $big = fn ($v) => number_format((float) $v);
     $pct = fn ($v) => rtrim(rtrim(number_format($v * 100, 2), '0'), '.');
@@ -56,8 +57,19 @@
                 <div class="track"><i style="width:{{ $usedPct }}%"></i><b style="left:{{ $worstPct }}%" title="ภาระสูงสุดถ้าขายหมด"></b></div>
                 <div class="row"><span>ผูกพันแล้ว (รอ+ครบ+พัก) <b class="mono">{{ $big($t['committed']) }}</b></span><span>งบ <b class="mono">{{ $big($t['budget']) }}</b> IDTC</span></div>
                 <div class="row"><span>ภาระสูงสุดถ้าขายหมด (อัตรารวมสูงสุด {{ $pct($t['max_rate']) }}%)</span><b class="mono" style="color:#f5c86b">{{ $big($t['worst']) }} · {{ number_format($t['worst'] / $budget * 100, 1) }}%</b></div>
-                <div class="row"><span>คืนเข้างบ (ไม่มีสาย {{ $big($t['returned_none']) }} · ระดับไม่ถึง {{ $big($t['returned_rank']) }} · Sprint แจกไม่หมด {{ $big($t['returned_sprint']) }})</span><b class="mono">{{ $big($t['returned']) }}</b></div>
+                <div class="row"><span>คืนเข้างบ (ไม่มีสาย {{ $big($t['returned_none']) }} · ระดับไม่ถึง {{ $big($t['returned_rank']) }} · ขาย/โอนออกก่อนครบ {{ $big($t['returned_sold'] ?? 0) }} · Sprint แจกไม่หมด {{ $big($t['returned_sprint']) }})</span><b class="mono">{{ $big($t['returned']) }}</b></div>
             </div>
+            @php $hold = $t['hold'] ?? ['enabled' => false, 'covered' => null, 'gaps' => []]; @endphp
+            @if (! $hold['enabled'])
+                <div class="flash warn" role="note" style="margin-top:12px"><b>ยังไม่ตรวจการถือจริง</b> — ยังไม่ได้ตั้งที่อยู่สัญญาเหรียญ IDTC ระบบนับระยะถือจากเวลาอย่างเดียว ไม่รู้ว่าผู้ซื้อขายออกไปแล้วหรือไม่ · ตั้งได้ที่ <a href="{{ route('admin.settings') }}">ตั้งค่า</a></div>
+            @elseif ($hold['covered'] === null)
+                <div class="flash warn" role="note" style="margin-top:12px"><b>รอดึงการโอนเหรียญ</b> — ยังไม่มีรางวัลใดพร้อมจ่ายจนกว่าระบบจะดึง event Transfer ของเหรียญถึงวันครบระยะถือ (งานตามเวลา idtc:index-sales ทุกนาที)</div>
+            @else
+                <div class="row" style="margin-top:12px"><span>ตรวจการถือจากการโอนบนเชน ดึงครบถึง</span><b class="mono">{{ F::dateTime($hold['covered']) }}</b></div>
+                @if ($hold['gaps'])
+                    <div class="flash warn" role="note">{{ number_format(count($hold['gaps'])) }} กระเป๋ามีประวัติการโอนก่อนบล็อกเริ่มดึงไม่ครบ (ยอดคำนวณติดลบ) — ระบบไม่ตัดรางวัลของกระเป๋าเหล่านี้ ตรวจเองในหน้าสมาชิก</div>
+                @endif
+            @endif
             @if ($t['worst'] > $t['budget'])
                 <div class="flash err" role="alert" style="margin-top:12px">ภาระสูงสุดเกินงบ — ลดอัตราในหน้า <a href="{{ route('admin.grid.plan') }}">แผนรางวัล</a> (แผนใหม่มีผลสัปดาห์ถัดไป)</div>
             @endif

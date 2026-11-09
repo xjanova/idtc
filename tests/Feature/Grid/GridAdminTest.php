@@ -5,12 +5,14 @@ namespace Tests\Feature\Grid;
 use App\Models\AuditLog;
 use App\Models\GridMember;
 use App\Models\GridPlanVersion;
+use App\Models\IndexerState;
 use App\Models\Purchase;
 use App\Services\Chain\Address;
 use App\Services\Grid\GridPlan;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\InteractsWithAdmin;
 use Tests\TestCase;
 
@@ -78,6 +80,23 @@ class GridAdminTest extends TestCase
         $this->post('/admin/grid/plan', $this->form())->assertForbidden();
         $this->post('/admin/grid/members/'.self::B.'/hold', ['reason' => 'ทดสอบพักรางวัล'])->assertForbidden();
         $this->post('/admin/grid/toggle', ['enabled' => 1])->assertForbidden();
+    }
+
+    public function test_overview_says_whether_holding_is_checked_on_chain(): void
+    {
+        $this->loginAs(self::VIEWER, 'viewer');
+        config(['idtc.contracts.token' => null]);
+        $this->get('/admin/grid')->assertOk()->assertSee('ยังไม่ตรวจการถือจริง');
+
+        config(['idtc.contracts.token' => '0x7777777777777777777777777777777777777777']);
+        $this->get('/admin/grid')->assertOk()->assertSee('รอดึงการโอนเหรียญ');
+
+        IndexerState::query()->create(['key' => 'transfers', 'contract' => '0x7777777777777777777777777777777777777777', 'last_block' => 9, 'last_block_time' => '2026-12-16 04:00:00']);
+        // B โอนออกมากกว่าที่เห็นว่าเข้า → ประวัติไม่ครบ ไม่ตัดรางวัล แต่แจ้งแอดมิน
+        DB::table('token_transfers')->insert(['contract' => '0x7777777777777777777777777777777777777777', 'tx_hash' => '0x'.str_repeat('9', 64), 'log_index' => 0,
+            'from' => self::B, 'to' => self::A, 'value' => '0', 'amount' => 1e12, 'block_number' => 5, 'block_time' => '2026-12-03 00:00:00']);
+        $this->get('/admin/grid')->assertOk()->assertSee('ตรวจการถือจากการโอนบนเชน')->assertSee('ประวัติการโอนก่อนบล็อกเริ่มดึงไม่ครบ');
+        $this->get('/admin/grid/members/'.self::B)->assertOk()->assertSee('ประวัติการโอนไม่ครบ');
     }
 
     public function test_only_the_owner_turns_the_grid_on_and_off(): void
