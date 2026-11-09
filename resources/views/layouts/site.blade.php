@@ -7,6 +7,10 @@
     $alternates = SiteLocale::alternates();
     $canonical = SiteLocale::page() !== null ? $alternates[$locale] : url()->current();
     $nav = ['home', 'presale', 'transparency', 'whitepaper', 'add-network'];
+    // IDTC Grid ขึ้นเมนูเมื่อเปิดจากหลังบ้านเท่านั้น
+    if (app(\App\Services\Grid\GridPlan::class)->enabled()) {
+        array_splice($nav, 2, 0, ['grid']);
+    }
     $langs = ['th' => 'TH', 'en' => 'EN'];
 @endphp
 <!doctype html>

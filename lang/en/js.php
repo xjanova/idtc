@@ -164,4 +164,20 @@ return [
         'unknown' => 'Check on explorer ↗',
         'none' => 'Awaiting deployment',
     ],
+
+    'grid' => [
+        'status' => ['ready' => 'Hold done', 'wait' => 'Holding', 'held' => 'On hold', 'rank' => 'Rank not reached (returned)', 'none' => 'No upline (returned)'],
+        'kind_ring' => 'Ring :n',
+        'kind_buyer' => 'Buyer share',
+        'need_own' => 'Own purchases :have / :need USDT',
+        'need_directs' => 'Direct friends :have / :need',
+        'need_team' => 'Team volume :have / :need USDT',
+        'copied' => 'Link copied',
+        'bound' => 'Inviter bound',
+        'signed_in' => 'Signed in',
+        'failed' => 'Could not load your data. Try again.',
+        'phase' => ['connect' => 'Open your wallet to connect…', 'sign' => 'Sign the message in your wallet (no gas)…', 'check' => 'Checking signature…'],
+        'share_text' => 'Buy the IDTC presale through my link',
+        'ends' => 'Pool closes in :d d :h h',
+    ],
 ];

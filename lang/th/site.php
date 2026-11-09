@@ -14,6 +14,7 @@ return [
         'presale' => 'Presale',
         'transparency' => 'ความโปร่งใส',
         'whitepaper' => 'ไวท์เปเปอร์',
+        'grid' => 'ชวนเพื่อน',
         'add-network' => 'เพิ่มเชน',
         'main' => 'เมนูหลัก',
         'mobile' => 'เมนูมือถือ',

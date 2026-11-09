@@ -43,6 +43,10 @@ class AuditLog extends Model
         'admins.role' => 'เปลี่ยนสิทธิ์ผู้ดูแล',
         'admins.remove' => 'ลบผู้ดูแล',
         'sales.sync' => 'ซิงก์ยอดขายจากเชน',
+        'grid.enabled' => 'เปิด/ปิด IDTC Grid',
+        'grid.plan' => 'แก้แผนรางวัล Grid',
+        'grid.hold' => 'พักรางวัล Grid ของกระเป๋า',
+        'grid.unhold' => 'ปลดการพักรางวัล Grid',
     ];
 
     protected $guarded = ['id'];

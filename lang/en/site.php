@@ -14,6 +14,7 @@ return [
         'presale' => 'Presale',
         'transparency' => 'Transparency',
         'whitepaper' => 'Whitepaper',
+        'grid' => 'Invite',
         'add-network' => 'Add network',
         'main' => 'Main menu',
         'mobile' => 'Mobile menu',
