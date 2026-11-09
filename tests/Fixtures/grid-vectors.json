@@ -1,0 +1,32 @@
+{
+  "note": "TEST-ONLY fixture: signed by a random throwaway key generated once with ethers; the key was not kept.",
+  "address": "0xbc27504440d4A5bC815709D4799579D5600aa17e",
+  "referrer": "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+  "issued_at": "2026-12-02T05:00:00Z",
+  "cases": {
+    "login_th": {
+      "nonce": "GridNonceLoginTh00000001",
+      "statement": "เข้าสู่ IDTC Grid",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0xbc27504440d4A5bC815709D4799579D5600aa17e\n\nเข้าสู่ IDTC Grid\n\nURI: http://localhost/grid\nVersion: 1\nChain ID: 4289\nNonce: GridNonceLoginTh00000001\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0xd565fe6fad47a63884e97441a4e244f51df2b54618248c87f1eadfd87a7086290954b7822809f237828412ba5c951307126957625f47b68a4a5a88722748d7e91b"
+    },
+    "login_en": {
+      "nonce": "GridNonceLoginEn00000001",
+      "statement": "Sign in to IDTC Grid",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0xbc27504440d4A5bC815709D4799579D5600aa17e\n\nSign in to IDTC Grid\n\nURI: http://localhost/grid\nVersion: 1\nChain ID: 4289\nNonce: GridNonceLoginEn00000001\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0x105bb7a8a7a22ee952797d3b7e6b3f4990addeb5a8547082921baef340d0ecfd4ade18c8042b67cbb03d41747def4d1a180b82eefcf222298bc1c1a10ac4f9c41b"
+    },
+    "bind_th": {
+      "nonce": "GridNonceBindTh000000001",
+      "statement": "ผูกกระเป๋านี้กับผู้ชวน IDTC Grid 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0xbc27504440d4A5bC815709D4799579D5600aa17e\n\nผูกกระเป๋านี้กับผู้ชวน IDTC Grid 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4\n\nURI: http://localhost/grid\nVersion: 1\nChain ID: 4289\nNonce: GridNonceBindTh000000001\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0x9a4cb2cf317deda866899a7c1d9247583842a3cd0a56289cf639a0b3af62663828c4e40ac017f7e45082b0038bf3bee38e3563d091e923259b763531eca559c21c"
+    },
+    "bind_th2": {
+      "nonce": "GridNonceBindTh000000002",
+      "statement": "ผูกกระเป๋านี้กับผู้ชวน IDTC Grid 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0xbc27504440d4A5bC815709D4799579D5600aa17e\n\nผูกกระเป๋านี้กับผู้ชวน IDTC Grid 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4\n\nURI: http://localhost/grid\nVersion: 1\nChain ID: 4289\nNonce: GridNonceBindTh000000002\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0x4bfa2e4ca2d94d8908ba330bfb9b9858a3a6015c0fe3c689708e748623ddef172b4889fe60b3fa033cf5d898cb5b5e7a890ecebb1f240b18c827e843e5cf8e1f1c"
+    }
+  }
+}

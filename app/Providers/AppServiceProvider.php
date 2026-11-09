@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureAdminRole;
 use App\Services\Admin\AdminRegistry;
 use App\Services\Auth\SiweAuth;
 use App\Services\Chain\RpcClient;
+use App\Services\Grid\GridPlan;
 use App\Support\Idtc;
 use App\Support\Settings;
 use App\Support\SiteLocale;
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RpcClient::class);
         $this->app->singleton(AdminRegistry::class);
         $this->app->singleton(SiweAuth::class);
+        $this->app->scoped(GridPlan::class);
     }
 
     public function boot(): void
@@ -50,6 +52,10 @@ class AppServiceProvider extends ServiceProvider
         // เข้าระบบหลังบ้าน: ขอ nonce/ส่งลายเซ็น ได้ 10 ครั้งต่อนาทีต่อ IP
         RateLimiter::for('admin-auth', fn (Request $request) => Limit::perMinute(10)->by('admin-auth|'.$request->ip())
             ->response(fn () => response()->json(['message' => 'ลองเข้าระบบบ่อยเกินไป รอสักหนึ่งนาทีแล้วลองใหม่'], 429)));
+
+        // IDTC Grid: ขอข้อความ/ส่งลายเซ็นของสมาชิก 20 ครั้งต่อนาทีต่อ IP (ข้อความตามภาษาของหน้า)
+        RateLimiter::for('grid-auth', fn (Request $request) => Limit::perMinute(20)->by('grid-auth|'.$request->ip())
+            ->response(fn () => response()->json(['message' => __('grid.err.throttle'), 'code' => 'throttle'], 429)));
 
         /** @var Router $router */
         $router = $this->app->make(Router::class);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GridController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,16 @@ $pages = function (): void {
     Route::get('/transparency', [PageController::class, 'transparency'])->name('transparency');
     Route::get('/whitepaper', [PageController::class, 'whitepaper'])->name('whitepaper');
     Route::get('/add-network', [PageController::class, 'addNetwork'])->name('add-network');
+
+    // IDTC Grid — ปิดอยู่ (หลังบ้าน) = 404 · API อยู่ใต้ภาษาของหน้า ข้อความตอบกลับจึงเป็นภาษาเดียวกับหน้า
+    Route::get('/grid', [GridController::class, 'page'])->name('grid');
+    Route::get('/r/{wallet}', [GridController::class, 'ref'])->where('wallet', '0x[0-9a-fA-F]{40}')->name('ref');
+    Route::get('/grid/me', [GridController::class, 'me'])->name('grid.me');
+    Route::post('/grid/logout', [GridController::class, 'logout'])->name('grid.logout');
+    Route::middleware('throttle:grid-auth')->group(function () {
+        Route::post('/grid/auth/nonce', [GridController::class, 'nonce'])->name('grid.nonce');
+        Route::post('/grid/auth/verify', [GridController::class, 'verify'])->name('grid.verify');
+    });
 };
 
 Route::middleware('site.locale:th')->group($pages);

@@ -22,17 +22,26 @@ class SiweAuth
 
     public const CLOCK_SKEW = 60;
 
-    public function issue(Request $request, string $address): SiweMessage
+    /** @var array<string, mixed> ข้อมูลเพิ่มที่ผูกกับ nonce ของข้อความที่เพิ่งตรวจผ่าน (เช่น ผู้แนะนำที่ขอผูก) */
+    public array $verifiedExtra = [];
+
+    /**
+     * @param  string  $path  ส่วนของเว็บที่ข้อความนี้ใช้เข้า (/admin = หลังบ้าน · /grid = สมาชิก Grid) — ตรวจคู่กันตอน verify
+     * @param  string|null  $statement  บรรทัดข้อความที่ผู้ใช้เห็นในกระเป๋า (ไม่ระบุ = ข้อความเข้าหลังบ้าน)
+     * @param  array<string, mixed>  $extra  เก็บคู่กับ nonce ฝั่งเซิร์ฟเวอร์ อ่านคืนได้จาก $verifiedExtra หลังตรวจผ่าน
+     */
+    public function issue(Request $request, string $address, string $path = '/admin', ?string $statement = null, array $extra = []): SiweMessage
     {
         $nonce = Str::random(24);
         $now = CarbonImmutable::now('UTC');
-        Cache::put($this->nonceKey($nonce), ['address' => strtolower($address)], self::NONCE_TTL);
+        $statement ??= SiweMessage::STATEMENT;
+        Cache::put($this->nonceKey($nonce), ['address' => strtolower($address), 'path' => $path, 'statement' => $statement, 'extra' => $extra], self::NONCE_TTL);
 
         return new SiweMessage(
             domain: $request->getHttpHost(),
             address: Address::checksum($address),
-            statement: SiweMessage::STATEMENT,
-            uri: $request->getSchemeAndHttpHost().'/admin',
+            statement: $statement,
+            uri: $request->getSchemeAndHttpHost().$path,
             version: '1',
             chainId: (int) config('idtc.chain.id'),
             nonce: $nonce,
@@ -46,7 +55,7 @@ class SiweAuth
      *
      * @throws SiweException
      */
-    public function verify(Request $request, string $text, string $signature): string
+    public function verify(Request $request, string $text, string $signature, string $path = '/admin'): string
     {
         $msg = SiweMessage::parse($text);
         if ($msg === null) {
@@ -64,13 +73,17 @@ class SiweAuth
         $uriHost = (string) parse_url($msg->uri, PHP_URL_HOST);
         $uriPort = parse_url($msg->uri, PHP_URL_PORT);
         $uriAuthority = $uriHost.($uriPort ? ':'.$uriPort : '');
+        $uriPath = (string) parse_url($msg->uri, PHP_URL_PATH);
+        if (($data['path'] ?? '/admin') !== $path || $uriPath !== $path) {
+            throw new SiweException('ข้อความนี้ออกให้ส่วนอื่นของเว็บ กดเข้าสู่ระบบใหม่', 'format');
+        }
         if (strcasecmp($msg->domain, $host) !== 0 || strcasecmp($uriAuthority, $host) !== 0) {
             throw new SiweException('ข้อความนี้ไม่ได้ออกให้เว็บนี้ (โดเมนไม่ตรง) อย่าเซ็นข้อความเข้าระบบจากเว็บอื่น', 'domain');
         }
         if ($msg->chainId !== (int) config('idtc.chain.id')) {
             throw new SiweException('ข้อความระบุเชนไม่ถูกต้อง ต้องเป็น TPIX Chain (4289)', 'chain');
         }
-        if ($msg->version !== '1' || $msg->statement !== SiweMessage::STATEMENT) {
+        if ($msg->version !== '1' || $msg->statement !== ($data['statement'] ?? SiweMessage::STATEMENT)) {
             throw new SiweException('ข้อความที่เซ็นไม่ใช่รูปแบบของหลังบ้าน IDTC กดเข้าสู่ระบบใหม่', 'format');
         }
         if (strtolower($msg->address) !== ($data['address'] ?? null)) {
@@ -94,6 +107,8 @@ class SiweAuth
         if ($signer === null || $signer !== strtolower($msg->address)) {
             throw new SiweException('ลายเซ็นไม่ถูกต้อง กดเข้าสู่ระบบใหม่', 'signature');
         }
+
+        $this->verifiedExtra = is_array($data['extra'] ?? null) ? $data['extra'] : [];
 
         return $signer;
     }
