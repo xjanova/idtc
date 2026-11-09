@@ -39,6 +39,12 @@ final class ChainActions
         'feeder.withdrawLeftoverQuote' => ['contract' => 'feeder', 'method' => 'withdrawLeftoverQuote(address)', 'label' => 'ถอน USDT ที่ค้างในสัญญาเติมพูล (หลังปลดล็อก)', 'guard' => 'owner', 'destructive' => true, 'params' => ['to' => 'address']],
         'feeder.transferOwnership' => ['contract' => 'feeder', 'method' => 'transferOwnership(address)', 'label' => 'เริ่มโอนสิทธิ์เจ้าของสัญญาเติมพูล', 'guard' => 'owner', 'destructive' => true, 'params' => ['newOwner' => 'address']],
         'feeder.acceptOwnership' => ['contract' => 'feeder', 'method' => 'acceptOwnership()', 'label' => 'รับสิทธิ์เจ้าของสัญญาเติมพูล', 'guard' => 'pendingOwner', 'destructive' => false, 'params' => []],
+        // GridRewards: ประกาศรอบจ่ายรางวัล Grid (รายชื่อสร้างที่หน้า Grid › รอบจ่าย) · เหรียญต้องโอนเข้าสัญญาก่อนประกาศ
+        'rewards.addRound' => ['contract' => 'rewards', 'method' => 'addRound(uint256,bytes32,uint256,uint64)', 'label' => 'ประกาศรอบจ่ายรางวัล Grid', 'guard' => 'owner', 'destructive' => false, 'params' => ['id' => 'uint', 'root' => 'bytes32', 'total' => 'uint', 'unlockAt' => 'uint']],
+        'rewards.revokeRound' => ['contract' => 'rewards', 'method' => 'revokeRound(uint256)', 'label' => 'ยกเลิกรอบจ่ายรางวัล Grid', 'guard' => 'owner', 'destructive' => true, 'params' => ['id' => 'uint']],
+        'rewards.pause' => ['contract' => 'rewards', 'method' => 'pause()', 'label' => 'หยุดรับรางวัล Grid ชั่วคราว', 'guard' => 'owner', 'destructive' => true, 'params' => []],
+        'rewards.unpause' => ['contract' => 'rewards', 'method' => 'unpause()', 'label' => 'เปิดรับรางวัล Grid ต่อ', 'guard' => 'owner', 'destructive' => false, 'params' => []],
+        'rewards.withdrawExcess' => ['contract' => 'rewards', 'method' => 'withdrawExcess(address,uint256)', 'label' => 'ถอนเหรียญส่วนเกินจากสัญญาจ่ายรางวัล', 'guard' => 'owner', 'destructive' => true, 'params' => ['to' => 'address', 'amount' => 'uint']],
         'vesting.release' => ['contract' => 'vesting', 'method' => 'release()', 'label' => 'ปลดงวดที่ถึงเวลา', 'guard' => 'anyone', 'destructive' => false, 'params' => []],
         'vesting.transferBeneficiary' => ['contract' => 'vesting', 'method' => 'transferBeneficiary(address)', 'label' => 'เริ่มเปลี่ยนผู้รับเหรียญที่ปลดล็อก', 'guard' => 'beneficiary', 'destructive' => true, 'params' => ['newBeneficiary' => 'address']],
         'vesting.acceptBeneficiary' => ['contract' => 'vesting', 'method' => 'acceptBeneficiary()', 'label' => 'รับสิทธิ์ผู้รับเหรียญที่ปลดล็อก', 'guard' => 'pendingBeneficiary', 'destructive' => false, 'params' => []],
@@ -83,12 +89,13 @@ final class ChainActions
             $ok = match ($type) {
                 'uint' => preg_match('/^\d{1,78}$/', $value) === 1,
                 'address' => preg_match('/^0x[0-9a-fA-F]{40}$/', $value) === 1,
+                'bytes32' => preg_match('/^0x[0-9a-fA-F]{64}$/', $value) === 1,
                 default => false,
             };
             if (! $ok) {
                 return null;
             }
-            $out[$name] = $type === 'address' ? strtolower($value) : (ltrim($value, '0') ?: '0');
+            $out[$name] = in_array($type, ['address', 'bytes32'], true) ? strtolower($value) : (ltrim($value, '0') ?: '0');
         }
 
         return $out;

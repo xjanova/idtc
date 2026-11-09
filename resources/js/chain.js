@@ -198,6 +198,14 @@ ABI.errors = [
     'error ERC20InvalidSender(address sender)',
     'error ERC20InvalidReceiver(address receiver)',
     'error ERC20InvalidSpender(address spender)',
+    // GridRewards (รอบจ่ายรางวัล Grid)
+    'error UnknownRound(uint256 round)',
+    'error RoundRevokedError(uint256 round)',
+    'error NotUnlocked(uint256 round, uint64 unlockAt)',
+    'error AlreadyClaimed(uint256 round, address account)',
+    'error InvalidProof()',
+    'error AmountTooLarge()',
+    'error LengthMismatch()',
 ];
 
 /** custom error ที่มีคำอธิบายในพจนานุกรม (revert.*) */

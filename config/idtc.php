@@ -48,6 +48,8 @@ return [
         'dex_router' => env('IDTC_DEX_ROUTER', '0x8aF94D36Ea0C14C40CDaff5bddE017269A9ccc04'),
         'pair_usdt' => env('IDTC_PAIR_USDT'),
         'pair_tpix' => env('IDTC_PAIR_TPIX'),
+        // GridRewards — รอบจ่ายรางวัล IDTC Grid (Merkle) · TPIX-Coin contracts/src/launch/GridRewards.sol
+        'rewards' => env('IDTC_GRID_REWARDS_ADDRESS'),
     ],
 
     // presale: ราคาฝังในสัญญา FixedPriceSale — ค่านี้ใช้แสดงผลก่อนสัญญาขึ้นเชน และใช้ตรวจว่าสัญญาตรงแผน

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\AdminContext;
 use App\Services\Admin\Audit;
+use App\Services\Chain\Abi;
 use App\Services\Chain\Address;
 use App\Services\Chain\ChainStatus;
 use App\Services\Chain\ContractOrigin;
@@ -33,6 +34,7 @@ class SettingsController extends Controller
         'feeder' => ['สัญญาเติมพูล', 'PoolFeeder — เจ้าของสัญญา presale (จาก LaunchpadFactory)'],
         'pair_usdt' => ['พูล IDTC/USDT', 'คู่บน TPIX DEX'],
         'pair_tpix' => ['พูล IDTC/TPIX', 'คู่บน TPIX DEX'],
+        'rewards' => ['สัญญาจ่ายรางวัล Grid', 'GridRewards — รอบจ่ายรางวัลแนะนำเพื่อน (Merkle)'],
     ];
 
     public function edit(Settings $settings, ChainStatus $chain, SalesIndexer $indexer): View
@@ -88,7 +90,18 @@ class SettingsController extends Controller
                 try {
                     if (! $rpc->hasCode($input)) {
                         $error = 'ไม่พบสัญญาที่ที่อยู่นี้บน TPIX Chain (อาจเป็นกระเป๋าธรรมดา หรือยังไม่ได้ deploy)';
+                    } elseif ($key === 'rewards') {
+                        // สัญญาจ่ายรางวัลต้องจ่ายเหรียญ IDTC ตัวเดียวกับที่เว็บใช้ ไม่งั้นรายชื่อรอบจ่ายผิดเหรียญ
+                        $paid = Abi::decodeAddress(Abi::words($rpc->ethCall($input, Abi::encodeCall('token()')))[0] ?? '');
+                        $token = Idtc::contract('token');
+                        if ($token === null) {
+                            $error = 'ตั้งที่อยู่เหรียญ IDTC ก่อน แล้วจึงตั้งสัญญาจ่ายรางวัล';
+                        } elseif (! Address::same($paid, $token)) {
+                            $error = 'สัญญานี้จ่ายเหรียญ '.$paid.' ไม่ใช่ IDTC ที่ตั้งไว้ — ตรวจว่าเป็น GridRewards ที่ deploy ให้ IDTC';
+                        }
                     }
+                } catch (\UnexpectedValueException) {
+                    $error = 'อ่านเหรียญที่สัญญานี้จ่ายไม่ได้ — ที่อยู่นี้อาจไม่ใช่ GridRewards';
                 } catch (RpcException $e) {
                     $error = 'ตรวจที่อยู่กับเชนไม่ได้: '.$e->getMessage();
                 }

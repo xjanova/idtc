@@ -711,6 +711,8 @@
 .grid-box { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: var(--bg-3); display: grid; gap: 8px; align-content: start; }
 .grid-box h4, .grid-h { font-size: 15px; color: var(--fg-strong); }
 .grid-box .kv { margin: 4px 0; }
+.grid-claim { border-color: color-mix(in srgb, var(--emerald) 45%, var(--line)); }
+.grid-claim-act { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .grid-need { display: grid; gap: 4px; font-size: 13.5px; color: var(--fg-2); margin-top: 8px; }
 .grid-need i { display: block; height: 6px; border-radius: 99px; background: var(--panel-2); overflow: hidden; }
 .grid-need i b { display: block; height: 100%; background: linear-gradient(90deg, var(--lime), var(--emerald)); }

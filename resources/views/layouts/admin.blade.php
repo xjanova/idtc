@@ -13,6 +13,7 @@
         ['route' => 'admin.grid.members', 'label' => 'สมาชิกและสายงาน', 'icon' => 'wallet'],
         ['route' => 'admin.grid.ledger', 'label' => 'รางวัลรายการซื้อ', 'icon' => 'chart'],
         ['route' => 'admin.grid.plan', 'label' => 'แผนรางวัล', 'icon' => 'gear'],
+        ['route' => 'admin.grid.rounds', 'label' => 'รอบจ่ายรางวัล', 'icon' => 'download'],
         'เว็บไซต์',
         ['route' => 'admin.content', 'label' => 'เนื้อหาและประกาศ', 'icon' => 'layout'],
         ['route' => 'admin.settings', 'label' => 'ตั้งค่าเหรียญ', 'icon' => 'gear'],
