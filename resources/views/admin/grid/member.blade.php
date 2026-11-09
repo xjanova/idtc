@@ -12,6 +12,7 @@
 @endsection
 
 @section('actions')
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', ['root' => $n['wallet']]) }}"><x-admin.icon name="users"/>ดูบนผัง</a>
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.ledger', ['wallet' => $n['wallet']]) }}"><x-admin.icon name="chart"/>รางวัลของกระเป๋านี้</a>
 @endsection
 

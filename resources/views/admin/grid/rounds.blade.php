@@ -15,7 +15,7 @@
     <div class="panel">
         <h3>สัญญาจ่ายรางวัล (GridRewards)</h3>
         @if (! $chain['deployed'])
-            <p><span class="pill warn">รอ deploy</span> ยังไม่ได้ตั้งที่อยู่สัญญาจ่ายรางวัล — deploy สัญญา GridRewards (TPIX-Coin) แล้วตั้งที่อยู่ที่ <a href="{{ route('admin.settings') }}">ตั้งค่าเหรียญ</a></p>
+            <p><span class="pill-wait">รอ deploy</span> ยังไม่ได้ตั้งที่อยู่สัญญาจ่ายรางวัล — deploy สัญญา GridRewards (TPIX-Coin) แล้วตั้งที่อยู่ที่ <a href="{{ route('admin.settings') }}">ตั้งค่าเหรียญ</a></p>
         @elseif (! $chain['ok'])
             <div class="flash err" role="alert">อ่านสัญญาจ่ายรางวัลไม่ได้: {{ $chain['error'] }}</div>
         @else
@@ -107,7 +107,7 @@
                             <tr>
                                 <td><a href="{{ route('admin.grid.round', $r) }}">#{{ $r->chain_round }}</a>@if (strtolower($r->contract) !== strtolower((string) ($chain['address'] ?? ''))) <span class="muted" title="{{ $r->contract }}">(สัญญาเดิม)</span>@endif</td>
                                 <td>{{ R::KIND[$r->kind] ?? $r->kind }}</td>
-                                <td><span @class(['pill', 'ok' => $r->status === GridRound::LIVE, 'warn' => $r->status === GridRound::DRAFT, 'bad' => in_array($r->status, [GridRound::STALE, GridRound::REVOKED], true)])>{{ R::STATUS[$r->status] ?? $r->status }}</span></td>
+                                <td><span @class(['pill-ok' => $r->status === GridRound::LIVE, 'pill-wait' => $r->status === GridRound::DRAFT, 'pill-bad' => in_array($r->status, [GridRound::STALE, GridRound::REVOKED], true)])>{{ R::STATUS[$r->status] ?? $r->status }}</span></td>
                                 <td class="r">{{ number_format($r->items) }}</td>
                                 <td class="r mono">{{ number_format($r->total_idtc, 2) }}</td>
                                 <td>{{ $r->unlock_at ? F::dateTime($r->unlock_at) : 'ทันทีที่ประกาศ' }}</td>

@@ -44,6 +44,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('grid', [GridController::class, 'index'])->name('grid');
         Route::get('grid/members', [GridController::class, 'members'])->name('grid.members');
         Route::get('grid/members/{wallet}', [GridController::class, 'member'])->where('wallet', '0x[0-9a-fA-F]{40}')->name('grid.member');
+        Route::get('grid/map', [GridController::class, 'map'])->name('grid.map');
         Route::get('grid/ledger', [GridController::class, 'ledger'])->name('grid.ledger');
         Route::get('grid/ledger/export', [GridController::class, 'export'])->name('grid.export');
         Route::get('grid/plan', [GridController::class, 'plan'])->name('grid.plan');

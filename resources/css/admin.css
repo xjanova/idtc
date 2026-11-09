@@ -274,3 +274,28 @@
 .adm .plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
 .adm .plan-grid .field { margin: 0; }
 .adm .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+
+/* ───────────── ผังสายงาน Grid (canvas) ───────────── */
+.adm .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13.5px; color: var(--fg-3); }
+.adm .crumbs a { color: var(--fg-2); }
+.adm .map-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 18px; margin-top: 12px; }
+.adm .map-bar .field { min-width: 130px; }
+.adm .map-wrap { position: relative; border: 1px solid var(--line); border-radius: 16px; background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, .06), transparent 60%), #040908; overflow: hidden; }
+.adm .map-wrap canvas { display: block; width: 100%; height: min(72vh, 680px); min-height: 360px; touch-action: none; cursor: grab; }
+.adm .map-tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+.adm .map-tools .btn { background: rgba(5, 10, 9, .85); }
+.adm .map-tip { position: absolute; z-index: 5; max-width: 270px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: rgba(5, 10, 9, .94); font-size: 12.5px; color: var(--fg-2); pointer-events: none; }
+.adm .map-tip.pinned { pointer-events: auto; }
+.adm .map-tip > div { display: grid; gap: 3px; }
+.adm .map-tip b { color: var(--fg-strong); }
+.adm .map-tip em { font-style: normal; color: var(--fg-3); font-size: 11.5px; }
+.adm .map-tip .bad { color: #fda4af; }
+.adm .map-tip-act { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.adm .map-legend { position: absolute; left: 10px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 6px 10px; list-style: none; border-radius: 10px; background: rgba(5, 10, 9, .8); font-size: 12px; color: var(--fg-2); }
+.adm .map-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.adm .map-legend i { width: 10px; height: 10px; border-radius: 50%; background: #5b6b66; }
+.adm .map-legend i[data-rank="1"] { background: #e6f23a; }
+.adm .map-legend i[data-rank="2"] { background: #3b82f6; }
+.adm .map-legend i[data-rank="3"] { background: #10b981; }
+.adm .map-legend i[data-rank="4"] { background: #a3e635; }
+.adm .map-legend i.held { background: transparent; border: 2px solid #fb7185; }

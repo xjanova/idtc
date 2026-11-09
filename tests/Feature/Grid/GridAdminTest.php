@@ -8,6 +8,7 @@ use App\Models\GridPlanVersion;
 use App\Models\IndexerState;
 use App\Models\Purchase;
 use App\Services\Chain\Address;
+use App\Services\Grid\GridLedger;
 use App\Services\Grid\GridPlan;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -164,5 +165,38 @@ class GridAdminTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBFtime_utc,week,tx_hash", $csv);
         $this->assertStringContainsString(self::B, $csv);
         $this->assertStringContainsString(',ring,1,'.self::A.',0.070000,', $csv);
+    }
+
+    public function test_network_map_slices_the_line_and_folds_what_it_cuts(): void
+    {
+        // สาย A → B → C → D
+        $c = '0xcccccccccccccccccccccccccccccccccccccccc';
+        $d = '0xdddddddddddddddddddddddddddddddddddddddd';
+        GridMember::query()->create(['wallet' => $c, 'referrer' => self::B, 'bound_at' => '2026-12-03 00:00:00']);
+        GridMember::query()->create(['wallet' => $d, 'referrer' => $c, 'bound_at' => '2026-12-04 00:00:00']);
+        $book = app(GridLedger::class)->book(null, true);
+
+        $all = $book->slice(null, 6);
+        $this->assertSame(4, $all['total']);
+        $this->assertSame([self::A, null, 1], array_slice($all['nodes'][0], 0, 3));
+        $this->assertSame([self::B, self::A, 2], array_slice($all['nodes'][1], 0, 3));
+
+        // ลึก 2 วงจาก A: เห็น B, C · D พับไว้ที่ C
+        $two = $book->slice(self::A, 2);
+        $this->assertSame([self::B, $c], array_column($two['nodes'], 0));
+        $this->assertSame(1, $two['nodes'][1][8]);
+        $this->assertSame(3, $two['total']);
+
+        // จำกัดจำนวน: เห็นแค่ B · ที่เหลือพับไว้ที่ B
+        $cap = $book->slice(self::A, 6, 1);
+        $this->assertSame([self::B], array_column($cap['nodes'], 0));
+        $this->assertSame(2, $cap['nodes'][0][8]);
+
+        $this->loginAs(self::VIEWER, 'viewer');
+        $this->get('/admin/grid/map')->assertOk()->assertSee('ทั้งระบบ')->assertSee('data-map', false)->assertSee('แสดง 4 จาก 4 กระเป๋า');
+        $this->get('/admin/grid/map?root='.self::B.'&depth=1')->assertOk()->assertSee('แสดง 1 จาก 2 กระเป๋า');
+        $this->get('/admin/grid/map?root='.$d)->assertOk()->assertSee('กระเป๋านี้ยังไม่มีสายล่าง');
+        $this->get('/admin/grid/map?root=0x'.str_repeat('e', 40))->assertNotFound();
+        $this->get('/admin/grid/map?root=nope')->assertNotFound();
     }
 }

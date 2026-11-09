@@ -11,6 +11,7 @@
         'IDTC Grid',
         ['route' => 'admin.grid', 'label' => 'ภาพรวม Grid', 'icon' => 'users'],
         ['route' => 'admin.grid.members', 'label' => 'สมาชิกและสายงาน', 'icon' => 'wallet'],
+        ['route' => 'admin.grid.map', 'label' => 'ผังสายงาน', 'icon' => 'users'],
         ['route' => 'admin.grid.ledger', 'label' => 'รางวัลรายการซื้อ', 'icon' => 'chart'],
         ['route' => 'admin.grid.plan', 'label' => 'แผนรางวัล', 'icon' => 'gear'],
         ['route' => 'admin.grid.rounds', 'label' => 'รอบจ่ายรางวัล', 'icon' => 'download'],
