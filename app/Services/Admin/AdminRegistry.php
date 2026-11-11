@@ -12,8 +12,10 @@ use Throwable;
  *   1. IDTC_ADMIN_WALLETS ใน .env (config idtc.admin_wallets) — ตัวแรกที่ถูกรูปแบบ = owner ที่เหลือ = admin
  *      แก้จากหน้าเว็บไม่ได้ (กันเจ้าของล็อกตัวเองออก)
  *   2. ตาราง admins — owner เพิ่ม/เปลี่ยน/ลบจากหน้า "ผู้ดูแล"
+ *   3. ไม่มีผู้ดูแลเลย (ทั้งสองข้อว่าง) = คนแรกที่เปิด /admin/setup ตั้งตัวเองเป็น owner (เจ้าของเลือกแบบนี้เอง)
  *
- * สิทธิ์: viewer = ดูอย่างเดียว · admin = แก้ค่าตั้ง + ใช้หน้าคำสั่งบนเชน · owner = ทุกอย่าง + จัดการผู้ดูแล
+ * สิทธิ์: owner = ทุกอย่าง + จัดการผู้ดูแล · คนอื่นได้สิทธิ์รายเมนู (AdminPermissions) ที่ owner ติ๊กให้
+ *   viewer/admin เป็นชุดสิทธิ์สำเร็จรูป: viewer = ดูทุกส่วน · admin = ดู + แก้ทุกส่วน
  */
 class AdminRegistry
 {
@@ -77,6 +79,10 @@ class AdminRegistry
         return isset($this->envAdmins()[strtolower($address)]);
     }
 
+    /**
+     * มีผู้ดูแลอย่างน้อยหนึ่งคนหรือยัง — อ่านฐานข้อมูลไม่ได้ถือว่า "มีแล้ว" (ปิดหน้าตั้งค่าครั้งแรกไว้ก่อน
+     * ไม่เปิดให้ใครก็ได้ยึดหลังบ้านตอนฐานข้อมูลมีปัญหา)
+     */
     public function hasAnyAdmin(): bool
     {
         if ($this->envAdmins() !== []) {
@@ -86,8 +92,29 @@ class AdminRegistry
         try {
             return Admin::query()->exists();
         } catch (Throwable) {
-            return false;
+            return true;
         }
+    }
+
+    /**
+     * สิทธิ์รายเมนูของที่อยู่นี้ — owner ได้ครบเสมอ · แอดมินจาก .env ได้ชุด admin · แถวในตารางใช้ค่าที่ติ๊ก (ว่าง = ตาม role)
+     *
+     * @return array<string, string>
+     */
+    public function permissionsFor(string $address, string $role): array
+    {
+        if ($role === 'owner' || $this->isEnvAdmin($address)) {
+            return AdminPermissions::preset($role);
+        }
+
+        try {
+            $raw = Admin::query()->where('address', strtolower($address))->value('permissions');
+        } catch (Throwable) {
+            return [];
+        }
+        $perms = is_string($raw) ? json_decode($raw, true) : $raw;
+
+        return is_array($perms) ? AdminPermissions::normalize($perms) : AdminPermissions::preset($role);
     }
 
     /** จำนวน owner ทั้งหมด (env + ตาราง) — กันลบ owner คนสุดท้าย */

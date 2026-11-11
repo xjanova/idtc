@@ -97,7 +97,7 @@
 
         <div class="panel section-gap">
             <h3>คำสั่งควบคุม <span class="meta">{{ $viaFeeder ? 'สั่งผ่านสัญญาเติมพูล · เซ็นด้วยกระเป๋าเจ้าของสัญญาเติมพูล' : 'เซ็นด้วยกระเป๋าเจ้าของสัญญา' }} ({{ $controlOwner ? Idtc::short(F::addr($controlOwner)) : 'อ่านไม่ได้' }})</span></h3>
-            @if (! $me->canWrite())
+            @if (! $me->canEdit('presale'))
                 <p class="readonly-note">สิทธิ์ของคุณดูได้อย่างเดียว — คำสั่งควบคุมใช้ได้เฉพาะแอดมินและเจ้าของ</p>
             @elseif ($viaFeeder && ! $fdOk)
                 <p class="readonly-note">อ่านสัญญาเติมพูลไม่ได้ — คำสั่งควบคุมของ presale ต้องสั่งผ่านสัญญานั้น <a href="{{ route('admin.presale') }}">ลองใหม่</a></p>
@@ -209,7 +209,7 @@
                     </div>
 
                     <div>
-                        @if (! $me->canWrite())
+                        @if (! $me->canEdit('presale'))
                             <p class="readonly-note">สิทธิ์ของคุณดูได้อย่างเดียว — คำสั่งของสัญญาเติมพูลใช้ได้เฉพาะแอดมินและเจ้าของ</p>
                         @else
                             <div class="act" id="feed" x-data="chainAction('feeder.feed', @js(['pendingText' => F::usdt($fv['pendingQuote'], 6).' USDT', 'shareText' => $bps($fv['poolShareBps']), 'unlockText' => $unlockText]))">

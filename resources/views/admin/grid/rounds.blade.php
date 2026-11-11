@@ -4,7 +4,7 @@
     use App\Models\GridRound;
     use App\Services\Grid\GridRounds;
     use App\Support\AdminFormat as F;
-    $ro = ! $me->canWrite();
+    $ro = ! $me->canEdit('grid_rounds');
 @endphp
 
 @section('sub')

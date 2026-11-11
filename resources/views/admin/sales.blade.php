@@ -18,7 +18,7 @@
 @section('content')
     @include('admin.partials.indexer-note')
     @if (! Idtc::isDeployed('presale'))
-        <div class="flash info" role="note">ยังไม่ได้ตั้งที่อยู่สัญญา presale — รายการซื้อจะเริ่มเข้ามาเมื่อสัญญาขึ้นเชนและตั้งที่อยู่ในหน้า <a href="{{ route('admin.settings') }}">ตั้งค่าเหรียญ</a></div>
+        <div class="flash info" role="note">ยังไม่ได้ตั้งที่อยู่สัญญา presale — รายการซื้อจะเริ่มเข้ามาเมื่อสัญญาขึ้นเชนและตั้งที่อยู่ในหน้า @if ($me->canView('settings'))<a href="{{ route('admin.settings') }}">ตั้งค่าเหรียญ</a>@else"ตั้งค่าเหรียญ"@endif</div>
     @endif
 
     <div class="kpis">

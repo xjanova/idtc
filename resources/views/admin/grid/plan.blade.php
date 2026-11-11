@@ -3,7 +3,7 @@
     use App\Services\Grid\GridPlan;
     use App\Support\AdminFormat as F;
     $pct = fn ($v) => rtrim(rtrim(number_format((float) $v * 100, 3), '0'), '.');
-    $ro = ! $me->canWrite();
+    $ro = ! $me->canEdit('grid_plan');
     $boostRows = $plan['boost'];
     while (count($boostRows) < 3) { $boostRows[] = null; }
     $field = fn (string $name, $value) => old($name, $value);

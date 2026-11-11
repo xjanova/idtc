@@ -3,6 +3,8 @@
 namespace Tests\Concerns;
 
 use App\Models\Admin;
+use App\Services\Admin\AdminPasswords;
+use App\Services\Admin\AdminRegistry;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -31,14 +33,32 @@ trait InteractsWithAdmin
         config(['idtc.admin_wallets' => [$this->ownerAddress]]);
     }
 
-    protected function loginAs(string $address, ?string $role = null): static
+    /** รหัสผ่านที่ loginAs ตั้งให้ owner (owner ต้องมีรหัสผ่านเสมอ) */
+    protected string $testPassword = 'correct-horse-battery';
+
+    /**
+     * จำลอง session ที่ผ่านทุกขั้นแล้ว (ลายเซ็น + รหัสผ่านถ้าต้องใช้)
+     *
+     * @param  array<string, string>|null  $permissions  สิทธิ์รายเมนู (null = ตามชุดของ role)
+     */
+    protected function loginAs(string $address, ?string $role = null, ?array $permissions = null): static
     {
         $address = strtolower($address);
         if ($role !== null) {
-            Admin::query()->updateOrCreate(['address' => $address], ['role' => $role]);
+            Admin::query()->updateOrCreate(['address' => $address], ['role' => $role, 'permissions' => $permissions]);
         }
 
-        return $this->withSession(['admin' => ['address' => $address, 'login_at' => time()]]);
+        $pwV = null;
+        $actual = app(AdminRegistry::class)->roleFor($address);
+        if ($actual !== null) {
+            $passwords = app(AdminPasswords::class);
+            if ($passwords->stepFor($address, $actual) === AdminPasswords::STEP_SET) {
+                $passwords->set($address, $this->testPassword);
+            }
+            $pwV = $passwords->sessionVersion($address, $actual);
+        }
+
+        return $this->withSession(['admin' => ['address' => $address, 'login_at' => time(), 'pw_v' => $pwV]]);
     }
 
     protected function loginAsOwner(): static

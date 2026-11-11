@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Admin;
 use App\Models\AuditLog;
+use App\Services\Admin\AdminPasswords;
 use App\Services\Auth\SiweMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -80,7 +81,12 @@ class AdminAuthTest extends TestCase
 
     public function test_valid_signature_from_owner_logs_in(): void
     {
-        $this->verify($this->prime('valid'))
+        // owner ต้องมีรหัสผ่านเสมอ — ตั้งไว้แล้ว: เซ็นผ่าน → ใส่รหัสผ่าน → เข้า
+        app(AdminPasswords::class)->set($this->f['address'], 'owner-pass-1234');
+        $this->verify($this->prime('valid'))->assertOk()->assertJson(['next' => 'password']);
+        $this->assertNull(session('admin.address'));
+
+        $this->postJson('/admin/auth/password', ['password' => 'owner-pass-1234'])
             ->assertOk()
             ->assertJson(['redirect' => route('admin.dashboard')]);
 
@@ -177,8 +183,8 @@ class AdminAuthTest extends TestCase
 
     public function test_logout_clears_session(): void
     {
-        $this->loginAsOwner();
         config(['idtc.admin_wallets' => [$this->ownerAddress]]);
+        $this->loginAsOwner();
         $this->post('/admin/logout')->assertRedirect('/admin/login');
         $this->assertNull(session('admin.address'));
         $this->get('/admin')->assertRedirect('/admin/login');

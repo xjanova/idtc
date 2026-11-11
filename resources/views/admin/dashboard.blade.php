@@ -103,10 +103,10 @@
                 <div class="empty"><b>อ่านค่าจากสัญญาไม่ได้</b><span>{{ $presale['error'] }}</span></div>
             @else
                 <div class="ctrl">
-                    <div class="ctrl-row"><div><b>{{ $v['paused'] ? 'หยุดขายชั่วคราวอยู่' : 'การขาย' }}</b><span>{{ $v['paused'] ? 'ผู้ซื้อกดซื้อไม่ได้จนกว่าจะเปิดขายต่อ' : 'หยุดชั่วคราวได้ทันทีเมื่อมีเหตุผิดปกติ' }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#pause">{{ $me->canWrite() ? ($v['paused'] ? 'เปิดขายต่อ' : 'หยุดชั่วคราว') : 'ดู' }}</a></div>
-                    <div class="ctrl-row"><div><b>ขั้นต่ำ / เพดานต่อกระเป๋า</b><span>{{ F::usdt($v['minPurchase'], 6) }} USDT · {{ $v['maxPerWallet'] === '0' ? 'ไม่จำกัด' : F::idtc($v['maxPerWallet']).' IDTC' }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#limits">{{ $me->canWrite() ? 'แก้ไข' : 'ดู' }}</a></div>
-                    <div class="ctrl-row"><div><b>ช่วงเวลาขาย</b><span>{{ F::dateTime($presale['start']) }} → {{ F::dateTime($presale['end']) }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#window">{{ $me->canWrite() ? 'แก้ไข' : 'ดู' }}</a></div>
-                    <div class="ctrl-row"><div><b>กระเป๋ารับเงิน</b><span class="mono">{{ Idtc::short(F::addr($v['treasury'])) }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#treasury">{{ $me->canWrite() ? 'เปลี่ยน' : 'ดู' }}</a></div>
+                    <div class="ctrl-row"><div><b>{{ $v['paused'] ? 'หยุดขายชั่วคราวอยู่' : 'การขาย' }}</b><span>{{ $v['paused'] ? 'ผู้ซื้อกดซื้อไม่ได้จนกว่าจะเปิดขายต่อ' : 'หยุดชั่วคราวได้ทันทีเมื่อมีเหตุผิดปกติ' }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#pause">{{ $me->canEdit('presale') ? ($v['paused'] ? 'เปิดขายต่อ' : 'หยุดชั่วคราว') : 'ดู' }}</a></div>
+                    <div class="ctrl-row"><div><b>ขั้นต่ำ / เพดานต่อกระเป๋า</b><span>{{ F::usdt($v['minPurchase'], 6) }} USDT · {{ $v['maxPerWallet'] === '0' ? 'ไม่จำกัด' : F::idtc($v['maxPerWallet']).' IDTC' }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#limits">{{ $me->canEdit('presale') ? 'แก้ไข' : 'ดู' }}</a></div>
+                    <div class="ctrl-row"><div><b>ช่วงเวลาขาย</b><span>{{ F::dateTime($presale['start']) }} → {{ F::dateTime($presale['end']) }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#window">{{ $me->canEdit('presale') ? 'แก้ไข' : 'ดู' }}</a></div>
+                    <div class="ctrl-row"><div><b>กระเป๋ารับเงิน</b><span class="mono">{{ Idtc::short(F::addr($v['treasury'])) }}</span></div><a class="btn btn-ghost btn-sm" href="{{ route('admin.presale') }}#treasury">{{ $me->canEdit('presale') ? 'เปลี่ยน' : 'ดู' }}</a></div>
                 </div>
             @endif
             <p class="sig"><x-admin.icon name="shield"/>ทุกคำสั่งเซ็นด้วยกระเป๋าแอดมินในเบราว์เซอร์ เซิร์ฟเวอร์ไม่ถือคีย์</p>

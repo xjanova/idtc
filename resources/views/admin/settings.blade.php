@@ -2,7 +2,7 @@
 @php
     use App\Support\AdminFormat as F;
     use App\Support\Idtc;
-    $ro = ! $me->canWrite();
+    $ro = ! $me->canEdit('settings');
     $fixedLabels = ['usdt' => 'USDT (TPIX Chain)', 'wtpix' => 'WTPIX', 'dex_factory' => 'TPIX DEX factory', 'dex_router' => 'TPIX DEX router'];
 @endphp
 

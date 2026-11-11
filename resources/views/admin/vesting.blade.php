@@ -85,7 +85,7 @@
 
         <div class="panel section-gap">
             <h3>คำสั่ง <span class="meta">release ใครก็กดได้ · คำสั่งอื่นต้องใช้กระเป๋าผู้รับ ({{ Idtc::short(F::addr($v['beneficiary'])) }})</span></h3>
-            @if (! $me->canWrite())
+            @if (! $me->canEdit('vesting'))
                 <p class="readonly-note">สิทธิ์ของคุณดูได้อย่างเดียว — คำสั่งบนเชนใช้ได้เฉพาะแอดมินและเจ้าของ</p>
             @else
                 <div class="grid-2">

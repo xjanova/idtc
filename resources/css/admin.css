@@ -299,3 +299,12 @@
 .adm .map-legend i[data-rank="3"] { background: #10b981; }
 .adm .map-legend i[data-rank="4"] { background: #a3e635; }
 .adm .map-legend i.held { background: transparent; border: 2px solid #fb7185; }
+
+/* หน้า "ผู้ดูแล": การ์ดผู้ดูแล + ตารางติ๊กสิทธิ์รายเมนู */
+.adm .admin-card { margin-bottom: 12px; }
+.adm .perm-editor { display: grid; gap: 10px; }
+.adm .perm-editor .btn.on { border-color: var(--lime); color: var(--lime); }
+.adm .perm-tbl { max-width: 560px; }
+.adm .perm-tbl th.c, .adm .perm-tbl td.c { text-align: center; width: 110px; }
+.adm .perm-tbl td.c input { width: 18px; height: 18px; accent-color: var(--lime); }
+.adm .perm-tbl tr.grp-row td { color: var(--fg-3); font-size: 12px; letter-spacing: .06em; padding-top: 14px; }

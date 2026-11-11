@@ -4,7 +4,7 @@
     use App\Models\GridRound;
     use App\Services\Chain\Units;
     use App\Support\AdminFormat as F;
-    $ro = ! $me->canWrite();
+    $ro = ! $me->canEdit('grid_rounds');
     $sameContract = ($chain['ok'] ?? false) && strtolower($chain['address']) === strtolower($round->contract);
     // เหรียญที่ต้องมีในสัญญาก่อนประกาศ = ค้างจ่ายทุกรอบ + รอบนี้
     $need = $sameContract ? Units::add($chain['outstanding'], $round->total) : null;
