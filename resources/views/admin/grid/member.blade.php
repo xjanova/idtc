@@ -4,7 +4,7 @@
     use App\Services\Grid\GridLedger;
     use App\Support\AdminFormat as F;
     $rk = GridLedger::RANKS[$n['rank']];
-    $ro = ! $me->canWrite();
+    $ro = ! $me->canEdit('grid_members');
 @endphp
 
 @section('sub')

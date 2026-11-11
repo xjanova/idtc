@@ -40,7 +40,7 @@
 
     <div class="panel section-gap">
         <h3>รายชื่อกระเป๋าโครงการ <span class="meta">ไม่เกิน {{ $max }} กระเป๋า</span></h3>
-        @if (! $me->canWrite())
+        @if (! $me->canEdit('wallets'))
             <p class="readonly-note">สิทธิ์ของคุณดูได้อย่างเดียว</p>
         @else
             <form method="POST" action="{{ route('admin.wallets.update') }}" class="form" x-data="walletList(@js(old('address') ? collect(old('address'))->map(fn ($a, $i) => ['label' => old('label')[$i] ?? '', 'address' => $a])->values()->all() : $configured), {{ $max }})" @submit="if ($el.dataset.busy) { $event.preventDefault() } else { $el.dataset.busy = 1 }">

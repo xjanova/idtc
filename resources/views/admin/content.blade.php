@@ -9,7 +9,7 @@
 @endsection
 
 @section('content')
-    @php $ro = ! $me->canWrite(); @endphp
+    @php $ro = ! $me->canEdit('content'); @endphp
     @if ($ro)
         <p class="readonly-note" style="margin-bottom:16px">สิทธิ์ของคุณดูได้อย่างเดียว — แก้ไขไม่ได้</p>
     @endif

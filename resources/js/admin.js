@@ -88,13 +88,46 @@ Alpine.data('adminShell', () => ({
     },
 }));
 
-/* ───────────── หน้าเข้าสู่ระบบ: เชื่อมกระเป๋า → ขอ nonce → เซ็น → ตรวจ ───────────── */
+/* ───────────── เซ็นข้อความเข้าหลังบ้าน (ใช้ทั้งหน้าเข้าสู่ระบบและหน้าตั้งค่าครั้งแรก) ───────────── */
+async function signAdminMessage(vm, eth, pick) {
+    vm.step = vm.stepConnect; vm.msg = pick;
+    const [acc] = await eth.request({ method: 'eth_requestAccounts' });
+    if (!acc) throw new AdminError('ไม่ได้เลือกบัญชีในกระเป๋า');
+    vm.account = getAddress(acc);
+
+    const { message } = await api(A.routes.nonce, { address: vm.account });
+    vm.step = vm.stepConnect + 1; vm.msg = 'กด "เซ็น" ในกระเป๋า — ไม่มีค่าธรรมเนียม และไม่มีการโอนเงิน';
+    const signer = await new BrowserProvider(eth, 'any').getSigner(vm.account);
+    const signature = await signer.signMessage(message);
+
+    const [cur] = await eth.request({ method: 'eth_accounts' });
+    if (!cur || cur.toLowerCase() !== vm.account.toLowerCase()) throw new AdminError('บัญชีในกระเป๋าเปลี่ยนระหว่างเซ็น กดเริ่มใหม่');
+
+    return { message, signature };
+}
+
+/** ตรวจรหัสผ่านใหม่ฝั่งเบราว์เซอร์ก่อนส่ง (เซิร์ฟเวอร์ตรวจซ้ำเสมอ) — คืนข้อความผิดพลาดหรือ '' */
+function passwordProblem(pw, pw2) {
+    const rule = A.password || { min: 10, maxBytes: 72 };
+    if ([...pw].length < rule.min) return `รหัสผ่านต้องยาวอย่างน้อย ${rule.min} ตัวอักษร`;
+    if (new TextEncoder().encode(pw).length > rule.maxBytes) return 'รหัสผ่านยาวเกินไป (ไม่เกิน 72 ไบต์ — อักษรไทยราว 24 ตัว)';
+    if (pw.trim() !== pw) return 'รหัสผ่านขึ้นต้นหรือลงท้ายด้วยช่องว่างไม่ได้';
+    if (pw !== pw2) return 'ยืนยันรหัสผ่านไม่ตรงกัน';
+    return '';
+}
+
+/* ───────────── หน้าเข้าสู่ระบบ: เชื่อมกระเป๋า → ขอ nonce → เซ็น → ตรวจ → รหัสผ่าน (ถ้าต้องใช้) ───────────── */
 Alpine.data('adminLogin', () => ({
     step: 0,
+    stepConnect: 1,
     busy: false,
     msg: '',
     kind: '',
     account: null,
+    need: '', // '' | 'password' | 'set_password'
+    pw: '',
+    pw2: '',
+    locked: 0,
     stepClass(n) { return { on: this.step === n, done: this.step > n }; },
     async login() {
         if (this.busy) return;
@@ -102,30 +135,110 @@ Alpine.data('adminLogin', () => ({
         if (!eth) { this.fail(walletError({ code: 'NO_WALLET' })); return; }
         this.busy = true; this.kind = ''; this.msg = '';
         try {
-            this.step = 1; this.msg = 'เปิดกระเป๋า… เลือกบัญชีที่มีสิทธิ์เข้าหลังบ้าน';
-            const [acc] = await eth.request({ method: 'eth_requestAccounts' });
-            if (!acc) throw new AdminError('ไม่ได้เลือกบัญชีในกระเป๋า');
-            this.account = getAddress(acc);
-
-            const { message } = await api(A.routes.nonce, { address: this.account });
-            this.step = 2; this.msg = 'กด "เซ็น" ในกระเป๋า — ไม่มีค่าธรรมเนียม และไม่มีการโอนเงิน';
-            const signer = await new BrowserProvider(eth, 'any').getSigner(this.account);
-            const signature = await signer.signMessage(message);
-
-            const [cur] = await eth.request({ method: 'eth_accounts' });
-            if (!cur || cur.toLowerCase() !== this.account.toLowerCase()) throw new AdminError('บัญชีในกระเป๋าเปลี่ยนระหว่างเซ็น กดเข้าสู่ระบบใหม่');
-
+            const signed = await signAdminMessage(this, eth, 'เปิดกระเป๋า… เลือกบัญชีที่มีสิทธิ์เข้าหลังบ้าน');
             this.step = 3; this.msg = 'กำลังตรวจลายเซ็นและสิทธิ์…';
-            const res = await api(A.routes.verify, { message, signature });
-            this.step = 4; this.kind = 'ok'; this.msg = 'เข้าสู่ระบบแล้ว กำลังพาไปหน้าภาพรวม…';
-            location.assign(res.redirect || '/admin');
+            const res = await api(A.routes.verify, signed);
+            if (res.next) { this.askPassword(res); return; }
+            this.done(res.redirect);
         } catch (e) {
             this.fail(e instanceof AdminError ? e.message : walletError(e));
         } finally {
-            if (this.step !== 4) this.busy = false;
+            if (this.step !== 5) this.busy = false;
         }
     },
+    askPassword(res) {
+        this.need = res.next; this.step = 4; this.pw = ''; this.pw2 = '';
+        this.kind = res.locked ? 'err' : 'ok'; this.msg = res.message || '';
+        this.lockFor(res.locked || 0);
+        setTimeout(() => this.$refs.pw?.focus(), 60);
+    },
+    async sendPassword() {
+        if (this.busy || this.locked > 0) return;
+        if (this.need === 'set_password') {
+            const bad = passwordProblem(this.pw, this.pw2);
+            if (bad) { this.kind = 'err'; this.msg = bad; return; }
+        } else if (!this.pw) { this.kind = 'err'; this.msg = 'ใส่รหัสผ่านหลังบ้าน'; return; }
+        this.busy = true; this.kind = ''; this.msg = 'กำลังตรวจรหัสผ่าน…';
+        try {
+            const res = await api(A.routes.password, { password: this.pw, password_confirmation: this.pw2 });
+            this.pw = ''; this.pw2 = '';
+            this.done(res.redirect);
+        } catch (e) {
+            this.pw = '';
+            const code = e?.data?.code;
+            if (code === 'expired') { this.restart(); this.fail(e.message); return; }
+            if (code === 'locked') this.lockFor(e.data.locked || 900);
+            this.kind = 'err'; this.msg = e instanceof AdminError ? e.message : 'ตรวจรหัสผ่านไม่ได้ ลองใหม่อีกครั้ง';
+            setTimeout(() => this.$refs.pw?.focus(), 60);
+        } finally {
+            if (this.step !== 5) this.busy = false;
+        }
+    },
+    lockFor(seconds) {
+        clearTimeout(this._lock);
+        this.locked = seconds;
+        if (seconds > 0) this._lock = setTimeout(() => { this.locked = 0; }, seconds * 1000);
+    },
+    restart() { this.need = ''; this.pw = ''; this.pw2 = ''; this.step = 0; this.msg = ''; this.kind = ''; this.lockFor(0); },
+    done(url) { this.step = 5; this.kind = 'ok'; this.msg = 'เข้าสู่ระบบแล้ว กำลังพาไปหน้าหลังบ้าน…'; location.assign(url || '/admin'); },
     fail(m) { this.step = 0; this.kind = 'err'; this.msg = m; },
+    destroy() { clearTimeout(this._lock); },
+}));
+
+/* ───────────── ตั้งค่าครั้งแรก: รหัสผ่าน → เชื่อมกระเป๋า → เซ็น → เป็นเจ้าของ ───────────── */
+Alpine.data('adminSetup', () => ({
+    step: 1,
+    stepConnect: 2,
+    busy: false,
+    msg: '',
+    kind: '',
+    account: null,
+    pw: '',
+    pw2: '',
+    ack: false,
+    stepClass(n) { return { on: this.step === n, done: this.step > n }; },
+    async run() {
+        if (this.busy) return;
+        const bad = passwordProblem(this.pw, this.pw2);
+        if (bad) { this.kind = 'err'; this.msg = bad; return; }
+        if (!this.ack) { this.kind = 'err'; this.msg = 'ติ๊กยืนยันก่อน'; return; }
+        const eth = injected();
+        if (!eth) { this.kind = 'err'; this.msg = walletError({ code: 'NO_WALLET' }); return; }
+        this.busy = true; this.kind = ''; this.msg = '';
+        try {
+            const signed = await signAdminMessage(this, eth, 'เปิดกระเป๋า… เลือกบัญชีที่จะเป็นเจ้าของหลังบ้าน');
+            this.step = 4; this.msg = 'กำลังบันทึกเป็นเจ้าของ…';
+            const res = await api(A.routes.setup, { ...signed, password: this.pw, password_confirmation: this.pw2, ack: true });
+            this.pw = ''; this.pw2 = '';
+            this.step = 5; this.kind = 'ok'; this.msg = 'ตั้งค่าเสร็จแล้ว กำลังพาเข้าหลังบ้าน…';
+            location.assign(res.redirect || '/admin');
+        } catch (e) {
+            this.step = 1; this.kind = 'err';
+            this.msg = e?.status === 404 ? 'มีผู้ตั้งค่าเจ้าของไปแล้ว — โหลดหน้าใหม่เพื่อเข้าสู่ระบบตามปกติ' : (e instanceof AdminError ? e.message : walletError(e));
+        } finally {
+            if (this.step !== 5) this.busy = false;
+        }
+    },
+}));
+
+/* ───────────── หน้า "ผู้ดูแล": ติ๊กสิทธิ์ ดู/แก้ รายเมนู (ชุดสำเร็จรูปเติมช่องให้) ───────────── */
+Alpine.data('permEditor', (role = 'viewer', perms = {}, presets = {}) => ({
+    owner: role === 'owner',
+    p: { ...perms }, // ส่วน => 'view' | 'edit' (ไม่มี key = ไม่มีสิทธิ์)
+    view(s) { return !!this.p[s]; },
+    edit(s) { return this.p[s] === 'edit'; },
+    setView(s, on) { if (on) this.p[s] = this.p[s] || 'view'; else delete this.p[s]; },
+    setEdit(s, on) { if (on) this.p[s] = 'edit'; else if (this.p[s]) this.p[s] = 'view'; },
+    is(name) {
+        const ref = presets[name] || {};
+        const a = Object.keys(ref), b = Object.keys(this.p);
+        return a.length === b.length && a.every((k) => this.p[k] === ref[k]);
+    },
+    preset(name) {
+        if (name === 'owner') { this.owner = true; return; }
+        this.owner = false;
+        this.p = name === 'none' ? {} : { ...(presets[name] || {}) };
+    },
 }));
 
 /* ───────────── คำสั่งบนเชน (หนึ่งฟอร์มต่อหนึ่งคำสั่ง) ───────────── */

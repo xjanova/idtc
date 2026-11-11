@@ -56,6 +56,19 @@ final class ChainActions
         return isset(self::ALL[$action]);
     }
 
+    /** ส่วนของหลังบ้าน (AdminPermissions) ที่ต้องมีสิทธิ์ edit จึงบันทึก/ตามผลคำสั่งนี้ได้ · null = ไม่ใช่คำสั่งบนเชนที่รู้จัก */
+    public static function section(string $action): ?string
+    {
+        $contract = self::get($action)['contract'] ?? null;
+
+        return match ($contract) {
+            'presale', 'feeder' => 'presale',
+            'vesting' => 'vesting',
+            'rewards' => 'grid_rounds',
+            default => null,
+        };
+    }
+
     /** @return array{contract: string, method: string, label: string, guard: string, destructive: bool, params: array<string, string>}|null */
     public static function get(string $action): ?array
     {

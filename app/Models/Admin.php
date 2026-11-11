@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $address
  * @property string $role
+ * @property array<string, string>|null $permissions null = ใช้ชุดสิทธิ์ตาม role
  * @property string|null $label
  * @property string|null $added_by
  */
@@ -17,7 +18,12 @@ class Admin extends Model
 {
     public const ROLES = ['owner', 'admin', 'viewer'];
 
-    protected $fillable = ['address', 'role', 'label', 'added_by'];
+    protected $fillable = ['address', 'role', 'permissions', 'label', 'added_by'];
+
+    protected function casts(): array
+    {
+        return ['permissions' => 'array'];
+    }
 
     protected function setAddressAttribute(string $value): void
     {

@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureAdminPermission;
 use App\Http\Middleware\EnsureAdminRole;
+use App\Services\Admin\AdminPasswords;
 use App\Services\Admin\AdminRegistry;
 use App\Services\Auth\SiweAuth;
 use App\Services\Chain\RpcClient;
@@ -29,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(Settings::class);
         $this->app->singleton(RpcClient::class);
         $this->app->singleton(AdminRegistry::class);
+        $this->app->singleton(AdminPasswords::class);
         $this->app->singleton(SiweAuth::class);
         $this->app->scoped(GridPlan::class);
     }
@@ -49,7 +52,8 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // เข้าระบบหลังบ้าน: ขอ nonce/ส่งลายเซ็น ได้ 10 ครั้งต่อนาทีต่อ IP
+        // เข้าระบบหลังบ้าน: ขอ nonce/ส่งลายเซ็น/ใส่รหัสผ่าน/ตั้งค่าครั้งแรก ได้ 10 ครั้งต่อนาทีต่อ IP
+        // (รหัสผ่านผิดยังถูกนับแยกต่อกระเป๋าใน AdminPasswords — เปลี่ยน IP ก็ไม่ช่วย)
         RateLimiter::for('admin-auth', fn (Request $request) => Limit::perMinute(10)->by('admin-auth|'.$request->ip())
             ->response(fn () => response()->json(['message' => 'ลองเข้าระบบบ่อยเกินไป รอสักหนึ่งนาทีแล้วลองใหม่'], 429)));
 
@@ -61,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('admin', EnsureAdmin::class);
         $router->aliasMiddleware('admin.role', EnsureAdminRole::class);
+        $router->aliasMiddleware('admin.can', EnsureAdminPermission::class);
 
         $this->renderAdminErrorsInThai();
     }

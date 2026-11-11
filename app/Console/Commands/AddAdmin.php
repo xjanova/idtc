@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Admin;
+use App\Services\Admin\AdminPasswords;
 use App\Services\Chain\Address;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -23,6 +24,7 @@ class AddAdmin extends Command
 
         if ($this->option('remove')) {
             $deleted = Admin::query()->where('address', strtolower($address))->delete();
+            app(AdminPasswords::class)->forget($address);
             $this->info($deleted ? 'ลบแล้ว' : 'ไม่พบที่อยู่นี้ในตาราง admins');
 
             return self::SUCCESS;
@@ -35,9 +37,10 @@ class AddAdmin extends Command
             return self::FAILURE;
         }
 
+        // ตั้งจากบรรทัดคำสั่ง = ใช้ชุดสิทธิ์ของ role (ล้างสิทธิ์ที่เคยติ๊กเอง) · owner ต้องตั้งรหัสผ่านตอนเข้าครั้งแรก
         Admin::query()->updateOrCreate(
             ['address' => strtolower($address)],
-            ['role' => $role, 'label' => $this->option('label') ?: null, 'added_by' => 'cli'],
+            ['role' => $role, 'permissions' => null, 'label' => $this->option('label') ?: null, 'added_by' => 'cli'],
         );
         $this->info("บันทึกแล้ว: {$address} = {$role}");
 

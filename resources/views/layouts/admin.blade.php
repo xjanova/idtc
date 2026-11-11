@@ -1,29 +1,42 @@
 @php
     use App\Support\Idtc;
-    $nav = [
-        ['route' => 'admin.dashboard', 'label' => 'ภาพรวม', 'icon' => 'grid'],
-        ['route' => 'admin.sales', 'label' => 'ยอดขาย', 'icon' => 'chart'],
-        'ควบคุมเหรียญ',
-        ['route' => 'admin.presale', 'label' => 'Presale', 'icon' => 'bolt'],
-        ['route' => 'admin.vesting', 'label' => 'สัญญาล็อก', 'icon' => 'lock'],
-        ['route' => 'admin.pools', 'label' => 'พูลสภาพคล่อง', 'icon' => 'pool'],
-        ['route' => 'admin.wallets', 'label' => 'กระเป๋าโครงการ', 'icon' => 'wallet'],
-        'IDTC Grid',
-        ['route' => 'admin.grid', 'label' => 'ภาพรวม Grid', 'icon' => 'users'],
-        ['route' => 'admin.grid.members', 'label' => 'สมาชิกและสายงาน', 'icon' => 'wallet'],
-        ['route' => 'admin.grid.map', 'label' => 'ผังสายงาน', 'icon' => 'users'],
-        ['route' => 'admin.grid.ledger', 'label' => 'รางวัลรายการซื้อ', 'icon' => 'chart'],
-        ['route' => 'admin.grid.plan', 'label' => 'แผนรางวัล', 'icon' => 'gear'],
-        ['route' => 'admin.grid.rounds', 'label' => 'รอบจ่ายรางวัล', 'icon' => 'download'],
-        'เว็บไซต์',
-        ['route' => 'admin.content', 'label' => 'เนื้อหาและประกาศ', 'icon' => 'layout'],
-        ['route' => 'admin.settings', 'label' => 'ตั้งค่าเหรียญ', 'icon' => 'gear'],
-        ['route' => 'admin.admins', 'label' => 'ผู้ดูแล', 'icon' => 'users', 'owner' => true],
-        ['route' => 'admin.audit', 'label' => 'บันทึกการทำงาน', 'icon' => 'log'],
+    // เมนูที่ดูไม่ได้ถูกซ่อน (สิทธิ์รายเมนูจาก AdminPermissions) · หัวข้อกลุ่มที่ไม่เหลือเมนูก็ซ่อนด้วย
+    $groups = [
+        [null, [
+            ['route' => 'admin.dashboard', 'label' => 'ภาพรวม', 'icon' => 'grid', 'section' => 'dashboard'],
+            ['route' => 'admin.sales', 'label' => 'ยอดขาย', 'icon' => 'chart', 'section' => 'sales'],
+        ]],
+        ['ควบคุมเหรียญ', [
+            ['route' => 'admin.presale', 'label' => 'Presale', 'icon' => 'bolt', 'section' => 'presale'],
+            ['route' => 'admin.vesting', 'label' => 'สัญญาล็อก', 'icon' => 'lock', 'section' => 'vesting'],
+            ['route' => 'admin.pools', 'label' => 'พูลสภาพคล่อง', 'icon' => 'pool', 'section' => 'pools'],
+            ['route' => 'admin.wallets', 'label' => 'กระเป๋าโครงการ', 'icon' => 'wallet', 'section' => 'wallets'],
+        ]],
+        ['IDTC Grid', [
+            ['route' => 'admin.grid', 'label' => 'ภาพรวม Grid', 'icon' => 'users', 'section' => 'grid'],
+            ['route' => 'admin.grid.members', 'label' => 'สมาชิกและสายงาน', 'icon' => 'wallet', 'section' => 'grid_members'],
+            ['route' => 'admin.grid.map', 'label' => 'ผังสายงาน', 'icon' => 'users', 'section' => 'grid_map'],
+            ['route' => 'admin.grid.ledger', 'label' => 'รางวัลรายการซื้อ', 'icon' => 'chart', 'section' => 'grid_ledger'],
+            ['route' => 'admin.grid.plan', 'label' => 'แผนรางวัล', 'icon' => 'gear', 'section' => 'grid_plan'],
+            ['route' => 'admin.grid.rounds', 'label' => 'รอบจ่ายรางวัล', 'icon' => 'download', 'section' => 'grid_rounds'],
+        ]],
+        ['เว็บไซต์', [
+            ['route' => 'admin.content', 'label' => 'เนื้อหาและประกาศ', 'icon' => 'layout', 'section' => 'content'],
+            ['route' => 'admin.settings', 'label' => 'ตั้งค่าเหรียญ', 'icon' => 'gear', 'section' => 'settings'],
+            ['route' => 'admin.admins', 'label' => 'ผู้ดูแล', 'icon' => 'users', 'owner' => true],
+            ['route' => 'admin.audit', 'label' => 'บันทึกการทำงาน', 'icon' => 'log', 'section' => 'audit'],
+        ]],
     ];
+    $nav = [];
+    foreach ($groups as [$heading, $items]) {
+        $items = array_values(array_filter($items, fn ($i) => ! empty($i['owner']) ? $me->isOwner() : $me->canView($i['section'])));
+        if ($items !== []) {
+            $nav = array_merge($nav, $heading !== null ? [$heading] : [], $items);
+        }
+    }
     $adminJs = [
         'csrf' => csrf_token(),
-        'me' => ['address' => $me->checksum(), 'role' => $me->role, 'canWrite' => $me->canWrite()],
+        'me' => ['address' => $me->checksum(), 'role' => $me->role, 'canWrite' => $me->canEdit($adminSection ?? null)],
         'routes' => [
             'tx' => route('admin.tx.store'),
             'txCheck' => url('/admin/tx/__ID__/check'),
@@ -62,7 +75,7 @@
                 @foreach ($nav as $item)
                     @if (is_string($item))
                         <p class="grp">{{ $item }}</p>
-                    @elseif (empty($item['owner']) || $me->isOwner())
+                    @else
                         <a href="{{ route($item['route']) }}" @class(['on' => request()->routeIs($item['route'])]) @if (request()->routeIs($item['route'])) aria-current="page" @endif><x-admin.icon :name="$item['icon']"/>{{ $item['label'] }}</a>
                     @endif
                 @endforeach
@@ -71,7 +84,8 @@
             <div class="who">
                 <span style="color:var(--fg-3)">เข้าระบบด้วยกระเป๋า</span>
                 <span class="mono" style="color:var(--fg)" title="{{ $me->checksum() }}">{{ Idtc::short($me->checksum()) }}</span>
-                <span @class(['role', 'viewer' => ! $me->canWrite()])>● {{ $me->roleLabel() }}</span>
+                <span @class(['role', 'viewer' => ! $me->hasAnyEdit()])>● {{ $me->roleLabel() }}</span>
+                <a class="btn btn-ghost btn-sm btn-block" href="{{ route('admin.password') }}" @if (request()->routeIs('admin.password')) aria-current="page" @endif><x-admin.icon name="lock"/>รหัสผ่าน</a>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button class="btn btn-ghost btn-sm btn-block" type="submit"><x-admin.icon name="logout"/>ออกจากระบบ</button>

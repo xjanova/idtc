@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Services\Admin\AdminContext;
+use App\Services\Admin\AdminPermissions;
 use App\Services\Admin\Audit;
 use App\Services\Admin\ChainActions;
 use App\Services\Chain\Address;
@@ -29,6 +31,9 @@ class TxController extends Controller
         $spec = ChainActions::get($action);
         if ($spec === null) {
             return response()->json(['message' => 'ไม่รู้จักคำสั่งนี้'], 422);
+        }
+        if ($denied = $this->denied($action)) {
+            return $denied;
         }
         $hash = strtolower((string) $request->input('tx_hash'));
         if (! preg_match('/^0x[0-9a-f]{64}$/', $hash)) {
@@ -64,6 +69,9 @@ class TxController extends Controller
         if (! $log->tx_hash) {
             return response()->json(['message' => 'รายการนี้ไม่ใช่ธุรกรรมบนเชน'], 422);
         }
+        if ($denied = $this->denied((string) $log->action)) {
+            return $denied;
+        }
         try {
             $tracker->check($log);
         } catch (RpcException $e) {
@@ -79,6 +87,19 @@ class TxController extends Controller
         }
 
         return response()->json($this->payload($log));
+    }
+
+    /** ต้องมีสิทธิ์ edit ในส่วนของคำสั่งนั้น (presale/feeder → presale · vesting → vesting · rewards → รอบจ่ายรางวัล) */
+    protected function denied(string $action): ?JsonResponse
+    {
+        $section = ChainActions::section($action);
+        $me = app(AdminContext::class);
+        if ($section !== null && $me->canEdit($section)) {
+            return null;
+        }
+        $name = AdminPermissions::SECTIONS[$section]['label'] ?? 'คำสั่งบนเชน';
+
+        return response()->json(['message' => 'สิทธิ์ของคุณในส่วน "'.$name.'" ดูได้อย่างเดียว แก้ไขหรือสั่งงานไม่ได้'], 403);
     }
 
     /** @return array<string, mixed> */

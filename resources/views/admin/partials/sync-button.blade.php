@@ -1,4 +1,4 @@
-@if ($me->canWrite())
+@if ($me->canEdit('sales'))
     <form method="POST" action="{{ route('admin.sales.sync') }}" x-data="{ busy: false }" @submit="if (busy) { $event.preventDefault(); return; } busy = true">
         @csrf
         <button class="btn btn-ghost btn-sm" type="submit" :disabled="busy" title="ดึงยอดซื้อล่าสุดจากเชนเดี๋ยวนี้ (ปกติระบบดึงเองทุกนาที)">
