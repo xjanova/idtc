@@ -22,7 +22,7 @@ class SiteLocale
     ];
 
     /** หน้าสาธารณะที่มีครบทั้งสองภาษา (ชื่อ route ภาษาไทย) */
-    public const PAGES = ['home', 'presale', 'transparency', 'whitepaper', 'add-network', 'grid'];
+    public const PAGES = ['home', 'presale', 'transparency', 'whitepaper', 'add-network', 'grid', 'rewards'];
 
     /** คุกกี้จำภาษาที่ผู้เข้าชมเลือกเอง (ตั้งจาก JS ตอนกดสลับภาษา — ไม่เข้ารหัส) */
     public const COOKIE = 'idtc_locale';

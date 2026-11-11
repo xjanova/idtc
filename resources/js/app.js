@@ -165,6 +165,24 @@ Alpine.data('explainer', () => ({
     },
 }));
 
+/* ───────────── /rewards calculator (ตัวเลขอย่างเดียว ข้อความอยู่ใน Blade) ───────────── */
+Alpine.data('rewardCalc', (cfg) => ({
+    cfg,
+    usdt: 100,
+    phase: 0,
+    get amount() {
+        const v = Number(this.usdt);
+        return Number.isFinite(v) && v > 0 ? Math.min(v, 1e9) : 0;
+    },
+    get bought() { return this.amount * cfg.perUsdt; },
+    rate(ring) {
+        const add = ring === 1 ? (cfg.phases[this.phase]?.add || 0) : 0;
+        return (cfg.levels[ring - 1] || 0) + add;
+    },
+    pct(v) { return String(Math.round(v * 10000) / 100); },
+    fmt(n) { return Math.round(n).toLocaleString(cfg.locale); },
+}));
+
 /* ───────────── presale stats (อ่านสดจากสัญญา) ───────────── */
 Alpine.data('presaleStats', () => ({
     live: false,

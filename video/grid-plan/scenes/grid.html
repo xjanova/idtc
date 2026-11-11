@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>IDTC Grid — the reward plan</title>
+<link rel="stylesheet" href="_theme.css">
+<style>
+    /* IDTC night-energy palette (resources/css/app.css) */
+    :root {
+        --bg-0: #04080a; --bg-1: #07110f; --bg-2: #0b1714;
+        --line: rgba(220, 255, 240, .09); --line-2: rgba(220, 255, 240, .16);
+        --ink: #eaf4ef; --ink-2: #b0c3bb; --ink-3: #7b8f88;
+        --gold: #f5c86b; --gold-2: #ffe1a1; --gold-dim: rgba(245, 200, 107, .14);
+        --cyan: #10b981; --cyan-2: #6ee7b7; --cyan-dim: rgba(16, 185, 129, .13);
+        --lime: #a3e635; --bolt: #e6f23a; --solar: #3b82f6; --red: #fb7185;
+    }
+    .bg-base {
+        background:
+            radial-gradient(120% 90% at 80% 6%, rgba(16, 185, 129, .13) 0%, transparent 55%),
+            radial-gradient(100% 80% at 10% 98%, rgba(163, 230, 53, .08) 0%, transparent 58%),
+            linear-gradient(168deg, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+    }
+    #progress { background: linear-gradient(90deg, var(--cyan), var(--lime)); box-shadow: 0 0 12px rgba(163, 230, 53, .45); }
+    .chapter-rail .dot { background: var(--lime); box-shadow: 0 0 14px var(--lime); }
+    .chapter-rail .cur { color: var(--lime); }
+    .eyebrow, .label.accent { color: var(--cyan-2); }
+    .lime { color: var(--lime); }
+
+    .act { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; }
+    .center { align-items: center; text-align: center; }
+    .row { display: flex; gap: 28px; align-items: stretch; }
+    .grow { flex: 1; }
+    .chip { display: inline-flex; align-items: center; gap: 12px; padding: 16px 26px; border-radius: 999px;
+            border: 1px solid var(--line-2); background: rgba(255,255,255,.04); font-size: 26px; font-weight: 650; }
+    .chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); }
+    .arrow { font-size: 54px; color: var(--ink-3); align-self: center; }
+    .big { font-size: 112px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+
+    /* allocation bar */
+    .alloc { position: relative; height: 64px; border-radius: 14px; background: rgba(255,255,255,.05);
+             border: 1px solid var(--line-2); overflow: hidden; }
+    .alloc .fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--p, 0) * 100%);
+                   background: linear-gradient(90deg, var(--gold), var(--bolt)); }
+    .alloc span { position: absolute; top: 50%; transform: translateY(-50%); font-size: 22px; font-weight: 700; }
+
+    .step { flex: 1; border-radius: 22px; padding: 36px 34px; border: 1px solid var(--line-2); background: rgba(255,255,255,.035); }
+    .step .n { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; font-weight: 800;
+               background: var(--cyan-dim); color: var(--cyan-2); border: 1px solid rgba(16,185,129,.4); }
+    .step h3 { font-size: 36px; font-weight: 700; margin-top: 24px; }
+    .step p { font-size: 24px; color: var(--ink-2); margin-top: 10px; line-height: 1.45; }
+    .linkbar { display: flex; align-items: center; gap: 18px; padding: 22px 28px; border-radius: 16px;
+               background: rgba(0,0,0,.35); border: 1px solid rgba(163,230,53,.35); font-size: 30px; }
+    .linkbar .btn { margin-left: auto; padding: 10px 22px; border-radius: 10px; background: var(--lime); color: #03130c; font-weight: 800; font-size: 22px; }
+
+    .ratetbl { width: 100%; border-collapse: collapse; }
+    .ratetbl td { padding: 20px 0; border-bottom: 1px solid var(--line); font-size: 29px; color: var(--ink-2); }
+    .ratetbl td.v { text-align: right; font-size: 44px; font-weight: 800; color: var(--ink); font-family: "JetBrains Mono", monospace; }
+    .boost { display: flex; gap: 14px; margin-top: 26px; }
+    .boost div { flex: 1; border-radius: 14px; padding: 16px 18px; border: 1px solid var(--line-2); }
+    .boost b { display: block; font-size: 34px; font-weight: 800; margin-top: 4px; }
+    .boost span { font-size: 19px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+
+    .exrow { display: flex; align-items: center; gap: 26px; padding: 22px 30px; border-radius: 18px;
+             border: 1px solid var(--line-2); background: rgba(255,255,255,.035); }
+    .exrow .who { font-size: 28px; font-weight: 700; flex: 1; }
+    .exrow .who small { display: block; font-size: 21px; color: var(--ink-3); font-weight: 500; margin-top: 4px; }
+    .exrow .pc { font-size: 34px; font-weight: 800; min-width: 110px; text-align: right; }
+    .exrow .amt { font-family: "JetBrains Mono", monospace; font-size: 42px; font-weight: 700; min-width: 420px; text-align: right; }
+
+    .rank { flex: 1; border-radius: 22px; padding: 30px 28px; border: 1px solid var(--line-2); background: rgba(255,255,255,.035);
+            display: flex; flex-direction: column; justify-content: flex-end; }
+    .rank .nm { font-size: 46px; font-weight: 800; letter-spacing: -.02em; }
+    .rank .req { font-size: 23px; color: var(--ink-2); margin-top: 14px; line-height: 1.45; min-height: 68px; }
+    .rank .get { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 23px; font-weight: 700; }
+
+    .bars .b { display: flex; align-items: center; gap: 20px; margin-top: 18px; }
+    .bars .b span { width: 200px; font-size: 23px; color: var(--ink-2); font-weight: 600; }
+    .bars .track { position: relative; flex: 1; height: 40px; border-radius: 10px; background: rgba(255,255,255,.05); }
+    .bars .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 10px; width: calc(var(--w) * 100%); }
+    .capline { position: absolute; top: -14px; bottom: -14px; width: 0; border-left: 3px dashed var(--red); }
+
+    .rule-card { border-radius: 20px; padding: 28px 30px; border: 1px solid var(--line-2); background: rgba(255,255,255,.035); }
+    .rule-card h4 { font-size: 31px; font-weight: 700; margin-top: 14px; }
+    .rule-card p { font-size: 22px; color: var(--ink-2); margin-top: 8px; line-height: 1.45; }
+    .ico { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 28px; font-weight: 800;
+           background: var(--cyan-dim); color: var(--cyan-2); border: 1px solid rgba(16,185,129,.35); }
+    .holdbar { position: relative; height: 22px; border-radius: 11px; background: rgba(255,255,255,.06); margin-top: 22px; overflow: hidden; }
+    .holdbar i { position: absolute; inset: 0 auto 0 0; width: calc(var(--p, 0) * 100%); background: linear-gradient(90deg, var(--cyan), var(--lime)); }
+
+    .node { border-radius: 20px; padding: 28px 30px; border: 1px solid var(--line-2); background: rgba(255,255,255,.04); text-align: center; flex: 1; }
+    .node .k { font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+    .node b { display: block; font-size: 34px; margin-top: 12px; font-weight: 750; }
+    .split { display: flex; height: 92px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line-2); }
+    .split div { display: flex; flex-direction: column; justify-content: center; padding: 0 28px; }
+    .split b { font-size: 34px; font-weight: 800; color: #03130c; }
+    .split span { font-size: 20px; font-weight: 700; color: rgba(3,19,12,.75); }
+
+    .risk { border-radius: 26px; padding: 44px 52px; border: 1px solid rgba(245,200,107,.45); background: rgba(245,200,107,.08); }
+    .risk li { list-style: none; font-size: 34px; line-height: 1.4; padding: 14px 0 14px 54px; position: relative; color: var(--ink); }
+    .risk li::before { content: "!"; position: absolute; left: 0; top: 16px; width: 36px; height: 36px; border-radius: 50%;
+                       display: grid; place-items: center; background: var(--gold); color: #1a1205; font-weight: 800; font-size: 22px; }
+
+    #net { position: absolute; left: 50%; top: 50%; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; opacity: .55;
+           -webkit-mask-image: radial-gradient(closest-side, transparent 34%, #000 62%); mask-image: radial-gradient(closest-side, transparent 34%, #000 62%); }
+</style>
+
+<div id="stage">
+<svg id="net" viewBox="-750 -750 1500 1500" data-in="0.1" data-anim="fade" data-dur="2.4" data-out-at="l04-1.2" data-odur="1.2"></svg>
+<div class="frame">
+
+<!-- ══ A1 · intro ══ -->
+<div class="act center" data-in="0.2" data-anim="fade" data-dur="1.0" data-out-at="l04-0.6" data-odur="0.6">
+    <img src="../assets/idtc-512.png" style="width:150px;height:150px;filter:drop-shadow(0 0 40px rgba(163,230,53,.35))" data-in="0.3" data-anim="pop" data-dur="1.2">
+    <div class="label accent" style="letter-spacing:.42em;margin-top:30px" data-in="0.9" data-dur="0.9">IDTC Presale · TPIX Chain</div>
+    <div class="display" style="margin-top:20px;font-size:128px" data-in="1.2" data-anim="blur" data-dur="1.3">IDTC <span class="lime">Grid</span></div>
+    <div class="h3" style="margin-top:22px;color:var(--ink-2);font-weight:500" data-in="2.2" data-dur="1.0">Invite friends. Receive IDTC from a budget fixed in advance.</div>
+    <div style="display:flex;gap:20px;margin-top:52px">
+        <div class="chip" data-at="l02+0.2" data-anim="pop" data-dur="0.7"><i></i>15B IDTC fixed budget</div>
+        <div class="chip" data-at="l02+0.9" data-anim="pop" data-dur="0.7"><i></i>3 reward rings</div>
+        <div class="chip" data-at="l02+1.6" data-anim="pop" data-dur="0.7"><i></i>Claimed on-chain</div>
+    </div>
+    <div class="small" style="margin-top:34px" data-at="l03" data-dur="0.8">Every number · every rule</div>
+</div>
+
+<!-- ══ A2 · budget ══ -->
+<div class="act" data-at="l04-0.4" data-anim="fade" data-dur="0.7" data-out-at="l07-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l04-0.2">01 · Where rewards come from</div>
+    <div class="row" style="align-items:flex-end;gap:40px;margin-top:22px">
+        <div class="big mono" style="color:var(--gold-2)" data-at="l04" data-count="15000000000" data-dur="2.6" data-anim="fade">0</div>
+        <div class="h2" style="padding-bottom:10px" data-at="l04+0.6">IDTC</div>
+    </div>
+    <div class="h3" style="margin-top:16px;color:var(--ink-2);font-weight:500" data-at="l04+1.0">Fixed reward budget, set aside before the sale began</div>
+    <div style="margin-top:40px" data-at="l04.2">
+        <div class="alloc" data-at="l04.2" data-bar="0.15" data-dur="1.6" data-anim="fade"><div class="fill"></div>
+            <span style="left:24px;color:#1a1205">Grid 15B</span><span style="right:24px;color:var(--ink-2)">Operations &amp; marketing allocation · 100B IDTC</span></div>
+    </div>
+    <div class="row" style="margin-top:44px;align-items:center">
+        <div class="node" data-at="l05" data-anim="rise"><div class="k">Buyers pay</div><b>USDT</b></div>
+        <div class="arrow" data-at="l05.2-0.3" data-anim="left">→</div>
+        <div class="node" style="border-color:rgba(16,185,129,.5);background:var(--cyan-dim)" data-at="l05.2" data-anim="rise"><div class="k">100% goes into</div><b class="cyan">IDTC/USDT pool</b></div>
+        <div class="arrow" data-at="l05.3-0.3" data-anim="left">→</div>
+        <div class="node" data-at="l05.3" data-anim="rise"><div class="k">Liquidity locked until</div><b class="mono">29 Feb 2028</b></div>
+    </div>
+    <div class="row" style="margin-top:30px;gap:20px">
+        <div class="chip" style="border-color:rgba(251,113,133,.45)" data-at="l05+0.8" data-anim="pop"><span class="red" style="font-weight:800">✕</span>Rewards are never paid from buyers' money</div>
+        <div class="chip" style="border-color:rgba(163,230,53,.45)" data-at="l06" data-anim="pop"><span class="lime" style="font-weight:800">✓</span>The plan can never be set above the budget</div>
+    </div>
+</div>
+
+<!-- ══ A3 · join ══ -->
+<div class="act" data-at="l07-0.4" data-anim="fade" data-dur="0.7" data-out-at="l09-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l07-0.2">02 · Join for free</div>
+    <div class="row" style="margin-top:30px">
+        <div class="step" data-at="l07+0.3" data-anim="rise"><div class="n">1</div><h3>Connect wallet</h3><p>Any EVM wallet on TPIX Chain</p></div>
+        <div class="step" data-at="l07+1.8" data-anim="rise"><div class="n">2</div><h3>Sign one message</h3><p>Proves the wallet is yours. It moves no tokens.</p></div>
+        <div class="step" data-at="l08" data-anim="rise"><div class="n">3</div><h3>Get your link</h3><p>Share it anywhere, right away</p></div>
+    </div>
+    <div class="row" style="margin-top:34px;gap:18px">
+        <div class="chip" data-at="l07.2" data-anim="pop"><i></i>No password</div>
+        <div class="chip" data-at="l07.2+0.6" data-anim="pop"><i></i>No fee</div>
+        <div class="chip" data-at="l07.2+1.2" data-anim="pop"><i></i>Gas 0</div>
+    </div>
+    <div class="linkbar mono" style="margin-top:34px" data-at="l08+0.4" data-anim="rise">
+        <span style="color:var(--ink-3)">Your link</span><span data-at="l08+0.6" data-type="idtc.online/r/0x7a3F…c91E" data-dur="1.4" data-anim="none"></span><span class="btn">Copy</span>
+    </div>
+</div>
+
+<!-- ══ A4 · rings ══ -->
+<div class="act" data-at="l09-0.4" data-anim="fade" data-dur="0.7" data-out-at="l14-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l09-0.2">03 · Three rings</div>
+    <div class="row" style="margin-top:20px;align-items:center;gap:60px">
+        <svg id="rings" width="700" height="700" viewBox="-350 -350 700 700" style="flex:none"></svg>
+        <div class="grow">
+            <table class="ratetbl">
+                <tr data-at="l10" data-anim="left"><td>Ring 1 · friends you invite</td><td class="v lime">5%</td></tr>
+                <tr data-at="l11" data-anim="left"><td>Ring 2 · their friends</td><td class="v cyan">3%</td></tr>
+                <tr data-at="l11.2" data-anim="left"><td>Ring 3 · one level further</td><td class="v">1%</td></tr>
+                <tr data-at="l13" data-anim="left"><td>Buyer who came through a link</td><td class="v" style="color:var(--gold-2)">+1%</td></tr>
+            </table>
+            <div class="small" style="margin-top:14px" data-at="l10+1">% of the IDTC each friend buys</div>
+            <div class="boost" data-at="l12" data-anim="rise">
+                <div style="border-color:rgba(163,230,53,.5);background:rgba(163,230,53,.08)"><span>Weeks 1–3</span><b class="lime">Ring 1 · 7%</b></div>
+                <div style="border-color:rgba(16,185,129,.45);background:var(--cyan-dim)"><span>Weeks 4–6</span><b class="cyan">Ring 1 · 6%</b></div>
+                <div><span>Week 7 on</span><b>Ring 1 · 5%</b></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ A5 · example ══ -->
+<div class="act" data-at="l14-0.4" data-anim="fade" data-dur="0.7" data-out-at="l18-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l14-0.2">04 · Example</div>
+    <div class="row" style="margin-top:24px;align-items:center">
+        <div class="node" data-at="l14.2" data-anim="rise"><div class="k">A friend buys</div><b class="mono" style="font-size:48px">100 USDT</b></div>
+        <div class="arrow" data-at="l14.2+0.6" data-anim="left">→</div>
+        <div class="node" style="flex:1.4" data-at="l14.2+0.9" data-anim="rise"><div class="k">They receive</div>
+            <b class="mono" style="font-size:48px"><span data-at="l14.2+1.1" data-count="66666667" data-dur="2.2" data-anim="none">0</span> IDTC</b></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:34px">
+        <div class="exrow" data-at="l15" data-anim="rise"><div class="who">You · ring 1<small>Sale week 7 on</small></div><div class="pc lime">5%</div><div class="amt"><span data-at="l15+0.2" data-count="3333333" data-dur="1.8" data-anim="none">0</span></div></div>
+        <div class="exrow" style="border-color:rgba(163,230,53,.45);background:rgba(163,230,53,.07)" data-at="l15.2" data-anim="rise"><div class="who">You · ring 1, launch bonus<small>Sale weeks 1–3</small></div><div class="pc lime">7%</div><div class="amt"><span data-at="l15.2+0.2" data-count="4666667" data-dur="1.8" data-anim="none">0</span></div></div>
+        <div class="exrow" data-at="l16" data-anim="rise"><div class="who">Your friend · buyer bonus<small>For coming through your link</small></div><div class="pc" style="color:var(--gold-2)">1%</div><div class="amt"><span data-at="l16+0.2" data-count="666667" data-dur="1.6" data-anim="none">0</span></div></div>
+    </div>
+    <div class="chip" style="margin-top:30px;align-self:flex-start;border-color:rgba(245,200,107,.45)" data-at="l17" data-anim="pop"><span style="color:var(--gold);font-weight:800">!</span>IDTC token amounts, not cash · value follows the IDTC market price</div>
+</div>
+
+<!-- ══ A6 · ranks ══ -->
+<div class="act" data-at="l18-0.4" data-anim="fade" data-dur="0.7" data-out-at="l23-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l18-0.2">05 · Ranks unlock the rings</div>
+    <div class="row" style="margin-top:28px;align-items:flex-end;height:560px">
+        <div class="rank" style="height:58%" data-at="l19" data-anim="rise"><div class="nm lime">Spark</div><div class="req">Buy at least 10 USDT yourself</div><div class="get">Unlocks ring 1</div></div>
+        <div class="rank" style="height:72%" data-at="l20" data-anim="rise"><div class="nm cyan">Cell</div><div class="req">2 direct friends who bought</div><div class="get">Unlocks ring 2</div></div>
+        <div class="rank" style="height:86%;border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.08)" data-at="l21" data-anim="rise"><div class="nm" style="color:#93c5fd">Grid</div><div class="req">4 direct friends<br>+ 1,000 USDT team volume</div><div class="get">Ring 3 + weekly Sprint</div></div>
+        <div class="rank" style="height:100%;border-color:rgba(245,200,107,.5);background:var(--gold-dim)" data-at="l22" data-anim="rise"><div class="nm" style="color:var(--gold-2)">Core</div><div class="req">10 direct friends<br>+ 10,000 USDT team volume</div><div class="get">Double Sprint share</div></div>
+    </div>
+</div>
+
+<!-- ══ A7 · sprint ══ -->
+<div class="act" data-at="l23-0.4" data-anim="fade" data-dur="0.7" data-out-at="l25-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l23-0.2">06 · Weekly Sprint</div>
+    <div class="row" style="align-items:center;gap:44px;margin-top:20px">
+        <div class="big" style="color:var(--lime)" data-at="l23" data-anim="pop">2%</div>
+        <div class="h3" style="color:var(--ink-2);font-weight:500;max-width:1000px" data-at="l23+0.6">of the IDTC sold each week becomes a Sprint pool for <b class="ink">Grid</b> and <b class="ink">Core</b> members</div>
+    </div>
+    <div class="bars" style="margin-top:44px">
+        <div class="b" data-at="l23.2" data-anim="left"><span>Core · ×2</span><div class="track"><div class="fill" id="sp0" style="--w:.30;background:linear-gradient(90deg,var(--gold),var(--bolt))"></div><div class="capline" style="left:20%" data-at="l24" data-anim="fade"></div></div></div>
+        <div class="b" data-at="l23.2+0.3" data-anim="left"><span>Grid member</span><div class="track"><div class="fill" style="--w:.17;background:linear-gradient(90deg,var(--solar),#93c5fd)"></div></div></div>
+        <div class="b" data-at="l23.2+0.6" data-anim="left"><span>Grid member</span><div class="track"><div class="fill" style="--w:.12;background:linear-gradient(90deg,var(--solar),#93c5fd)"></div></div></div>
+        <div class="b" data-at="l23.2+0.9" data-anim="left"><span>Grid member</span><div class="track"><div class="fill" style="--w:.08;background:linear-gradient(90deg,var(--solar),#93c5fd)"></div></div></div>
+    </div>
+    <div class="chip" style="margin-top:36px;align-self:flex-start;border-color:rgba(251,113,133,.45)" data-at="l24+0.3" data-anim="pop"><span class="red" style="font-weight:800">┆</span>Cap: no one takes more than 20% of a week's pool</div>
+    <div class="figcap" style="margin-top:18px" data-at="l23.2+1.2">Illustrative split — shares follow each member's team volume that week.</div>
+</div>
+
+<!-- ══ A8 · rules ══ -->
+<div class="act" data-at="l25-0.4" data-anim="fade" data-dur="0.7" data-out-at="l29-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l25-0.2">07 · Rules that keep it fair</div>
+    <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:24px;margin-top:26px">
+        <div class="rule-card" data-at="l26" data-anim="rise">
+            <div class="ico">14</div><h4>Hold 14 days before it counts</h4>
+            <p>Sold or moved out early → no reward. That share returns to the budget.</p>
+            <div class="holdbar" data-at="l26+0.6" data-bar="1" data-dur="3.4" data-anim="fade"><i></i></div>
+            <div class="small" style="margin-top:10px">Day <span data-at="l26+0.6" data-count="14" data-dur="3.4" data-anim="none">0</span> of 14</div>
+        </div>
+        <div class="rule-card" data-at="l27" data-anim="rise"><div class="ico">✓</div><h4>Checked on-chain</h4><p>From IDTC transfer records, not from anyone's word.</p></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px">
+        <div class="rule-card" data-at="l28" data-anim="rise"><div class="ico">○</div><h4>Empty rings don't pass up</h4><p>The share goes back to the budget.</p></div>
+        <div class="rule-card" data-at="l28.2" data-anim="rise"><div class="ico">1×</div><h4>Bind your inviter once</h4><p>Before your first purchase. Never yourself.</p></div>
+        <div class="rule-card" data-at="l28.3" data-anim="rise"><div class="ico">⟲</div><h4>Never retroactive</h4><p>Rates follow the week you buy. Plan changes apply the next week.</p></div>
+    </div>
+</div>
+
+<!-- ══ A9 · payout ══ -->
+<div class="act" data-at="l29-0.4" data-anim="fade" data-dur="0.7" data-out-at="l32-0.6" data-odur="0.6">
+    <div class="label accent" data-at="l29-0.2">08 · Paid on-chain</div>
+    <div class="row" style="margin-top:26px;align-items:center">
+        <div class="node" data-at="l29" data-anim="rise"><div class="k">Team publishes</div><b>Payout round</b></div>
+        <div class="arrow" data-at="l29+0.8" data-anim="left">→</div>
+        <div class="node" style="border-color:rgba(16,185,129,.5);background:var(--cyan-dim)" data-at="l29+1.1" data-anim="rise"><div class="k">TPIX Chain</div><b class="cyan">Reward contract</b></div>
+        <div class="arrow" data-at="l29.2-0.3" data-anim="left">→</div>
+        <div class="node" style="border-color:rgba(163,230,53,.5)" data-at="l29.2" data-anim="rise"><div class="k">You claim to</div><b class="lime">Your own wallet</b></div>
+    </div>
+    <div class="chip" style="margin-top:22px;align-self:flex-end" data-at="l29.2+1.2" data-anim="pop"><i></i>Gas 0</div>
+    <div style="margin-top:30px" data-at="l30" data-anim="rise">
+        <div class="split">
+            <div style="flex:1;background:var(--lime)"><b>50% · claim at once</b><span>When the round is published</span></div>
+            <div style="flex:1;background:var(--gold)" data-at="l30.2" data-anim="wipe" data-dur="1.0"><b>50% · after the sale closes</b><span>From 1 March 2027</span></div>
+        </div>
+    </div>
+    <div class="chip" style="margin-top:28px;align-self:flex-start;border-color:rgba(163,230,53,.45)" data-at="l31" data-anim="pop"><span class="lime" style="font-weight:800">✓</span>The website never holds your keys · you sign every claim</div>
+</div>
+
+<!-- ══ A10 · risk ══ -->
+<div class="act" data-at="l32-0.4" data-anim="fade" data-dur="0.7" data-out-at="l34-0.6" data-odur="0.6">
+    <div class="label" style="color:var(--gold)" data-at="l32-0.2">Read before you join</div>
+    <ul class="risk" style="margin-top:24px" data-at="l32" data-anim="rise">
+        <li data-at="l32.2">Rewards are IDTC tokens — not an investment return</li>
+        <li data-at="l32.3">IDTC can lose value, even all of it. No profit is guaranteed</li>
+        <li data-at="l33">Use only money you can afford to lose</li>
+        <li data-at="l33+2.2">Never promise profits to the people you invite</li>
+    </ul>
+</div>
+
+<!-- ══ A11 · end card ══ -->
+<div class="act center" data-at="l34-0.4" data-anim="fade" data-dur="0.8">
+    <img src="../assets/idtc-512.png" style="width:130px;height:130px;filter:drop-shadow(0 0 40px rgba(163,230,53,.35))" data-at="l34-0.2" data-anim="pop" data-dur="1.0">
+    <div class="display" style="margin-top:26px" data-at="l34" data-anim="blur">IDTC <span class="lime">Grid</span></div>
+    <div style="display:flex;gap:20px;margin-top:40px">
+        <div class="chip" data-at="l34+1.0" data-anim="pop"><i></i>Fixed budget</div>
+        <div class="chip" data-at="l34+1.6" data-anim="pop"><i></i>Clear rules</div>
+        <div class="chip" data-at="l34+2.2" data-anim="pop"><i></i>Paid on-chain</div>
+    </div>
+    <div class="mono" style="font-size:44px;margin-top:48px;color:var(--lime)" data-at="l34+3.4" data-anim="rise">idtc.online/rewards</div>
+</div>
+
+</div>
+</div>
+
+<script src="../tmp/grid/timing.js"></script>
+<script src="_engine.js"></script>
+<script>
+(function () {
+    const E = window.TPIX, T = window.TIMING;
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); parent && parent.appendChild(n); return n; };
+
+    // deterministic random
+    let seed = 4289;
+    const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+
+    // ---- background network (intro): nodes on three orbits + links to centre ----
+    const net = document.getElementById('net');
+    const orbits = [220, 400, 600];
+    const netNodes = [];
+    orbits.forEach((r, oi) => {
+        el('circle', { cx: 0, cy: 0, r, fill: 'none', stroke: 'rgba(220,255,240,.07)', 'stroke-width': 1.5 }, net);
+        const n = [7, 13, 21][oi];
+        for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 + rnd() * 0.3;
+            netNodes.push({ oi, r, a, d: rnd() });
+        }
+    });
+    const netG = el('g', {}, net);
+    netNodes.forEach((p) => {
+        p.line = el('line', { x1: 0, y1: 0, stroke: 'rgba(163,230,53,.18)', 'stroke-width': 1.2 }, netG);
+        p.dot = el('circle', { r: [7, 5.5, 4][p.oi], fill: ['#a3e635', '#34d399', '#7b8f88'][p.oi] }, netG);
+    });
+    el('circle', { cx: 0, cy: 0, r: 16, fill: '#e6f23a' }, net);
+
+    // ---- rings diagram (act 4) ----
+    const R = document.getElementById('rings');
+    const ringSpec = [
+        { r: 120, n: 4, col: '#a3e635', label: 'Ring 1 · 5%', at: 'l10' },
+        { r: 210, n: 9, col: '#34d399', label: 'Ring 2 · 3%', at: 'l11' },
+        { r: 300, n: 16, col: '#7b8f88', label: 'Ring 3 · 1%', at: 'l11.2' },
+    ];
+    const ringEls = ringSpec.map((s, i) => {
+        const g = el('g', {}, R);
+        const c = el('circle', { cx: 0, cy: 0, r: s.r, fill: 'none', stroke: s.col, 'stroke-opacity': .5, 'stroke-width': 2, 'stroke-dasharray': '6 9' }, g);
+        const dots = [];
+        for (let k = 0; k < s.n; k++) {
+            const a = (k / s.n) * Math.PI * 2 + i * 0.4;
+            dots.push(el('circle', { cx: Math.cos(a) * s.r, cy: Math.sin(a) * s.r, r: 10 - i * 2, fill: s.col }, g));
+        }
+        // label stays upright (outside the rotating group)
+        const t = el('text', { x: 0, y: -s.r - 16, 'text-anchor': 'middle', fill: s.col, 'font-size': 24, 'font-weight': 700, 'font-family': 'Inter',
+                               stroke: '#05100c', 'stroke-width': 6, 'paint-order': 'stroke' }, R);
+        t.textContent = s.label;
+        return { g, t, t0: E.lineTime(s.at, T) };
+    });
+    // you at the centre; your team spreads outward ring by ring
+    el('circle', { cx: 0, cy: 0, r: 46, fill: 'rgba(230,242,58,.15)', stroke: '#e6f23a', 'stroke-width': 2 }, R);
+    const bt = el('text', { x: 0, y: 8, 'text-anchor': 'middle', fill: '#e6f23a', 'font-size': 24, 'font-weight': 800, 'font-family': 'Inter' }, R);
+    bt.textContent = 'YOU';
+
+    E.init({ duration: T.duration, cues: T.lines, timing: T, series: 'IDTC Grid', chapter: 'Reward plan' });
+
+    E.custom((t) => {
+        // network: slow orbit + links draw in
+        const rot = t * 0.035;
+        netNodes.forEach((p, i) => {
+            const a = p.a + rot * (p.oi % 2 ? -1 : 1) * (1 - p.oi * 0.2);
+            const x = Math.cos(a) * p.r, y = Math.sin(a) * p.r;
+            const u = E.win(t, 0.6 + p.oi * 0.7 + p.d * 1.2, 1.8 + p.oi * 0.7 + p.d * 1.2);
+            p.dot.setAttribute('cx', x); p.dot.setAttribute('cy', y);
+            p.dot.setAttribute('opacity', u);
+            p.line.setAttribute('x2', x * u); p.line.setAttribute('y2', y * u);
+            p.line.setAttribute('opacity', u * (p.oi === 0 ? 1 : 0.5));
+        });
+        // rings: appear on cue, rotate slowly
+        ringEls.forEach((r, i) => {
+            const u = E.win(t, r.t0, r.t0 + 0.9, E.Ease.out);
+            r.g.setAttribute('opacity', u);
+            r.t.setAttribute('opacity', u);
+            r.g.setAttribute('transform', `rotate(${(t * (i % 2 ? -3 : 3)).toFixed(2)}) scale(${(0.85 + 0.15 * u).toFixed(3)})`);
+        });
+        // sprint: the Core bar is clipped back to the 20% cap once the cap appears
+        const cap = E.lineTime('l24', T);
+        const sp = document.getElementById('sp0');
+        if (sp) {
+            const grow = E.win(t, E.lineTime('l23.2', T), E.lineTime('l23.2', T) + 1.4, E.Ease.outQuint);
+            const clip = E.win(t, cap + 0.4, cap + 1.4, E.Ease.inOut);
+            sp.style.setProperty('--w', (grow * E.lerp(0.30, 0.20, clip)).toFixed(4));
+        }
+    });
+    E.seek(0);
+})();
+</script>

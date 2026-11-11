@@ -23,6 +23,7 @@ class LocalizationTest extends TestCase
         'transparency' => ['/transparency', '/en/transparency'],
         'whitepaper' => ['/whitepaper', '/en/whitepaper'],
         'add-network' => ['/add-network', '/en/add-network'],
+        'rewards' => ['/rewards', '/en/rewards'],
     ];
 
     private const THAI = '/[\x{0E00}-\x{0E7F}]/u';

@@ -18,6 +18,7 @@ $pages = function (): void {
     Route::get('/transparency', [PageController::class, 'transparency'])->name('transparency');
     Route::get('/whitepaper', [PageController::class, 'whitepaper'])->name('whitepaper');
     Route::get('/add-network', [PageController::class, 'addNetwork'])->name('add-network');
+    Route::get('/rewards', [PageController::class, 'rewards'])->name('rewards');
 
     // IDTC Grid — ปิดอยู่ (หลังบ้าน) = 404 · API อยู่ใต้ภาษาของหน้า ข้อความตอบกลับจึงเป็นภาษาเดียวกับหน้า
     Route::get('/grid', [GridController::class, 'page'])->name('grid');

@@ -12,6 +12,7 @@ return [
     'nav' => [
         'home' => 'Overview',
         'presale' => 'Presale',
+        'rewards' => 'Rewards',
         'transparency' => 'Transparency',
         'whitepaper' => 'Whitepaper',
         'grid' => 'Invite',
