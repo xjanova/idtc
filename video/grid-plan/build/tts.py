@@ -62,8 +62,9 @@ async def main(script_path: Path):
 
     work = ROOT / "tmp" / ep
     work.mkdir(parents=True, exist_ok=True)
-    for stale in work.glob("line-*.mp3"):
-        stale.unlink()
+    if spec.get("engine") != "elevenlabs":
+        for stale in work.glob("line-*.mp3"):
+            stale.unlink()
 
     lines = spec["lines"]
     print(f"{ep}: {len(lines)} lines · voice={voice} rate={rate}")
@@ -86,7 +87,15 @@ async def main(script_path: Path):
                     await asyncio.sleep(1.5 * (attempt + 1))
             raise RuntimeError(f"empty audio for line {i}")
 
-    await asyncio.gather(*(one(i, ln) for i, ln in enumerate(lines)))
+    # engine "elevenlabs": the line files were synthesized elsewhere (build/elevenlabs/README.md)
+    # and copied into tmp/<id>/ — only check them; never re-synthesize here.
+    external = spec.get("engine") == "elevenlabs"
+    if external:
+        missing = [i for i in range(len(lines)) if not (work / f"line-{i:03d}.mp3").exists()]
+        if missing:
+            raise SystemExit(f"missing line files {missing} in {work}")
+    else:
+        await asyncio.gather(*(one(i, ln) for i, ln in enumerate(lines)))
     paths = [work / f"line-{i:03d}.mp3" for i in range(len(lines))]
 
     # ประกอบไทม์ไลน์
@@ -109,7 +118,8 @@ async def main(script_path: Path):
                 "line": lid,
                 "t0": round(t0, 3),
                 "t1": round(cursor + acc, 3),
-                "en": ln["en"] if j == 0 else "",
+                # Thai edition shows a small English line under every Thai cue
+                "en": ln["en"] if (j == 0 or external) else "",
                 "th": txt,
             })
         concat_parts.append((p, gap))
