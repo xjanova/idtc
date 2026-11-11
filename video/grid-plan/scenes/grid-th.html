@@ -397,8 +397,9 @@
     // Key moments use a Digen lip-sync clip of น้องไอเดีย, composited later by build/compose-th.py
     // (bottom-right 440×660). Inside these windows the still poses fade out so the corner is clear.
     // Keep in step with the cuts in build/compose-th.py.
-    // ?tail=k4 → only the last line (l34) has a clip; ?tail=none → no clip at the end (the poses stay)
-    const TAIL = new URLSearchParams(location.search).get('tail');
+    // Shipped cut (2026-11-11): lip clips on the intro only, the ending keeps the poses (Digen could not make k2–k4).
+    // ?tail=all → clips k2–k4 over l32–l34; ?tail=k4 → only the last line (l34) has a clip.
+    const TAIL = new URLSearchParams(location.search).get('tail') || 'none';
     const tailA = TAIL === 'k4' ? (E.lineTime('l33.end', T) + E.lineTime('l34', T)) / 2 : (E.lineTime('l31.end', T) + E.lineTime('l32', T)) / 2;
     const LIP_WIN = [
         [0.55, (E.lineTime('l01.end', T) + E.lineTime('l02', T)) / 2],
