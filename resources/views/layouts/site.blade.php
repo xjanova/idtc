@@ -6,7 +6,7 @@
     $description = $description ?? __('site.description', ['price' => config('idtc.sale.price_usd')]);
     $alternates = SiteLocale::alternates();
     $canonical = SiteLocale::page() !== null ? $alternates[$locale] : url()->current();
-    $nav = ['home', 'presale', 'transparency', 'whitepaper', 'add-network'];
+    $nav = ['home', 'presale', 'rewards', 'transparency', 'whitepaper', 'add-network'];
     // IDTC Grid ขึ้นเมนูเมื่อเปิดจากหลังบ้านเท่านั้น
     if (app(\App\Services\Grid\GridPlan::class)->enabled()) {
         array_splice($nav, 2, 0, ['grid']);
@@ -108,6 +108,7 @@
                 </div>
                 <div><h4>{{ __('site.footer.token') }}</h4><ul>
                     <li><a href="{{ lroute('presale') }}">{{ __('site.nav.presale') }}</a></li>
+                    <li><a href="{{ lroute('rewards') }}">{{ __('site.nav.rewards') }}</a></li>
                     <li><a href="{{ lroute('home') }}#tokenomics">Tokenomics</a></li>
                     <li><a href="{{ lroute('transparency') }}">{{ __('site.nav.transparency') }}</a></li>
                 </ul></div>

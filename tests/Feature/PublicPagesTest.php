@@ -48,7 +48,7 @@ class PublicPagesTest extends TestCase
 
     public function test_every_public_route_returns_ok(): void
     {
-        foreach (['/', '/presale', '/transparency', '/whitepaper', '/add-network'] as $uri) {
+        foreach (['/', '/presale', '/transparency', '/whitepaper', '/add-network', '/rewards'] as $uri) {
             $this->get($uri)->assertOk();
         }
     }
@@ -56,7 +56,7 @@ class PublicPagesTest extends TestCase
     public function test_every_public_route_returns_ok_when_deployed(): void
     {
         $this->deployAll();
-        foreach (['/', '/presale', '/transparency', '/whitepaper', '/add-network'] as $uri) {
+        foreach (['/', '/presale', '/transparency', '/whitepaper', '/add-network', '/rewards'] as $uri) {
             $this->get($uri)->assertOk();
         }
     }

@@ -1,0 +1,7 @@
+{
+  "name": "idtc-grid-video",
+  "private": true,
+  "type": "module",
+  "description": "IDTC Grid reward plan — narrated explainer (deterministic HTML render)",
+  "dependencies": { "puppeteer-core": "^24.9.0" }
+}

@@ -12,6 +12,7 @@ return [
     'nav' => [
         'home' => 'ภาพรวม',
         'presale' => 'Presale',
+        'rewards' => 'แผนรางวัล',
         'transparency' => 'ความโปร่งใส',
         'whitepaper' => 'ไวท์เปเปอร์',
         'grid' => 'ชวนเพื่อน',
