@@ -96,11 +96,13 @@
                 <h2 class="h2">{!! __('rewards.video.title') !!}</h2>
                 <p class="lead">{{ __('rewards.video.lead') }}</p>
             </div>
+            {{-- คลิปตามภาษาหน้า: ไทย = พากย์ไทย (น้องไอเดีย) · อังกฤษ = พากย์อังกฤษ --}}
+            @php($th = app()->getLocale() === 'th')
             <figure class="video-frame reveal" x-data="explainer">
-                <video x-ref="v" controls playsinline preload="none" poster="{{ asset('images/video/grid-plan-poster.webp') }}" width="1920" height="1080"
+                <video x-ref="v" controls playsinline preload="none" poster="{{ asset($th ? 'images/video/grid-plan-poster-th.webp' : 'images/video/grid-plan-poster.webp') }}" width="1920" height="1080"
                        @play="playing = true" @pause="playing = false" @ended="playing = false; done = true">
-                    <source src="{{ asset('media/idtc-grid-plan-1080p.mp4') }}" type="video/mp4">
-                    <track kind="captions" src="{{ asset('media/idtc-grid-plan-en.vtt') }}" srclang="en" label="{{ __('rewards.video.track') }}">
+                    <source src="{{ asset($th ? 'media/idtc-grid-plan-th-1080p.mp4' : 'media/idtc-grid-plan-1080p.mp4') }}" type="video/mp4">
+                    <track kind="captions" src="{{ asset($th ? 'media/idtc-grid-plan-th.vtt' : 'media/idtc-grid-plan-en.vtt') }}" srclang="{{ $th ? 'th' : 'en' }}" label="{{ __('rewards.video.track') }}">
                 </video>
                 <button class="video-play" type="button" x-show="!playing" @click="play()" :aria-label="done ? @js(__('home.video.replay')) : @js(__('rewards.video.play'))" aria-label="{{ __('rewards.video.play') }}">
                     <span class="video-play__ring"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>

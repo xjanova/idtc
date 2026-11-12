@@ -59,7 +59,8 @@ await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
 page.on('console', (m) => { if (m.type() === 'error') console.error('  [page]', m.text()); });
 page.on('pageerror', (e) => console.error('  [page:error]', e.message));
 
-await page.goto(pathToFileURL(SCENE).href, { waitUntil: 'load' });
+// --query "tail=k4": passed to the scene as location.search
+await page.goto(pathToFileURL(SCENE).href + (args.query ? '?' + args.query : ''), { waitUntil: 'load' });
 await page.waitForFunction(() => window.TPIX && window.TPIX.ready === true, { timeout: 20000 });
 await page.evaluate(async () => {
     await document.fonts.ready;
@@ -100,6 +101,8 @@ if (args.stills) {
 
 // ---------- ffmpeg ----------
 const total = Math.round(duration * FPS);
+// --from <s>: render only the tail from that time (to patch one section without a full re-render)
+const F0 = args.from ? Math.max(0, Math.min(total - 1, Math.round(parseFloat(args.from) * FPS))) : 0;
 const ff = [
     '-y', '-hide_banner', '-loglevel', 'error',
     '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', 'pipe:0',
@@ -118,7 +121,7 @@ const proc = spawn(FFMPEG, ff, { stdio: ['pipe', 'inherit', 'inherit'] });
 
 // ---------- frame loop ----------
 const t0 = Date.now();
-for (let f = 0; f < total; f++) {
+for (let f = F0; f < total; f++) {
     const t = f / FPS;
     await page.evaluate((tt) => window.TPIX.seek(tt), t);
     const buf = await page.screenshot({ type: 'png', optimizeForSpeed: true });
@@ -127,10 +130,10 @@ for (let f = 0; f < total; f++) {
     if (f % Math.max(1, Math.round(total / 20)) === 0 || f === total - 1) {
         const pct = ((f + 1) / total) * 100;
         const el = (Date.now() - t0) / 1000;
-        const eta = el / (f + 1) * (total - f - 1);
+        const eta = el / (f + 1 - F0) * (total - f - 1);
         process.stdout.write(
             `\r  frame ${f + 1}/${total}  ${pct.toFixed(0).padStart(3)}%  ` +
-            `${(( f + 1) / el).toFixed(1)} fps  eta ${eta.toFixed(0)}s   `
+            `${((f + 1 - F0) / el).toFixed(1)} fps  eta ${eta.toFixed(0)}s   `
         );
     }
 }

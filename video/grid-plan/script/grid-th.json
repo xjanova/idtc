@@ -1,0 +1,294 @@
+{
+  "id": "grid-th",
+  "title": "IDTC Grid — แผนรางวัล (ฉบับภาษาไทย)",
+  "engine": "elevenlabs",
+  "voice": "UxyS2mR9eUefCFboHnRH",
+  "voice_name": "บัว (ElevenLabs, Thaiprompt account)",
+  "model": "eleven_v4_turbo",
+  "note": "say = spoken Thai (numbers spelled out for the voice) · th = Thai subtitle cues (digits) · en = small English subtitle. Cue counts per line match script/grid.json so scene time specs (l05.2 …) stay valid. Every figure must match config/idtc.php. No profit promises.",
+  "lines": [
+    {
+      "id": "l00",
+      "say": "สวัสดีค่ะ หนูชื่อน้องไอเดีย วันนี้หนูจะพาไปดูแผนรางวัลของไอดีทีซี กริด แบบเข้าใจง่าย ๆ กันค่ะ",
+      "th": "สวัสดีค่ะ หนูชื่อน้องไอเดีย วันนี้จะพาไปดูแผนรางวัลของ IDTC Grid แบบเข้าใจง่าย ๆ",
+      "en": "Hi! I'm Nong Idea. Let's look at the IDTC Grid reward plan together, the easy way.",
+      "gap": 0.5
+    },
+    {
+      "id": "l01",
+      "say": "ไอดีทีซี กริด คือแผนรางวัลแนะนำเพื่อน สำหรับการขายล่วงหน้าเหรียญไอดีทีซี บนเชนทีพิกซ์ค่ะ",
+      "th": "IDTC Grid คือแผนรางวัลแนะนำเพื่อน สำหรับการขายล่วงหน้าเหรียญ IDTC บน TPIX Chain",
+      "en": "IDTC Grid is the referral reward plan for the IDTC presale on TPIX Chain."
+    },
+    {
+      "id": "l02",
+      "say": "แค่แชร์ลิงก์ของเรา เมื่อเพื่อนซื้อผ่านลิงก์ เราจะได้รับเหรียญไอดีทีซี ซึ่งจ่ายจากงบที่กันไว้ตั้งแต่ก่อนเริ่มขายค่ะ",
+      "th": [
+        "แชร์ลิงก์ของคุณ เมื่อเพื่อนซื้อผ่านลิงก์ คุณจะได้รับเหรียญ IDTC",
+        "จ่ายจากงบที่กันไว้ตั้งแต่ก่อนเริ่มการขาย"
+      ],
+      "en": "Share your link. When friends buy through it, you receive IDTC, from a budget that was set aside before the sale began."
+    },
+    {
+      "id": "l03",
+      "say": "มาดูกันทีละข้อเลยนะคะ ทุกตัวเลข และทุกกติกา",
+      "th": "มาดูกันทีละข้อ ทุกตัวเลข และทุกกติกา",
+      "en": "Here is exactly how it works. Every number, and every rule.",
+      "gap": 0.8
+    },
+    {
+      "id": "l04",
+      "say": "รางวัลทั้งหมดมาจากงบคงที่ หนึ่งหมื่นห้าพันล้านไอดีทีซี ที่กันมาจากส่วนดำเนินงานและการตลาดของโครงการค่ะ",
+      "th": [
+        "รางวัลมาจากงบคงที่ 15,000 ล้าน IDTC",
+        "ซึ่งกันมาจากส่วนดำเนินงานและการตลาดของโครงการ"
+      ],
+      "en": "Rewards come from a fixed budget of fifteen billion IDTC, taken from the project's operations and marketing allocation."
+    },
+    {
+      "id": "l05",
+      "say": "รางวัลไม่ได้จ่ายจากเงินของผู้ซื้อเลยค่ะ เงินยูเอสดีทีจากการขาย ร้อยเปอร์เซ็นต์ เข้าพูลสภาพคล่องไอดีทีซี ยูเอสดีที และสภาพคล่องนั้นถูกล็อกไว้ถึงยี่สิบเก้ากุมภาพันธ์ ปีสองพันห้าร้อยเจ็ดสิบเอ็ดค่ะ",
+      "th": [
+        "รางวัลไม่ได้จ่ายจากเงินของผู้ซื้อ",
+        "เงิน USDT จากการขายทั้งหมด 100% เข้าพูลสภาพคล่อง IDTC/USDT",
+        "และสภาพคล่องนั้นล็อกไว้ถึง 29 กุมภาพันธ์ 2571"
+      ],
+      "en": "They are never paid from buyers' money. One hundred percent of the presale USDT goes into the IDTC USDT liquidity pool, and that liquidity is locked until February 29, 2028."
+    },
+    {
+      "id": "l06",
+      "say": "และแผนนี้ แก้ไขให้จ่ายเกินงบไม่ได้ค่ะ",
+      "th": "และแผนนี้แก้ไขให้เกินงบไม่ได้",
+      "en": "And the plan cannot be changed in any way that would exceed that budget.",
+      "gap": 0.8
+    },
+    {
+      "id": "l07",
+      "say": "การสมัครฟรีค่ะ แค่เชื่อมกระเป๋า แล้วเซ็นข้อความหนึ่งครั้ง เพื่อยืนยันว่าเป็นเจ้าของ ไม่มีรหัสผ่าน ไม่มีค่าสมัคร และไม่เสียค่าแก๊สค่ะ",
+      "th": [
+        "สมัครฟรี เชื่อมกระเป๋า แล้วเซ็นข้อความหนึ่งครั้งเพื่อยืนยันว่าเป็นเจ้าของ",
+        "ไม่มีรหัสผ่าน ไม่มีค่าสมัคร และไม่เสียค่าแก๊ส"
+      ],
+      "en": "Joining is free. Connect your wallet, and sign one message to prove it's yours. No password, no fee, and no gas."
+    },
+    {
+      "id": "l08",
+      "say": "แล้วเราก็จะได้ลิงก์ชวนของตัวเองทันทีค่ะ",
+      "th": "คุณได้ลิงก์ชวนของตัวเองทันที",
+      "en": "You get your own invite link right away.",
+      "gap": 0.8
+    },
+    {
+      "id": "l09",
+      "say": "รางวัลนับเป็นสามชั้น ไล่ขึ้นจากคนที่ซื้อค่ะ",
+      "th": "รางวัลนับเป็นสามชั้น ไล่ขึ้นจากผู้ซื้อ",
+      "en": "Rewards are counted in three rings, from the buyer upward."
+    },
+    {
+      "id": "l10",
+      "say": "เพื่อนที่เราชวนเองคือชั้นที่หนึ่ง เราได้ห้าเปอร์เซ็นต์ ของไอดีทีซีที่เพื่อนซื้อค่ะ",
+      "th": "เพื่อนที่คุณชวนเองคือชั้นที่ 1 คุณได้ 5% ของ IDTC ที่เขาซื้อ",
+      "en": "Friends you invite directly are ring one. You receive five percent of the IDTC they buy."
+    },
+    {
+      "id": "l11",
+      "say": "เพื่อนของเพื่อนคือชั้นที่สอง ได้สามเปอร์เซ็นต์ ถัดไปอีกหนึ่งชั้นคือชั้นที่สาม ได้หนึ่งเปอร์เซ็นต์ค่ะ",
+      "th": [
+        "เพื่อนของเพื่อนคือชั้นที่ 2 ได้ 3%",
+        "ถัดไปอีกหนึ่งชั้นคือชั้นที่ 3 ได้ 1%"
+      ],
+      "en": "Their friends are ring two, at three percent. One level further is ring three, at one percent."
+    },
+    {
+      "id": "l12",
+      "say": "ช่วงเปิดตัว ชั้นที่หนึ่งได้เพิ่มด้วยนะคะ สัปดาห์ขายที่หนึ่งถึงสาม เพิ่มสองเปอร์เซ็นต์ และสัปดาห์ที่สี่ถึงหก เพิ่มหนึ่งเปอร์เซ็นต์ค่ะ",
+      "th": [
+        "ช่วงเปิดตัว ชั้นที่ 1 ได้เพิ่ม",
+        "สัปดาห์ขายที่ 1 ถึง 3 เพิ่ม 2% และสัปดาห์ที่ 4 ถึง 6 เพิ่ม 1%"
+      ],
+      "en": "During the launch, ring one earns more. Plus two percent in sale weeks one to three, and plus one percent in weeks four to six."
+    },
+    {
+      "id": "l13",
+      "say": "ส่วนเพื่อนที่ซื้อผ่านลิงก์ ก็ได้เพิ่มอีกหนึ่งเปอร์เซ็นต์ด้วยค่ะ",
+      "th": "ส่วนเพื่อนที่ซื้อผ่านลิงก์ ก็ได้เพิ่มอีก 1% ด้วย",
+      "en": "And the friend who bought through your link receives an extra one percent, too.",
+      "gap": 0.8
+    },
+    {
+      "id": "l35",
+      "say": "และนี่คือผังสายงานจริง จากระบบหลังบ้านของไอดีทีซีค่ะ ทุกจุดคือกระเป๋าหนึ่งใบ เรียงเป็นวงตามชั้น สีบอกระดับ ซูมเข้าไปดูได้ทุกสาย ว่าแต่ละกระเป๋าซื้อเท่าไร และทีมโตแค่ไหน ภาพนี้ใช้ข้อมูลตัวอย่างนะคะ",
+      "th": [
+        "นี่คือผังสายงานจริง จากระบบหลังบ้าน IDTC",
+        "ทุกจุดคือ 1 กระเป๋า เรียงเป็นวงตามชั้น สีบอกระดับ",
+        "ซูมดูได้ทุกสาย ว่าซื้อเท่าไร ทีมโตแค่ไหน · ภาพนี้ใช้ข้อมูลตัวอย่าง"
+      ],
+      "en": "This is the real network map from the IDTC back office. Every dot is one wallet, placed on rings by level and coloured by rank. Zoom into any branch to see what each wallet bought and how big its team is. Sample data shown.",
+      "gap": 0.8
+    },
+    {
+      "id": "l14",
+      "say": "มาดูตัวอย่างกันค่ะ เพื่อนซื้อไอดีทีซี หนึ่งร้อยยูเอสดีที จะได้เหรียญประมาณ หกสิบหกจุดเจ็ดล้านไอดีทีซี",
+      "th": [
+        "มาดูตัวอย่างกัน",
+        "เพื่อนซื้อ IDTC 100 USDT ได้เหรียญประมาณ 66.7 ล้าน IDTC"
+      ],
+      "en": "Let's make it concrete. A friend buys one hundred USDT of IDTC in the presale. That is about sixty-six point seven million IDTC."
+    },
+    {
+      "id": "l15",
+      "say": "เราในฐานะคนชวน ได้ห้าเปอร์เซ็นต์ ประมาณสามจุดสามล้านไอดีทีซี แต่ถ้าเพื่อนซื้อในสามสัปดาห์แรก จะได้เจ็ดเปอร์เซ็นต์ ประมาณสี่จุดเจ็ดล้านไอดีทีซีค่ะ",
+      "th": [
+        "คุณในฐานะผู้ชวนตรง ได้ 5% ประมาณ 3.3 ล้าน IDTC",
+        "ถ้าเพื่อนซื้อในสามสัปดาห์แรก ได้ 7% ประมาณ 4.7 ล้าน IDTC"
+      ],
+      "en": "As their direct inviter, you receive five percent, about three point three million IDTC. In the first three weeks, it's seven percent, about four point seven million."
+    },
+    {
+      "id": "l16",
+      "say": "ส่วนเพื่อนของเรา ก็ได้เพิ่มอีกประมาณ หกแสนหกหมื่นเจ็ดพันไอดีทีซี เพราะซื้อผ่านลิงก์ค่ะ",
+      "th": "เพื่อนของคุณก็ได้เพิ่มประมาณ 667,000 IDTC เพราะซื้อผ่านลิงก์",
+      "en": "Your friend also gets about six hundred and sixty-seven thousand IDTC extra, for coming through your link."
+    },
+    {
+      "id": "l17",
+      "say": "แต่จำไว้นะคะ ตัวเลขนี้คือจำนวนเหรียญ ไม่ใช่เงินสด มูลค่าจริงขึ้นอยู่กับราคาตลาดของไอดีทีซีค่ะ",
+      "th": "ตัวเลขนี้คือจำนวนเหรียญ ไม่ใช่เงินสด มูลค่าขึ้นอยู่กับราคาตลาดของ IDTC",
+      "en": "These are token amounts, not cash. What they are worth depends on the market price of IDTC.",
+      "gap": 0.8
+    },
+    {
+      "id": "l18",
+      "say": "ต่อไปคือระดับค่ะ ระดับจะปลดล็อกแต่ละชั้นทีละขั้น",
+      "th": "ระดับจะปลดล็อกแต่ละชั้น ทีละขั้น",
+      "en": "Ranks unlock the rings, step by step."
+    },
+    {
+      "id": "l19",
+      "say": "ซื้อเองอย่างน้อยสิบยูเอสดีที เป็นระดับสปาร์ก ปลดล็อกชั้นที่หนึ่งค่ะ",
+      "th": "ซื้อเองอย่างน้อย 10 USDT เป็นระดับ Spark ปลดล็อกชั้นที่ 1",
+      "en": "Buy at least ten USDT yourself, and you are a Spark. That unlocks ring one."
+    },
+    {
+      "id": "l20",
+      "say": "มีเพื่อนตรงที่ซื้อแล้วสองคน เป็นระดับเซลล์ ปลดล็อกชั้นที่สองค่ะ",
+      "th": "มีเพื่อนตรงที่ซื้อแล้ว 2 คน เป็นระดับ Cell ปลดล็อกชั้นที่ 2",
+      "en": "Two direct friends who bought make you a Cell, unlocking ring two."
+    },
+    {
+      "id": "l21",
+      "say": "เพื่อนตรงสี่คน และยอดทีมหนึ่งพันยูเอสดีที เป็นระดับกริด ปลดล็อกชั้นที่สาม และโบนัสสปรินต์รายสัปดาห์ค่ะ",
+      "th": [
+        "เพื่อนตรง 4 คน และยอดทีม 1,000 USDT เป็นระดับ Grid",
+        "ปลดล็อกชั้นที่ 3 และโบนัส Sprint รายสัปดาห์"
+      ],
+      "en": "Four direct friends, and one thousand USDT of team volume, make you a Grid. That unlocks ring three, and the weekly Sprint."
+    },
+    {
+      "id": "l22",
+      "say": "เพื่อนตรงสิบคน และยอดทีมหนึ่งหมื่นยูเอสดีที เป็นระดับคอร์ ได้ส่วนแบ่งสปรินต์สองเท่าค่ะ",
+      "th": [
+        "เพื่อนตรง 10 คน และยอดทีม 10,000 USDT เป็นระดับ Core",
+        "ได้ส่วนแบ่ง Sprint สองเท่า"
+      ],
+      "en": "Ten direct friends, and ten thousand USDT of team volume, make you a Core, with a double share of the Sprint.",
+      "gap": 0.8
+    },
+    {
+      "id": "l23",
+      "say": "ทุกสัปดาห์ จะมีกองสปรินต์ เท่ากับสองเปอร์เซ็นต์ของไอดีทีซีที่ขายได้ในสัปดาห์นั้น แบ่งให้ระดับกริดและคอร์ ตามยอดทีมของสัปดาห์นั้นค่ะ",
+      "th": [
+        "ทุกสัปดาห์ มีกอง Sprint เท่ากับ 2% ของ IDTC ที่ขายได้ในสัปดาห์นั้น",
+        "แบ่งให้ระดับ Grid และ Core ตามยอดทีมของสัปดาห์นั้น"
+      ],
+      "en": "Every week, a Sprint pool of two percent of the IDTC sold that week is shared among Grid and Core members, by their team volume that week."
+    },
+    {
+      "id": "l24",
+      "say": "และคนเดียว รับได้ไม่เกินยี่สิบเปอร์เซ็นต์ของกองในแต่ละสัปดาห์ค่ะ",
+      "th": "คนเดียวรับได้ไม่เกิน 20% ของกองในแต่ละสัปดาห์",
+      "en": "No one can take more than twenty percent of a single pool.",
+      "gap": 0.8
+    },
+    {
+      "id": "l25",
+      "say": "เพื่อความยุติธรรม มีกติกาง่าย ๆ ไม่กี่ข้อค่ะ",
+      "th": "มีกฎง่าย ๆ ไม่กี่ข้อที่ทำให้ระบบยุติธรรม",
+      "en": "A few simple rules keep it fair."
+    },
+    {
+      "id": "l26",
+      "say": "การซื้อจะนับรางวัล เมื่อผู้ซื้อถือเหรียญครบสิบสี่วัน ส่วนที่ขายหรือโอนออกก่อน จะไม่ได้รางวัล และส่วนนั้นคืนเข้างบค่ะ",
+      "th": [
+        "การซื้อจะนับรางวัลเมื่อผู้ซื้อถือเหรียญครบ 14 วัน",
+        "ส่วนที่ขายหรือโอนออกก่อน ไม่ได้รางวัล และส่วนนั้นคืนเข้างบ"
+      ],
+      "en": "A purchase only counts after the buyer has held the tokens for fourteen days. Anything sold or moved out early earns nothing, and that share goes back to the budget."
+    },
+    {
+      "id": "l27",
+      "say": "ระบบตรวจจากรายการโอนบนเชน ไม่ได้เชื่อจากคำบอกเล่าของใครค่ะ",
+      "th": "ระบบตรวจจากรายการโอนบนเชน ไม่ได้เชื่อจากคำบอกเล่าของใคร",
+      "en": "This is checked from on-chain transfers, not from anyone's word."
+    },
+    {
+      "id": "l28",
+      "say": "ชั้นที่ว่าง ไม่ส่งต่อขึ้นไปข้างบน ผูกผู้ชวนได้ครั้งเดียว ก่อนซื้อครั้งแรก และอัตราคิดตามสัปดาห์ที่ซื้อ แก้แผนแล้วไม่มีผลย้อนหลังค่ะ",
+      "th": [
+        "ชั้นที่ว่างไม่ส่งต่อขึ้นไปข้างบน",
+        "ผูกผู้ชวนได้ครั้งเดียว ก่อนซื้อครั้งแรก",
+        "และอัตราคิดตามสัปดาห์ที่ซื้อ แก้แผนแล้วไม่มีผลย้อนหลัง"
+      ],
+      "en": "Empty rings don't pass upward. You can bind an inviter only once, before your first purchase. And rates are fixed by the week you buy. A plan change never applies backwards.",
+      "gap": 0.8
+    },
+    {
+      "id": "l29",
+      "say": "การจ่ายรางวัลเกิดขึ้นบนเชนค่ะ ทีมงานเผยแพร่รอบจ่ายไว้ในสัญญารางวัลบนเชนทีพิกซ์ แล้วเรากดรับเข้ากระเป๋าของตัวเองได้เลย ค่าแก๊สเป็นศูนย์",
+      "th": [
+        "จ่ายรางวัลบนเชน ทีมงานเผยแพร่รอบจ่ายไว้ในสัญญารางวัลบน TPIX Chain",
+        "แล้วคุณกดรับเข้ากระเป๋าของตัวเอง ค่าแก๊สเป็นศูนย์"
+      ],
+      "en": "Payouts happen on-chain. The team publishes payout rounds to a reward contract on TPIX Chain, and you claim them straight to your own wallet, with zero gas."
+    },
+    {
+      "id": "l30",
+      "say": "ครึ่งหนึ่งของแต่ละรอบ รับได้ทันที อีกครึ่งปลดหลังปิดการขาย วันที่หนึ่งมีนาคม ปีสองพันห้าร้อยเจ็ดสิบค่ะ",
+      "th": [
+        "ครึ่งหนึ่งของแต่ละรอบ รับได้ทันที",
+        "อีกครึ่งปลดหลังปิดการขาย วันที่ 1 มีนาคม 2570"
+      ],
+      "en": "Half of each round can be claimed at once. The other half unlocks after the presale closes, on March 1, 2027."
+    },
+    {
+      "id": "l31",
+      "say": "เว็บไซต์ไม่เคยถือกุญแจของเรา ทุกการรับรางวัล เราเซ็นเองในกระเป๋าของเราค่ะ",
+      "th": "เว็บไซต์ไม่เคยถือกุญแจของคุณ ทุกการรับรางวัล คุณเซ็นเองในกระเป๋าของคุณ",
+      "en": "The website never holds your keys. Every claim is signed by you, in your own wallet.",
+      "gap": 0.9
+    },
+    {
+      "id": "l32",
+      "say": "ส่วนนี้สำคัญมาก โปรดฟังให้ดีนะคะ รางวัลเป็นเหรียญไอดีทีซี ไม่ใช่ผลตอบแทนการลงทุน ไอดีทีซีอาจมีมูลค่าลดลง หรือหมดมูลค่าได้ ไม่มีการรับประกันกำไรค่ะ",
+      "th": [
+        "โปรดฟังส่วนนี้ให้ดี",
+        "รางวัลเป็นเหรียญ IDTC ไม่ใช่ผลตอบแทนการลงทุน",
+        "IDTC อาจมีมูลค่าลดลง หรือหมดมูลค่าได้ ไม่มีการรับประกันกำไร"
+      ],
+      "en": "Please read this part carefully. Rewards are IDTC tokens, not an investment return. IDTC can lose value, even all of it. Nothing here is a promise of profit."
+    },
+    {
+      "id": "l33",
+      "say": "ใช้เฉพาะเงินที่เสียได้ และอย่าสัญญาเรื่องกำไรกับคนที่เราชวนนะคะ",
+      "th": "ใช้เฉพาะเงินที่เสียได้ และอย่าสัญญาเรื่องกำไรกับคนที่คุณชวน",
+      "en": "Only use money you can afford to lose, and never promise profits to the people you invite.",
+      "gap": 0.8
+    },
+    {
+      "id": "l34",
+      "say": "ไอดีทีซี กริด งบคงที่ กติกาชัดเจน จ่ายบนเชน ดูรายละเอียดเพิ่มเติมได้ที่ ไอดีทีซี ดอท ออนไลน์ ขอบคุณค่ะ",
+      "th": "IDTC Grid งบคงที่ กฎชัดเจน จ่ายบนเชน ดูรายละเอียดที่ idtc.online",
+      "en": "IDTC Grid. A fixed budget, clear rules, paid on-chain. Learn more at idtc.online."
+    }
+  ]
+}

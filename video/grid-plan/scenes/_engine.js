@@ -268,7 +268,7 @@
 
         const subs = document.createElement('div');
         subs.id = 'subs';
-        subs.innerHTML = '<div class="cue"></div>';
+        subs.innerHTML = '<div class="cue"></div>' + (opts.subEn ? '<div class="cue-en"></div>' : '');
         stage.appendChild(subs);
 
         const pr = document.createElement('div');
@@ -315,12 +315,19 @@
         for (const c of cues) {
             if (t >= c.t0 && t < c.t1) { active = c; break; }
         }
-        if (!active) { box.textContent = ''; box.style.opacity = 0; return; }
+        // ซับอังกฤษตัวเล็กใต้ซับไทย (เฉพาะฉากที่เปิด subEn)
+        const en = document.querySelector('#subs .cue-en');
+        if (!active) { box.textContent = ''; box.style.opacity = 0; if (en) { en.textContent = ''; en.style.opacity = 0; } return; }
         if (box.textContent !== active.th) box.textContent = active.th;
         // เฟดสั้น ๆ 120ms หัวท้าย ให้ตาไม่สะดุด
         const inU = clamp01((t - active.t0) / 0.12);
         const outU = clamp01((active.t1 - t) / 0.12);
         box.style.opacity = Math.min(inU, outU);
+        if (en) {
+            const txt = active.en || '';
+            if (en.textContent !== txt) en.textContent = txt;
+            en.style.opacity = txt ? Math.min(inU, outU) : 0;
+        }
     }
 
     // ---------- deterministic grain ----------
