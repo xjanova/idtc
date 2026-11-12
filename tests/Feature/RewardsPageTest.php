@@ -45,6 +45,22 @@ class RewardsPageTest extends TestCase
         $this->assertStringContainsString('media/idtc-grid-plan-1080p.mp4', $html);
     }
 
+    public function test_video_follows_the_page_language(): void
+    {
+        $th = $this->get('/rewards')->assertOk()->getContent();
+        $this->assertStringContainsString('media/idtc-grid-plan-th-1080p.mp4', $th);
+        $this->assertStringContainsString('media/idtc-grid-plan-th.vtt', $th);
+        $this->assertStringContainsString('images/video/grid-plan-poster-th.webp', $th);
+        $this->assertStringNotContainsString('media/idtc-grid-plan-1080p.mp4', $th);
+
+        $en = $this->get('/en/rewards')->assertOk()->getContent();
+        $this->assertStringContainsString('media/idtc-grid-plan-1080p.mp4', $en);
+        $this->assertStringContainsString('srclang="en"', $en);
+        $this->assertMatchesRegularExpression('/<video[^>]*>.*?<\/video>/s', $en);
+        preg_match('/<video[^>]*>.*?<\/video>/s', $en, $m);
+        $this->assertStringNotContainsString('-th', $m[0]); // หน้าอังกฤษไม่มีไฟล์ไทยเลย
+    }
+
     public function test_cta_follows_whether_grid_is_open(): void
     {
         app(Settings::class)->put('grid.enabled', false);
