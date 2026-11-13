@@ -21,6 +21,7 @@ return [
         'main' => 'Main menu',
         'mobile' => 'Mobile menu',
         'menu' => 'Menu',
+        'admin' => 'Admin',
     ],
 
     'add_network' => 'Add chain + token',
