@@ -6,7 +6,8 @@ use App\Support\Idtc;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * อ่านสัญญา GridRewards (รอบจ่ายรางวัล IDTC Grid) — แคช 15 วินาที ยกเว้นสถานะรับแล้วของสมาชิก
+ * อ่านสัญญา GridRewards — แคช 15 วินาที ยกเว้นสถานะรับแล้วของสมาชิก
+ * ค่าเริ่มต้นอ่านสัญญาของ IDTC Grid (contracts.rewards) · สายจ่ายอื่นใช้สัญญาของตัวเอง: for('binpay') / for('bindel')
  */
 class RewardsReader
 {
@@ -14,11 +15,28 @@ class RewardsReader
 
     public const ROUND = ['bytes32', 'uint128', 'uint128', 'uint64', 'uint64', 'bool'];
 
+    /** key ของที่อยู่สัญญาใน config idtc.contracts */
+    protected string $key = 'rewards';
+
     public function __construct(protected RpcClient $rpc) {}
+
+    /** ตัวอ่านของสัญญาจ่ายอีกตัว (GridRewards เหมือนกัน คนละที่อยู่/คนละเหรียญ) */
+    public function for(string $key): static
+    {
+        $copy = clone $this;
+        $copy->key = $key;
+
+        return $copy;
+    }
+
+    public function key(): string
+    {
+        return $this->key;
+    }
 
     public function address(): ?string
     {
-        return Idtc::contract('rewards');
+        return Idtc::contract($this->key);
     }
 
     public function forget(): void

@@ -11,6 +11,10 @@
     if (app(\App\Services\Grid\GridPlan::class)->enabled()) {
         array_splice($nav, 2, 0, ['grid']);
     }
+    // แผน Binary โปรโมชั่น ขึ้นเมนูเมื่อเปิดจากหลังบ้านเท่านั้น
+    if (app(\App\Services\Binary\BinaryPlan::class)->enabled()) {
+        array_splice($nav, 2, 0, ['binary']);
+    }
     $langs = ['th' => 'TH', 'en' => 'EN'];
 @endphp
 <!doctype html>

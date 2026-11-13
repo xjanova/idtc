@@ -2,6 +2,7 @@
 
 namespace App\Services\Grid;
 
+use App\Models\BinaryDeposit;
 use App\Models\GridMember;
 use App\Models\Purchase;
 use App\Services\Chain\Address;
@@ -46,6 +47,9 @@ final class GridBinder
         if (Purchase::query()->where('buyer', $wallet)->exists()) {
             return 'bought';
         }
+        if (BinaryDeposit::query()->where('wallet', $wallet)->where('status', BinaryDeposit::OK)->exists()) {
+            return 'deposited';
+        }
         // เดินขึ้นจากผู้ชวน — เจอตัวเอง = ผู้ชวนอยู่ในทีมของเรา
         $cur = $referrer;
         for ($i = 0; $i < self::MAX_WALK && $cur !== null; $i++) {
@@ -64,7 +68,8 @@ final class GridBinder
         $wallet = strtolower($wallet);
 
         return ! GridMember::query()->where('wallet', $wallet)->whereNotNull('referrer')->exists()
-            && ! Purchase::query()->where('buyer', $wallet)->exists();
+            && ! Purchase::query()->where('buyer', $wallet)->exists()
+            && ! BinaryDeposit::query()->where('wallet', $wallet)->where('status', BinaryDeposit::OK)->exists();
     }
 
     /**

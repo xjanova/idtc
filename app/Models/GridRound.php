@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
  * รอบจ่ายรางวัล IDTC Grid หนึ่งรอบ (หนึ่ง root บนสัญญา GridRewards)
  *
  * @property int $id
+ * @property string $stream สายจ่าย: grid | bin_usdt | bin_idtc (PayoutRounds)
  * @property string $contract
  * @property int $chain_round
  * @property string $kind

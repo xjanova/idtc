@@ -35,7 +35,12 @@ class SettingsController extends Controller
         'pair_usdt' => ['พูล IDTC/USDT', 'คู่บน TPIX DEX'],
         'pair_tpix' => ['พูล IDTC/TPIX', 'คู่บน TPIX DEX'],
         'rewards' => ['สัญญาจ่ายรางวัล Grid', 'GridRewards — รอบจ่ายรางวัลแนะนำเพื่อน (Merkle)'],
+        'binpay' => ['สัญญาจ่ายรางวัล Binary (USDT)', 'GridRewards ที่ deploy ให้เหรียญ USDT — รอบจ่ายรางวัลจับคู่ของแผน Binary โปรโมชั่น'],
+        'bindel' => ['สัญญาส่ง IDTC ของแผน Binary', 'GridRewards ที่ deploy ให้เหรียญ IDTC — ส่ง IDTC ที่สมาชิกซื้อในแผน Binary โปรโมชั่น'],
     ];
+
+    /** สัญญาจ่าย (GridRewards) แต่ละตัวต้องจ่ายเหรียญไหน: key สัญญา => [key เหรียญ, ชื่อเหรียญ] */
+    public const PAYS = ['rewards' => ['token', 'IDTC'], 'bindel' => ['token', 'IDTC'], 'binpay' => ['usdt', 'USDT']];
 
     public function edit(Settings $settings, ChainStatus $chain, SalesIndexer $indexer): View
     {
@@ -90,14 +95,15 @@ class SettingsController extends Controller
                 try {
                     if (! $rpc->hasCode($input)) {
                         $error = 'ไม่พบสัญญาที่ที่อยู่นี้บน TPIX Chain (อาจเป็นกระเป๋าธรรมดา หรือยังไม่ได้ deploy)';
-                    } elseif ($key === 'rewards') {
-                        // สัญญาจ่ายรางวัลต้องจ่ายเหรียญ IDTC ตัวเดียวกับที่เว็บใช้ ไม่งั้นรายชื่อรอบจ่ายผิดเหรียญ
+                    } elseif (isset(self::PAYS[$key])) {
+                        // สัญญาจ่ายต้องจ่ายเหรียญตัวเดียวกับที่เว็บใช้คำนวณรายชื่อ ไม่งั้นรอบจ่ายผิดเหรียญ
+                        [$tokenKey, $symbol] = self::PAYS[$key];
                         $paid = Abi::decodeAddress(Abi::words($rpc->ethCall($input, Abi::encodeCall('token()')))[0] ?? '');
-                        $token = Idtc::contract('token');
+                        $token = Idtc::contract($tokenKey);
                         if ($token === null) {
-                            $error = 'ตั้งที่อยู่เหรียญ IDTC ก่อน แล้วจึงตั้งสัญญาจ่ายรางวัล';
+                            $error = 'ตั้งที่อยู่เหรียญ '.$symbol.' ก่อน แล้วจึงตั้งสัญญาจ่ายรางวัล';
                         } elseif (! Address::same($paid, $token)) {
-                            $error = 'สัญญานี้จ่ายเหรียญ '.$paid.' ไม่ใช่ IDTC ที่ตั้งไว้ — ตรวจว่าเป็น GridRewards ที่ deploy ให้ IDTC';
+                            $error = 'สัญญานี้จ่ายเหรียญ '.$paid.' ไม่ใช่ '.$symbol.' ที่ตั้งไว้ — ตรวจว่าเป็น GridRewards ที่ deploy ให้ '.$symbol;
                         }
                     }
                 } catch (\UnexpectedValueException) {

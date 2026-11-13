@@ -184,7 +184,7 @@ function address(value, label) {
     if (!isAddress(s)) fail(`${label}ไม่ถูกต้อง — ต้องเป็น 0x ตามด้วยตัวอักษรฐานสิบหก 40 ตัว (ถ้าตัวพิมพ์ผสม ต้องตรง checksum)`);
     const a = getAddress(s);
     if (a === ZeroAddress) fail(`${label}เป็นที่อยู่ว่างไม่ได้`);
-    for (const key of ['presale', 'feeder', 'vesting', 'rewards', 'token', 'pair_usdt', 'pair_tpix']) {
+    for (const key of ['presale', 'feeder', 'vesting', 'rewards', 'binpay', 'bindel', 'token', 'pair_usdt', 'pair_tpix']) {
         if (contractAddress(key) === a) fail(`${label}เป็นที่อยู่ของสัญญาโครงการเอง (${key}) — เหรียญจะติดอยู่ในสัญญา ใช้ไม่ได้`);
     }
     return a;
@@ -474,6 +474,63 @@ Object.assign(ACTIONS, {
             target: to, targetLabel: 'ปลายทางที่จะได้รับ IDTC',
         }),
     },
+});
+
+/* ───────────── แผน Binary โปรโมชั่น: สัญญา GridRewards อีกสองตัว (binpay = จ่าย USDT · bindel = ส่ง IDTC) ─────────────
+   คำสั่งเหมือน rewards.* ทุกตัว ต่างกันที่สัญญา เหรียญ และข้อความยืนยัน */
+function payoutActions(contract, { what, unit, decimals }) {
+    return {
+        addRound: {
+            ...ACTIONS['rewards.addRound'], contract,
+            confirm: (f, [id]) => ({
+                title: `ประกาศรอบจ่ายที่ ${id} — ${what}`,
+                lines: [
+                    `${fmt(Number(f.items || 0))} กระเป๋า รวม ${f.totalText || ''}`,
+                    'หลังประกาศ แก้รายชื่อไม่ได้ — ถ้าผิด ทำได้แค่ยกเลิกทั้งรอบ (คนที่รับไปแล้วไม่ถูกดึงคืน)',
+                    `สัญญาจะตรวจเองว่ามี ${unit} พอจ่ายทุกรอบ ถ้าไม่พอจะปฏิเสธ`,
+                ],
+            }),
+        },
+        revokeRound: {
+            ...ACTIONS['rewards.revokeRound'], contract,
+            confirm: (f, [id]) => ({
+                title: `ยกเลิกรอบจ่ายที่ ${id} — ${what}`,
+                lines: ['คนที่ยังไม่รับจะรับรอบนี้ไม่ได้อีก (ย้อนกลับไม่ได้)', 'ส่วนที่ยังไม่มีใครรับกลายเป็นส่วนเกินในสัญญา ถอนออกได้', 'คนที่รับไปแล้วไม่ถูกดึงคืน · ยอดของคนที่ยังไม่รับจะกลับไปรอรอบถัดไป'],
+            }),
+        },
+        pause: {
+            ...ACTIONS['rewards.pause'], contract,
+            confirm: () => ({ title: `หยุดรับชั่วคราว — ${what}`, lines: ['สมาชิกกดรับไม่ได้จนกว่าจะเปิดต่อ', 'ยอดของทุกคนยังอยู่ครบ ไม่มีอะไรหาย'] }),
+        },
+        unpause: {
+            ...ACTIONS['rewards.unpause'], contract,
+            confirm: () => ({ title: `เปิดรับต่อ — ${what}`, lines: ['สมาชิกกดรับในรอบที่ประกาศแล้วได้ทันที'] }),
+        },
+        withdrawExcess: {
+            ...ACTIONS['rewards.withdrawExcess'], contract,
+            args: (f) => [address(f.to, 'ที่อยู่ปลายทาง'), amount(f.amount, decimals, `จำนวน ${unit}`, { allowZero: false })],
+            confirm: (f, [to]) => ({
+                title: `ถอน ${unit} ส่วนเกินจากสัญญา — ${what}`,
+                lines: [`${f.amount} ${unit} จะโอนไปที่ปลายทาง`, 'ถอนได้เฉพาะส่วนที่เกินยอดค้างจ่าย — ยอดที่สมาชิกยังรับได้ สัญญากันไว้เอง'],
+                target: to, targetLabel: `ปลายทางที่จะได้รับ ${unit}`,
+            }),
+        },
+    };
+}
+const BINPAY = payoutActions('binpay', { what: 'รางวัลจับคู่ Binary', unit: 'USDT', decimals: 6 });
+const BINDEL = payoutActions('bindel', { what: 'IDTC ที่ซื้อในแผน Binary', unit: 'IDTC', decimals: 18 });
+
+Object.assign(ACTIONS, {
+    'binpay.addRound': { ...BINPAY.addRound },
+    'binpay.revokeRound': { ...BINPAY.revokeRound },
+    'binpay.pause': { ...BINPAY.pause },
+    'binpay.unpause': { ...BINPAY.unpause },
+    'binpay.withdrawExcess': { ...BINPAY.withdrawExcess },
+    'bindel.addRound': { ...BINDEL.addRound },
+    'bindel.revokeRound': { ...BINDEL.revokeRound },
+    'bindel.pause': { ...BINDEL.pause },
+    'bindel.unpause': { ...BINDEL.unpause },
+    'bindel.withdrawExcess': { ...BINDEL.withdrawExcess },
 });
 
 const GUARDS = {

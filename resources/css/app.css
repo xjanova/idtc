@@ -860,3 +860,37 @@
 .grid-bin .grid-leg { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .grid-bin .grid-leg h5 { font-size: 14px; color: var(--fg-strong); }
 .grid-select { min-height: 38px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg-3); color: var(--fg-strong); padding: 0 12px; font-size: 13.5px; max-width: 100%; }
+
+/* แผน Binary โปรโมชั่น (/binary) */
+.bin-head { background: radial-gradient(60% 130% at 88% 0%, rgba(163, 230, 53, .14), transparent 60%), radial-gradient(50% 120% at 8% 0%, rgba(59, 130, 246, .14), transparent 60%), var(--bg); }
+.bin-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.bin-badge { display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 700; letter-spacing: .02em; color: var(--lime); background: rgba(163, 230, 53, .08); border: 1px solid rgba(163, 230, 53, .35); padding: 4px 12px; border-radius: 999px; }
+.bin-badge.alt { color: var(--gold); background: rgba(245, 200, 107, .07); border-color: rgba(245, 200, 107, .35); }
+.bin-page .grid-dash { display: grid; gap: 16px; }
+.bin-steps { margin: 0; padding: 0; list-style: none; counter-reset: bs; display: grid; gap: 6px; font-size: 13.5px; color: var(--fg-2); }
+.bin-steps li { counter-increment: bs; display: flex; gap: 10px; align-items: baseline; }
+.bin-steps li::before { content: counter(bs); flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--lime); border: 1px solid rgba(163, 230, 53, .4); }
+.bin-amount { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-top: 12px; align-items: start; }
+.bin-input { width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--bg-3); color: var(--fg-strong); padding: 0 14px; font-size: 20px; font-family: var(--font-mono); }
+.bin-input:focus { outline: 2px solid rgba(163, 230, 53, .5); outline-offset: 1px; }
+.bin-agree { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--fg-2); margin: 12px 0; cursor: pointer; }
+.bin-agree input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--lime); flex: none; }
+.bin-warn { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 12.5px; color: var(--fg-3); }
+.bin-balance { display: flex; height: 34px; border-radius: 999px; overflow: hidden; border: 1px solid var(--line-2); background: var(--bg-3); }
+.bin-balance span { display: flex; align-items: center; min-width: 0; transition: width .4s ease; font-family: var(--font-mono); font-size: 12.5px; color: #04110c; overflow: hidden; white-space: nowrap; }
+.bin-balance .l { background: linear-gradient(90deg, #60a5fa, #3b82f6); justify-content: flex-start; padding-left: 12px; }
+.bin-balance .r { background: linear-gradient(90deg, #a3e635, #84cc16); justify-content: flex-end; padding-right: 12px; }
+.bin-leg-left { border-color: rgba(96, 165, 250, .35) !important; }
+.bin-leg-right { border-color: rgba(163, 230, 53, .35) !important; }
+.bin-flow { list-style: none; margin: 0; padding: 0; counter-reset: bf; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.bin-flow li { counter-increment: bf; border: 1px solid var(--line); border-radius: 18px; padding: 16px; background: var(--bg-2, var(--bg-3)); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.bin-flow li::before { content: counter(bf, decimal-leading-zero); font-family: var(--font-mono); font-size: 13px; color: var(--lime); }
+.bin-flow b { font-family: var(--font-display); font-size: 16px; color: var(--fg-strong); }
+.bin-flow span { font-size: 13.5px; line-height: 1.6; color: var(--fg-2); }
+.bin-split { display: flex; height: 14px; border-radius: 999px; overflow: hidden; margin: 6px 0 10px; background: var(--bg-3); }
+.bin-split .pool, .bin-dot.pool { background: #f5c86b; }
+.bin-split .rest, .bin-dot.rest { background: #10b981; }
+.bin-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.bin-addr { font-size: 12.5px; overflow-wrap: anywhere; }
+@media (max-width: 860px) { .bin-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bin-amount { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .bin-flow { grid-template-columns: minmax(0, 1fr); } }
