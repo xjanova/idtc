@@ -855,3 +855,8 @@
     .rw-ring__tag { grid-column: 1 / -1; justify-self: start; }
 }
 @media (max-width: 520px) { .rw-steps, .rw-ladder, .rw-fair { grid-template-columns: minmax(0, 1fr); } }
+
+/* IDTC Grid — กล่องผัง Binary (สองขา) */
+.grid-bin .grid-leg { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.grid-bin .grid-leg h5 { font-size: 14px; color: var(--fg-strong); }
+.grid-select { min-height: 38px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg-3); color: var(--fg-strong); padding: 0 12px; font-size: 13.5px; max-width: 100%; }

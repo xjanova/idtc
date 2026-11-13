@@ -57,7 +57,7 @@
                 <div class="track"><i style="width:{{ $usedPct }}%"></i><b style="left:{{ $worstPct }}%" title="ภาระสูงสุดถ้าขายหมด"></b></div>
                 <div class="row"><span>ผูกพันแล้ว (รอ+ครบ+พัก) <b class="mono">{{ $big($t['committed']) }}</b></span><span>งบ <b class="mono">{{ $big($t['budget']) }}</b> IDTC</span></div>
                 <div class="row"><span>ภาระสูงสุดถ้าขายหมด (อัตรารวมสูงสุด {{ $pct($t['max_rate']) }}%)</span><b class="mono" style="color:#f5c86b">{{ $big($t['worst']) }} · {{ number_format($t['worst'] / $budget * 100, 1) }}%</b></div>
-                <div class="row"><span>คืนเข้างบ (ไม่มีสาย {{ $big($t['returned_none']) }} · ระดับไม่ถึง {{ $big($t['returned_rank']) }} · ขาย/โอนออกก่อนครบ {{ $big($t['returned_sold'] ?? 0) }} · Sprint แจกไม่หมด {{ $big($t['returned_sprint']) }})</span><b class="mono">{{ $big($t['returned']) }}</b></div>
+                <div class="row"><span>คืนเข้างบ (ไม่มีสาย {{ $big($t['returned_none']) }} · ระดับไม่ถึง {{ $big($t['returned_rank']) }} · ขาย/โอนออกก่อนครบ {{ $big($t['returned_sold'] ?? 0) }} · Sprint แจกไม่หมด {{ $big($t['returned_sprint']) }} · Binary จ่ายไม่ถึงกอง {{ $big($t['returned_binary'] ?? 0) }})</span><b class="mono">{{ $big($t['returned']) }}</b></div>
             </div>
             @php $hold = $t['hold'] ?? ['enabled' => false, 'covered' => null, 'gaps' => []]; @endphp
             @if (! $hold['enabled'])
@@ -93,7 +93,7 @@
             <div class="empty"><x-admin.icon name="chart"/><b>ยังไม่มียอดซื้อ</b><span>ตัวเลขจะขึ้นเองเมื่อมีการซื้อ presale (ระบบดึงยอดทุกนาที)</span></div>
         @else
             <div class="table-scroll"><table class="tbl">
-                <thead><tr><th>สัปดาห์</th><th class="r">USDT</th><th class="r">IDTC ขาย</th><th class="r">ซื้อ / คนใหม่</th><th class="r">วง 1</th><th class="r">วง 2</th><th class="r">วง 3</th><th class="r">ผู้ซื้อ</th><th class="r">Sprint (แจก/กอง)</th><th>Sprint</th></tr></thead>
+                <thead><tr><th>สัปดาห์</th><th class="r">USDT</th><th class="r">IDTC ขาย</th><th class="r">ซื้อ / คนใหม่</th><th class="r">วง 1</th><th class="r">วง 2</th><th class="r">วง 3</th><th class="r">ผู้ซื้อ</th><th class="r">Sprint (แจก/กอง)</th><th>Sprint</th><th class="r">Binary (แจก/กอง)</th></tr></thead>
                 <tbody>
                     @foreach (array_reverse($book->weeks, true) as $k => $w)
                         <tr>
@@ -107,6 +107,7 @@
                             <td class="r">{{ $big($w['buyer']) }}</td>
                             <td class="r">{{ $big($w['sprint_paid']) }} / {{ $big($w['sprint_pool']) }}</td>
                             <td><span class="gs {{ $w['sprint_status'] }}">{{ $w['sprint_status'] === 'live' ? 'กำลังสะสม' : (G::STATUS[$w['sprint_status']] ?? $w['sprint_status']) }}</span></td>
+                            <td class="r">{{ ($w['binary_pool'] ?? 0) > 0 ? $big($w['binary_paid']).' / '.$big($w['binary_pool']) : '—' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

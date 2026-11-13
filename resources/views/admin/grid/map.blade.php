@@ -4,6 +4,8 @@
     use App\Services\Grid\GridLedger;
     use App\Support\AdminFormat as F;
     $zero = '0x'.str_repeat('0', 40);
+    $binary = $binary ?? false;
+    $mq = ['depth' => $depth] + ($binary ? ['tree' => 'binary'] : []);   // คงโหมดผัง (แนะนำ/Binary) ไว้ทุกลิงก์
     $rootNode = $root !== null ? $book->node($root) : null;
     $payload = [
         'root' => $root,
@@ -12,34 +14,40 @@
         'nodes' => $slice['nodes'],
         'ranks' => array_values(array_map(fn ($k) => G::RANKS[$k], GridLedger::RANKS)),
         'memberUrl' => route('admin.grid.member', $zero),
-        'mapUrl' => route('admin.grid.map', ['depth' => $depth]),
+        'mapUrl' => route('admin.grid.map', $mq),
         'zero' => $zero,
     ];
 @endphp
 
 @section('sub')
+    @if ($binary)
+        ผัง Binary: แต่ละกระเป๋ามีได้สองขา (ซ้าย/ขวา) · วงกลมแต่ละชั้น = ชั้นในผังนับจาก{{ $root ? 'กระเป๋าที่เลือก' : 'กระเป๋าบนสุด' }} · ขนาดจุดตามยอดซื้อเอง · สีตามระดับ
+    @else
     วงกลมแต่ละชั้น = วงสายงานนับจาก{{ $root ? 'กระเป๋าที่เลือก' : 'ผู้แนะนำบนสุด' }} · วง 1–3 ได้รางวัล · ขนาดจุดตามยอดซื้อเอง · สีตามระดับ
+    @endif
 @endsection
 
 @section('actions')
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', array_filter(['root' => $root, 'depth' => $depth, 'tree' => $binary ? null : 'binary'])) }}"><x-admin.icon name="users"/>{{ $binary ? 'ดูผังสายแนะนำ' : 'ดูผัง Binary' }}</a>
     @if ($root)
         <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.member', $root) }}"><x-admin.icon name="wallet"/>ข้อมูลกระเป๋านี้</a>
-        <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', ['depth' => $depth]) }}">ดูทั้งระบบ</a>
+        <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', $mq) }}">ดูทั้งระบบ</a>
     @endif
 @endsection
 
 @section('content')
     <div class="panel">
         <nav class="crumbs" aria-label="สายบน">
-            <a href="{{ route('admin.grid.map', ['depth' => $depth]) }}">ทั้งระบบ</a>
+            <a href="{{ route('admin.grid.map', $mq) }}">ทั้งระบบ</a>
             @foreach ($upline as $u)
-                <span>›</span><a class="mono" href="{{ route('admin.grid.map', ['root' => $u, 'depth' => $depth]) }}">{{ F::addr($u) }}</a>
+                <span>›</span><a class="mono" href="{{ route('admin.grid.map', ['root' => $u] + $mq) }}">{{ F::addr($u) }}</a>
             @endforeach
             @if ($root)<span>›</span><b class="mono">{{ F::addr($root) }}</b>@endif
         </nav>
 
         <form class="map-bar" method="GET" action="{{ route('admin.grid.map') }}">
             @if ($root)<input type="hidden" name="root" value="{{ $root }}">@endif
+            @if ($binary)<input type="hidden" name="tree" value="binary">@endif
             <label class="field"><span>ความลึก</span>
                 <select class="input" name="depth" onchange="this.form.submit()">
                     @foreach ([3, 4, 6, 8] as $d)<option value="{{ $d }}" @selected($d === $depth)>{{ $d }} วง</option>@endforeach

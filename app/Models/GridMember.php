@@ -16,6 +16,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $held_at
  * @property string|null $held_reason
  * @property string|null $held_by
+ * @property string|null $bin_parent กระเป๋าที่อยู่เหนือในผัง Binary (ไม่จำเป็นต้องเป็นผู้แนะนำ)
+ * @property string|null $bin_leg L | R
+ * @property Carbon|null $bin_placed_at
+ * @property string|null $bin_side_pref ขาที่อยากให้คนใหม่ลง (null = อัตโนมัติ)
  */
 class GridMember extends Model
 {
@@ -25,6 +29,6 @@ class GridMember extends Model
 
     protected function casts(): array
     {
-        return ['bound_at' => 'datetime', 'held_at' => 'datetime'];
+        return ['bound_at' => 'datetime', 'held_at' => 'datetime', 'bin_placed_at' => 'datetime'];
     }
 }

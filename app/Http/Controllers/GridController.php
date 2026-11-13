@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GridMember;
 use App\Services\Admin\AdminRegistry;
 use App\Services\Auth\SiweAuth;
 use App\Services\Auth\SiweException;
 use App\Services\Chain\Address;
 use App\Services\Grid\GridBinder;
 use App\Services\Grid\GridLedger;
+use App\Services\Grid\GridPlacer;
 use App\Services\Grid\GridPlan;
 use App\Services\Grid\GridRounds;
 use App\Support\Idtc;
@@ -27,6 +29,9 @@ use Illuminate\Support\Facades\Cookie;
 class GridController extends Controller
 {
     public const REF_COOKIE = 'idtc_ref';
+
+    /** ขาในผัง Binary ที่ลิงก์ชวนระบุ (l | r) — ไม่มี = ตามที่ผู้ชวนตั้งไว้ / อัตโนมัติ */
+    public const SIDE_COOKIE = 'idtc_side';
 
     public const SESSION = 'grid.address';
 
@@ -55,10 +60,11 @@ class GridController extends Controller
             'plan' => $plan,
             'preview' => $access === 'preview',
             'ref' => Address::isValid($ref) && ! Address::isZero($ref) ? Address::checksum($ref) : null,
+            'side' => GridPlacer::side($request->query('side', $request->cookie(self::SIDE_COOKIE))),
         ]);
     }
 
-    public function ref(Request $request, string $wallet): RedirectResponse
+    public function ref(Request $request, string $wallet, ?string $side = null): RedirectResponse
     {
         if ($this->access($request) === null) {
             return redirect(SiteLocale::route('home'));
@@ -66,6 +72,11 @@ class GridController extends Controller
         $to = redirect(SiteLocale::route('grid'));
         if (Address::isValid($wallet) && ! Address::isZero($wallet)) {
             $to->withCookie(Cookie::make(self::REF_COOKIE, strtolower($wallet), 60 * 24 * 30, '/', null, null, true, false, 'lax'));
+            // ลิงก์ใหม่แทนลิงก์เก่าทั้งชุด: ไม่ระบุขา = ล้างขาที่ค้างจากลิงก์ก่อน
+            $side = GridPlacer::side($side);
+            $to->withCookie($side !== null
+                ? Cookie::make(self::SIDE_COOKIE, strtolower($side), 60 * 24 * 30, '/', null, null, true, false, 'lax')
+                : Cookie::forget(self::SIDE_COOKIE));
         }
 
         return $to;
@@ -85,7 +96,7 @@ class GridController extends Controller
                 return $this->fail($error);
             }
             $msg = $siwe->issue($request, $address, '/grid', __('grid.sign.bind', ['ref' => Address::checksum($ref)]), [
-                'purpose' => 'bind', 'referrer' => strtolower($ref),
+                'purpose' => 'bind', 'referrer' => strtolower($ref), 'side' => GridPlacer::side($request->input('side')),
             ]);
         } else {
             $msg = $siwe->issue($request, $address, '/grid', __('grid.sign.login'), ['purpose' => 'login']);
@@ -119,13 +130,14 @@ class GridController extends Controller
         $request->session()->put(self::SESSION, $address);
 
         if ($bindTo !== null) {
-            $result = $binder->bind($address, $bindTo, $text, $signature, $request->ip());
+            $result = $binder->bind($address, $bindTo, $text, $signature, $request->ip(), GridPlacer::side($extra['side'] ?? null));
             if (is_string($result)) {
                 // ลายเซ็นถูกต้อง (เข้าระบบแล้ว) แต่ผูกไม่ได้ เช่น เพิ่งซื้อไประหว่างรอเซ็น
                 return $this->fail($result, ['signed_in' => true]);
             }
 
-            return response()->json(['ok' => true, 'bound' => true])->withCookie(Cookie::forget(self::REF_COOKIE));
+            return response()->json(['ok' => true, 'bound' => true])
+                ->withCookie(Cookie::forget(self::REF_COOKIE))->withCookie(Cookie::forget(self::SIDE_COOKIE));
         }
 
         return response()->json(['ok' => true]);
@@ -136,6 +148,22 @@ class GridController extends Controller
         $request->session()->forget('grid');
 
         return response()->json(['ok' => true]);
+    }
+
+    /** สมาชิกตั้งขาที่อยากให้คนใหม่ลง เมื่อลิงก์ชวนไม่ได้ระบุขา (ว่าง = อัตโนมัติ ขาที่คนน้อยกว่า) — ไม่ย้ายคนที่วางไปแล้ว */
+    public function side(Request $request): JsonResponse
+    {
+        $this->access($request) ?? abort(404);
+        $address = $request->session()->get(self::SESSION);
+        if (! is_string($address)) {
+            return response()->json(['message' => __('grid.err.login'), 'code' => 'login'], 401);
+        }
+        $side = GridPlacer::side($request->input('side'));
+        $row = GridMember::query()->firstOrNew(['wallet' => strtolower($address)]);
+        $row->bin_side_pref = $side;
+        $row->save();
+
+        return response()->json(['ok' => true, 'pref' => $side]);
     }
 
     public function me(Request $request, GridLedger $ledger, GridBinder $binder, GridRounds $rounds): JsonResponse
@@ -190,6 +218,15 @@ class GridController extends Controller
         };
 
         $referrer = $n['referrer'] ?? null;
+        $bin = $plan['binary'];
+        $binWeek = $book->binary[$week] ?? null;
+        $binMine = null;
+        foreach ($binWeek['rows'] ?? [] as $row) {
+            if ($row['wallet'] === strtolower($address)) {
+                $binMine = ['matched' => $row['matched'], 'share' => $row['share'], 'capped' => $row['capped']];
+            }
+        }
+        $me = Address::checksum($address);
         // รางวัลในรอบที่ประกาศบนเชนแล้ว + proof — กดรับเองด้วยกระเป๋า (สถานะรับแล้วอ่านสดจากเชน)
         $claims = $rounds->claimsFor($address);
 
@@ -212,6 +249,19 @@ class GridController extends Controller
                 'ends_at' => GridPlan::weekStart($week + 1)->getTimestamp(),
                 'eligible' => $rank >= 3,
                 'mine' => $mine,
+            ],
+            'binary' => [
+                'on' => GridPlan::binaryPool($plan) > 0,
+                'links' => ['left' => SiteLocale::route('ref', ['wallet' => $me, 'side' => 'l']), 'right' => SiteLocale::route('ref', ['wallet' => $me, 'side' => 'r'])],
+                'pref' => GridPlacer::side(GridMember::query()->where('wallet', strtolower($address))->value('bin_side_pref')),
+                'leg' => $n['bin_leg'] ?? null,
+                'parent' => $short($n['bin_parent'] ?? null),
+                'left' => ['count' => $n['bin_nl'] ?? 0, 'idtc' => $n['bin_l'] ?? 0.0, 'carry' => $n['bin_cl'] ?? 0.0, 'directs' => $n['bin_dl'] ?? 0],
+                'right' => ['count' => $n['bin_nr'] ?? 0, 'idtc' => $n['bin_r'] ?? 0.0, 'carry' => $n['bin_cr'] ?? 0.0, 'directs' => $n['bin_dr'] ?? 0],
+                'need_directs' => $bin['directs'],
+                'qualified' => (bool) ($n['bin_q'] ?? false),
+                'earned' => $n['bin'] ?? 0.0,
+                'week' => ['pool' => $binWeek['pool'] ?? 0.0, 'cap' => $binWeek['cap'] ?? 0.0, 'mine' => $binMine],
             ],
             'hold_days' => $plan['hold_days'],
             'claims' => [

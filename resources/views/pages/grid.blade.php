@@ -14,11 +14,13 @@
     ];
     $gridJs = [
         'ref' => $ref,
+        'side' => $side,
         'routes' => [
             'me' => SiteLocale::route('grid.me'),
             'nonce' => SiteLocale::route('grid.nonce'),
             'verify' => SiteLocale::route('grid.verify'),
             'logout' => SiteLocale::route('grid.logout'),
+            'side' => SiteLocale::route('grid.side'),
         ],
         'csrf' => csrf_token(),
         'ranks' => __('grid.ranks'),
@@ -52,6 +54,7 @@
                         <span>{{ __('grid.me.invited') }}</span>
                         <b class="mono" x-text="ref"></b>
                         <p>{{ __('grid.me.bind_text', ['buyer' => $pct($plan['buyer'])]) }}</p>
+                        @if ($side && $plan['binary']['pool'] > 0)<p class="muted small">{{ __($side === 'L' ? 'grid.bin.side_left' : 'grid.bin.side_right') }}</p>@endif
                     </div>
                 </template>
                 <h3>{{ __('grid.me.connect_title') }}</h3>
@@ -120,6 +123,48 @@
                         <p class="plan-note" x-show="claimMsg" x-cloak role="status">{!! $icon !!}<span x-text="claimMsg"></span></p>
                         <p class="plan-note warn" x-show="claimErr" x-cloak role="alert">{!! $icon !!}<span x-text="claimErr"></span></p>
                         <p class="muted small" x-show="claimHash" x-cloak><a :href="explorerTx(claimHash)" target="_blank" rel="noopener">{{ __('grid.me.claim_tx') }} ↗</a></p>
+                    </div>
+
+                    {{-- Binary (สองขา) — แสดงเมื่อแผนเปิดกอง Binary --}}
+                    <div class="grid-box grid-bin" x-show="me.binary && me.binary.on" x-cloak data-testid="grid-binary">
+                        <h4>{{ __('grid.bin.title') }}</h4>
+                        <p class="muted small">{{ __('grid.bin.text', ['pair' => $pct($plan['binary']['pair']), 'pool' => $pct($plan['binary']['pool'])]) }}</p>
+                        <div class="grid-two">
+                            @foreach (['left', 'right'] as $leg)
+                                <div class="grid-leg">
+                                    <h5>{{ __('grid.bin.'.$leg) }} <em class="num" x-text="num(me.binary.{{ $leg }}.count)"></em> <span class="muted small">{{ __('grid.bin.members') }}</span></h5>
+                                    <div class="kv">
+                                        <div><span>{{ __('grid.bin.volume') }}</span><b class="num" x-text="idtc(me.binary.{{ $leg }}.idtc) + ' IDTC'"></b></div>
+                                        <div><span>{{ __('grid.bin.carry') }}</span><b class="num" x-text="idtc(me.binary.{{ $leg }}.carry) + ' IDTC'"></b></div>
+                                        <div><span>{{ __('grid.bin.directs') }}</span><b class="num" x-text="num(me.binary.{{ $leg }}.directs)"></b></div>
+                                    </div>
+                                    <label class="grid-link">
+                                        <span>{{ __('grid.bin.link_'.$leg) }}</span>
+                                        <span class="grid-link-row">
+                                            <input class="mono" type="text" readonly :value="me.binary.links.{{ $leg }}" @focus="$event.target.select()">
+                                            <button class="btn btn-ghost btn-sm" type="button" @click="copyText(me.binary.links.{{ $leg }}, '{{ $leg }}')" x-text="copiedKey === '{{ $leg }}' ? @js(__('grid.me.copied')) : @js(__('grid.me.copy'))">{{ __('grid.me.copy') }}</button>
+                                        </span>
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="kv">
+                            <div><span>{{ __('grid.bin.week') }}</span><b class="num" x-text="idtc(me.binary.week.mine ? me.binary.week.mine.share : 0) + ' IDTC'"></b></div>
+                            <div><span>{{ __('grid.bin.earned') }}</span><b class="num" x-text="idtc(me.binary.earned) + ' IDTC'"></b></div>
+                            <div x-show="me.binary.leg"><span>{{ __('grid.bin.placed') }}</span><b><span x-text="me.binary.leg === 'L' ? @js(__('grid.bin.left')) : @js(__('grid.bin.right'))"></span> {{ __('grid.bin.under') }} <span class="mono" x-text="me.binary.parent"></span></b></div>
+                        </div>
+                        <p class="muted small" x-show="me.binary.week.mine && me.binary.week.mine.capped">{{ __('grid.bin.capped') }}</p>
+                        <p class="muted small" x-show="me.binary.qualified">{{ __('grid.bin.qualified') }}</p>
+                        <p class="muted small" x-show="!me.binary.qualified" x-text="@js(__('grid.bin.need', ['n' => '__N__'])).replace('__N__', me.binary.need_directs)"></p>
+                        <label class="grid-link">
+                            <span>{{ __('grid.bin.pref') }}</span>
+                            <select class="grid-select" @change="setSide($event.target.value)" :disabled="savingSide">
+                                <option value="" :selected="!me.binary.pref">{{ __('grid.bin.pref_auto') }}</option>
+                                <option value="L" :selected="me.binary.pref === 'L'">{{ __('grid.bin.left') }}</option>
+                                <option value="R" :selected="me.binary.pref === 'R'">{{ __('grid.bin.right') }}</option>
+                            </select>
+                            <span class="muted small">{{ __('grid.bin.pref_note') }}</span>
+                        </label>
                     </div>
 
                     <div class="grid-two">
@@ -204,6 +249,11 @@
                     <p class="muted small">% {{ __('grid.how.of_buy') }}@if ($boost) · {{ __('grid.how.boost', ['steps' => $boost]) }}@endif</p>
                     <h3 style="margin-top:18px">{{ __('grid.how.sprint_title') }}</h3>
                     <p class="muted">{{ __('grid.how.sprint_text', ['sprint' => $pct($plan['sprint']), 'cap' => $pct($plan['sprint_cap'])]) }}</p>
+                    @if ($plan['binary']['pool'] > 0)
+                        <h3 style="margin-top:18px">{{ __('grid.bin.how_title') }}</h3>
+                        <p class="muted">{{ __('grid.bin.text', ['pair' => $pct($plan['binary']['pair']), 'pool' => $pct($plan['binary']['pool'])]) }}</p>
+                        <p class="muted small">{{ __('grid.bin.need', ['n' => $plan['binary']['directs']]) }} · {{ __('grid.bin.how_rule', ['cap' => $pct($plan['binary']['cap'])]) }}</p>
+                    @endif
                 </div>
                 <div class="panel">
                     <h3>{{ __('grid.how.ranks_title') }}</h3>

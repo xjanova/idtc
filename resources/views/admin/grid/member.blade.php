@@ -69,6 +69,21 @@
         </div>
     </div>
 
+    <div class="panel section-gap" data-testid="member-binary">
+        <h3>ผัง Binary <span class="meta">สองขา · {{ ($book->totals['binary_on'] ?? false) ? 'แผนเปิดกอง Binary อยู่' : 'แผนปิดกอง Binary อยู่ — ตำแหน่งบันทึกไว้แล้ว' }}</span> <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', ['root' => $n['wallet'], 'tree' => 'binary']) }}">ดูผัง Binary</a></h3>
+        <div class="kv">
+            <div><span>ตำแหน่ง</span><b>@if ($n['bin_parent'] ?? null){{ $n['bin_leg'] === 'L' ? 'ขาซ้าย' : 'ขาขวา' }} ของ <a class="mono" href="{{ route('admin.grid.member', $n['bin_parent']) }}">{{ F::addr($n['bin_parent']) }}</a>@else<span class="muted">บนสุดของผัง (ไม่มีคนเหนือ)</span>@endif</b></div>
+            @foreach ([['ขาซ้าย', 'bl', 'bin_nl', 'bin_l', 'bin_cl', 'bin_dl'], ['ขาขวา', 'br', 'bin_nr', 'bin_r', 'bin_cr', 'bin_dr']] as [$label, $kid, $cnt, $vol, $carry, $dir])
+                <div><span>{{ $label }}</span><b>@if ($n[$kid] ?? null)<a class="mono" href="{{ route('admin.grid.member', $n[$kid]) }}">{{ F::addr($n[$kid]) }}</a> · {{ number_format($n[$cnt] ?? 0) }} คน · ยอด {{ number_format($n[$vol] ?? 0) }} IDTC · ยกไป {{ number_format($n[$carry] ?? 0) }} · เพื่อนตรงที่ซื้อแล้ว {{ number_format($n[$dir] ?? 0) }}@else<span class="muted">ว่าง</span>@endif</b></div>
+            @endforeach
+            <div><span>รางวัลจับคู่สะสม</span><b>{{ number_format($n['bin'] ?? 0) }} IDTC <span class="muted">· {{ ($n['bin_q'] ?? false) ? 'ผ่านเงื่อนไข' : 'ยังไม่ผ่านเงื่อนไข (ระดับสปาร์ก + เพื่อนตรงที่ซื้อแล้วครบทั้งสองขา)' }}</span></b></div>
+            <div><span>ขาที่ตั้งให้คนใหม่ลง</span><b>{{ ['L' => 'ขาซ้าย', 'R' => 'ขาขวา'][$row?->bin_side_pref] ?? 'อัตโนมัติ (ขาที่คนน้อยกว่า)' }}</b></div>
+        </div>
+        @if ($binUpline)
+            <p class="fine">คนเหนือในผัง: @foreach ($binUpline as $i => $w)@if ($i) › @endif<a class="mono" href="{{ route('admin.grid.member', $w) }}">{{ F::addr($w) }}</a>@endforeach</p>
+        @endif
+    </div>
+
     <div class="panel section-gap">
         <h3>ทีม <span class="meta">3 วงที่กระเป๋านี้ได้รางวัล</span></h3>
         @foreach ($rings as $d => $ring)
