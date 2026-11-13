@@ -16,6 +16,7 @@ return [
         'transparency' => 'Transparency',
         'whitepaper' => 'Whitepaper',
         'grid' => 'Invite',
+        'binary' => 'Binary plan',
         'add-network' => 'Add network',
         'main' => 'Main menu',
         'mobile' => 'Mobile menu',

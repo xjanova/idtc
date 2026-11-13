@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BinaryController;
 use App\Http\Controllers\GridController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,17 @@ $pages = function (): void {
         Route::post('/grid/auth/nonce', [GridController::class, 'nonce'])->name('grid.nonce');
         Route::post('/grid/auth/verify', [GridController::class, 'verify'])->name('grid.verify');
         Route::post('/grid/side', [GridController::class, 'side'])->name('grid.side');
+    });
+
+    // แผน Binary โปรโมชั่น — ปิดอยู่ (หลังบ้าน) = 404 · /b/{wallet}/{l|r} = ลิงก์ชวนของแผนนี้
+    Route::get('/binary', [BinaryController::class, 'page'])->name('binary');
+    Route::get('/b/{wallet}/{side?}', [BinaryController::class, 'ref'])->where('wallet', '0x[0-9a-fA-F]{40}')->where('side', '[lrLR]')->name('bref');
+    Route::get('/binary/me', [BinaryController::class, 'me'])->name('binary.me');
+    Route::post('/binary/logout', [BinaryController::class, 'logout'])->name('binary.logout');
+    Route::middleware('throttle:grid-auth')->group(function () {
+        Route::post('/binary/auth/nonce', [BinaryController::class, 'nonce'])->name('binary.nonce');
+        Route::post('/binary/auth/verify', [BinaryController::class, 'verify'])->name('binary.verify');
+        Route::post('/binary/side', [BinaryController::class, 'side'])->name('binary.side');
     });
 };
 

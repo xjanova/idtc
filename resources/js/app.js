@@ -5,6 +5,7 @@ import './presale';
 import './transparency';
 import './whitepaper';
 import './grid';
+import './binary';
 
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const B = 1e9;

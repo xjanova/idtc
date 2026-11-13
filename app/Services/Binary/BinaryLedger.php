@@ -3,11 +3,13 @@
 namespace App\Services\Binary;
 
 use App\Models\BinaryDeposit;
+use App\Models\BinaryPlanVersion;
 use App\Models\GridMember;
 use App\Services\Grid\GridPlacer;
 use App\Services\Grid\GridPlan;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * คำนวณแผน Binary โปรโมชั่นจากยอดฝากจริง (binary_deposits ที่ status = ok) และผังซ้าย/ขวา (grid_members.bin_*)
@@ -33,6 +35,25 @@ final class BinaryLedger
     public const HELD = 'held';
 
     public function __construct(protected BinaryPlan $plans) {}
+
+    /**
+     * ผลคำนวณล่าสุด — แคช 30 วินาทีตามลายนิ้วมือข้อมูล (ยอดฝาก/ผัง/แผน/โควตาเปลี่ยน = คำนวณใหม่)
+     *
+     * @return array{nodes: array<string, array<string, mixed>>, weeks: array<int, array<string, mixed>>, totals: array<string, mixed>, nowWeek: int, at: int}
+     */
+    public function book(?CarbonInterface $now = null): array
+    {
+        $now = CarbonImmutable::instance($now ?? CarbonImmutable::now());
+        $fp = implode(':', [
+            BinaryDeposit::query()->count(), (string) BinaryDeposit::query()->max('updated_at'),
+            GridMember::query()->count(), (string) GridMember::query()->max('updated_at'),
+            BinaryPlanVersion::query()->count(), (string) BinaryPlanVersion::query()->max('updated_at'),
+            (string) $this->plans->quota(), intdiv($now->getTimestamp(), 30),
+        ]);
+        $data = Cache::remember('idtc:binary:book:'.md5($fp), 30, fn () => $this->compute($now));
+
+        return is_array($data) ? $data : $this->compute($now);
+    }
 
     /**
      * @return array{nodes: array<string, array<string, mixed>>, weeks: array<int, array<string, mixed>>, totals: array<string, mixed>, nowWeek: int, at: int}

@@ -1,0 +1,26 @@
+{
+  "note": "TEST-ONLY fixture: signed by a random throwaway key generated once with ethers; the key was not kept.",
+  "address": "0x91F72EDCf463D759eE6629802BfF525b5CE042d2",
+  "referrer": "0x267B83a4aD4B184A0Fccf44f3714dABdC65e2021",
+  "issued_at": "2026-12-02T05:00:00Z",
+  "cases": {
+    "login_th": {
+      "nonce": "BinNonceLoginTh000000001",
+      "statement": "เข้าสู่แผน Binary ของ IDTC",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0x91F72EDCf463D759eE6629802BfF525b5CE042d2\n\nเข้าสู่แผน Binary ของ IDTC\n\nURI: http://localhost/binary\nVersion: 1\nChain ID: 4289\nNonce: BinNonceLoginTh000000001\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0x96cdd6f7555e6092d3b68e4dac1d96ee5cb68c3739aa14bee653c3a574300f1668d60a513950072c9962646a52d0e85255c98bda439b5a69c2b7128e4629c6141b"
+    },
+    "bind_th": {
+      "nonce": "BinNonceBindTh0000000001",
+      "statement": "ผูกผู้ชวน 0x267B83a4aD4B184A0Fccf44f3714dABdC65e2021 ในแผน Binary ของ IDTC",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0x91F72EDCf463D759eE6629802BfF525b5CE042d2\n\nผูกผู้ชวน 0x267B83a4aD4B184A0Fccf44f3714dABdC65e2021 ในแผน Binary ของ IDTC\n\nURI: http://localhost/binary\nVersion: 1\nChain ID: 4289\nNonce: BinNonceBindTh0000000001\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0x18bf8421dae8165ea5ffa92647cba6f569ebe14a8b04a0601fdc3550401acf325c7fe4e885d2b561315edd26fcac1e757e5392a964a82000c757f0e2491afbe61c"
+    },
+    "login_en": {
+      "nonce": "BinNonceLoginEn000000001",
+      "statement": "Sign in to the IDTC Binary plan",
+      "message": "localhost wants you to sign in with your Ethereum account:\n0x91F72EDCf463D759eE6629802BfF525b5CE042d2\n\nSign in to the IDTC Binary plan\n\nURI: http://localhost/binary\nVersion: 1\nChain ID: 4289\nNonce: BinNonceLoginEn000000001\nIssued At: 2026-12-02T05:00:00Z\nExpiration Time: 2026-12-02T05:05:00Z",
+      "signature": "0xd0f9267c0d448e6b5b37ffda007372c5874cf697cd4edf5c91d48d97f9978b6824ac39dfc93650eec66a1a13f9329656c2c993a5ff6a81a41100efe5e4d40f4e1b"
+    }
+  }
+}

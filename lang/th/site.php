@@ -16,6 +16,7 @@ return [
         'transparency' => 'ความโปร่งใส',
         'whitepaper' => 'ไวท์เปเปอร์',
         'grid' => 'ชวนเพื่อน',
+        'binary' => 'แผน Binary',
         'add-network' => 'เพิ่มเชน',
         'main' => 'เมนูหลัก',
         'mobile' => 'เมนูมือถือ',
