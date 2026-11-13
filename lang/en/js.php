@@ -166,6 +166,16 @@ return [
     ],
 
     'binary' => [
+        'claim' => [
+            'connect' => 'Opening your wallet to claim…',
+            'check' => 'Checking with the payout contract…',
+            'sign' => 'Confirm the transaction in your wallet (gas is 0)…',
+            'pending' => 'Sent. Waiting for the chain to confirm…',
+            'done' => 'Claimed :n :unit — the tokens are in your wallet.',
+            'timeout' => 'Confirmation is taking too long — check the explorer, then refresh this page.',
+            'other_account' => 'The selected wallet is not the one you signed in with — switch to :a and try again.',
+            'rejected' => 'The payout contract rejected this claim (already claimed, or the round was revoked or paused) — refresh the page and try again.',
+        ],
         'failed' => 'Could not load your data. Try again.',
         'phase' => ['connect' => 'Opening your wallet to connect…', 'sign' => 'Sign the message in your wallet (no gas)…', 'check' => 'Checking the signature…'],
         'ends' => 'Week closes in :d d :h h',

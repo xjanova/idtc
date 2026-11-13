@@ -20,6 +20,8 @@
 @endsection
 
 @section('actions')
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.rounds', 'usdt') }}"><x-admin.icon name="download"/>รอบจ่าย USDT</a>
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.rounds', 'idtc') }}"><x-admin.icon name="download"/>รอบส่ง IDTC</a>
     @unless ($ro)
         <form method="POST" action="{{ route('admin.binary.sync') }}" x-data="{ busy: false }" @submit="if (busy) { $event.preventDefault(); return; } busy = true">
             @csrf
@@ -178,7 +180,7 @@
                     @endforeach
                 </tbody>
             </table></div>
-            <p class="fine">ตัวคูณ &lt; 1 = ยอดจับคู่รวมเกินกอง ทุกคนถูกลดลงเท่ากัน · การจ่าย USDT จริงเป็นรอบจ่ายที่เจ้าของเซ็นเอง (ช่วงถัดไปของงาน)</p>
+            <p class="fine">ตัวคูณ &lt; 1 = ยอดจับคู่รวมเกินกอง ทุกคนถูกลดลงเท่ากัน · จ่าย USDT จริงที่หน้า "รอบจ่าย USDT" · ส่ง IDTC ที่ซื้อที่หน้า "รอบส่ง IDTC" (เจ้าของเซ็นประกาศรอบเอง)</p>
         @endif
     </div>
 

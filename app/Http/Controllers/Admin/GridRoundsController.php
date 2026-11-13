@@ -44,7 +44,7 @@ class GridRoundsController extends Controller
             'chain' => $chain,
             'excess' => ($chain['ok'] ?? false) && Units::cmp($chain['balance'], $chain['outstanding']) > 0
                 ? Units::sub($chain['balance'], $chain['outstanding']) : '0',
-            'list' => GridRound::query()->orderByDesc('id')->limit(100)->get(),
+            'list' => GridRound::query()->where('stream', GridRounds::STREAM)->orderByDesc('id')->limit(100)->get(),
             'draft' => $this->rounds->draft(),
             'due' => $due,
             'dueSum' => array_sum(array_column($due, 'due')),
@@ -53,10 +53,11 @@ class GridRoundsController extends Controller
 
     public function show(GridRound $round): View
     {
+        abort_unless($round->stream === GridRounds::STREAM, 404);
         $this->rounds->reconcile();
         $round->refresh();
         $chain = $this->reader->read();
-        $drafts = GridRound::query()->where('status', GridRound::DRAFT)->orderBy('chain_round')->get();
+        $drafts = GridRound::query()->where('stream', GridRounds::STREAM)->where('status', GridRound::DRAFT)->orderBy('chain_round')->get();
 
         return view('admin.grid.round', [
             'title' => 'รอบจ่ายที่ '.$round->chain_round,
@@ -89,6 +90,7 @@ class GridRoundsController extends Controller
 
     public function discard(GridRound $round): RedirectResponse
     {
+        abort_unless($round->stream === GridRounds::STREAM, 404);
         $this->rounds->reconcile();
         $round->refresh();
         if (! $this->rounds->discard($round)) {
@@ -101,6 +103,7 @@ class GridRoundsController extends Controller
 
     public function export(GridRound $round): StreamedResponse
     {
+        abort_unless($round->stream === GridRounds::STREAM, 404);
         $name = 'idtc-grid-round-'.$round->chain_round.'-'.$round->kind.'.csv';
 
         return response()->streamDownload(function () use ($round) {

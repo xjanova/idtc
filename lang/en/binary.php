@@ -67,6 +67,20 @@ return [
         'tx' => 'View the transaction on the explorer',
     ],
 
+    'claim' => [
+        'title' => 'Claim IDTC and rewards',
+        'usdt' => 'Pairing rewards (USDT)',
+        'idtc' => 'IDTC you bought',
+        'now' => 'Claimable now',
+        'done' => 'Already claimed',
+        'button_usdt' => 'Claim USDT',
+        'button_idtc' => 'Claim IDTC',
+        'note' => 'Tokens go from the contract straight to your wallet. Gas is 0.',
+        'read_error' => 'The chain status could not be read right now. Refresh the page.',
+        'none' => 'No payout round has been announced for this wallet yet',
+        'tx' => 'View the transaction on the explorer',
+    ],
+
     'legs' => [
         'title' => 'Your two legs',
         'left' => 'Left leg',

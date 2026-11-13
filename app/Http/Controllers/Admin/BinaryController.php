@@ -76,7 +76,7 @@ class BinaryController extends Controller
         $sold = (float) BinaryDeposit::query()->where('status', BinaryDeposit::OK)->sum('idtc');
 
         $errors = [];
-        $reserved = array_map('strtolower', array_filter(array_map(fn ($k) => Idtc::contract($k), ['token', 'usdt', 'presale', 'vesting', 'feeder', 'rewards', 'pair_usdt', 'pair_tpix'])));
+        $reserved = array_map('strtolower', array_filter(array_map(fn ($k) => Idtc::contract($k), ['token', 'usdt', 'presale', 'vesting', 'feeder', 'rewards', 'binpay', 'bindel', 'pair_usdt', 'pair_tpix'])));
         if (! Address::isValid($wallet) || Address::isZero($wallet)) {
             $errors['wallet'] = 'ที่อยู่กระเป๋าต้องขึ้นต้นด้วย 0x ตามด้วยตัวอักษรฐานสิบหก 40 ตัว';
         } elseif (! Address::hasValidChecksum($wallet)) {

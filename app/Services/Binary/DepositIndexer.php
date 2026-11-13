@@ -216,6 +216,7 @@ class DepositIndexer
                 'status' => $status,
                 'price' => $plan['price'],
                 'idtc' => $ok ? $idtc : 0.0,
+                'idtc_micro' => $ok ? BinaryDeposit::microIdtc($row['amount'], (string) $plan['price']) : '0',
                 'pool_usdt' => $ok ? $row['usdt'] * (float) $plan['pool'] : 0.0,
             ]);
             if ($ok) {

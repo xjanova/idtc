@@ -30,7 +30,8 @@ return new class extends Migration
             $table->unsignedInteger('week')->default(0)->index();
             $table->string('status', 12)->default('ok')->index();
             $table->string('price', 40)->nullable();      // USDT ต่อ 1 IDTC ที่ใช้
-            $table->double('idtc')->default(0);           // IDTC ที่ซื้อได้
+            $table->double('idtc')->default(0);           // IDTC ที่ซื้อได้ (ทศนิยม — ใช้แสดงผลและตรวจโควตา)
+            $table->string('idtc_micro', 40)->default('0'); // ค่าเดียวกันแบบจำนวนเต็มแม่นยำ หน่วย 0.000001 IDTC ปัดลง — รอบส่ง IDTC ใช้ค่านี้
             $table->double('pool_usdt')->default(0);      // ส่วนที่เข้ากองรางวัลจับคู่ของสัปดาห์
             $table->timestamp('refunded_at')->nullable(); // แอดมินบันทึกว่าคืนเงินรายการที่ไม่นับแล้ว
             $table->string('refund_tx', 66)->nullable();

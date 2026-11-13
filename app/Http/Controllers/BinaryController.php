@@ -9,6 +9,7 @@ use App\Services\Auth\SiweAuth;
 use App\Services\Auth\SiweException;
 use App\Services\Binary\BinaryLedger;
 use App\Services\Binary\BinaryPlan;
+use App\Services\Binary\BinaryRounds;
 use App\Services\Chain\Address;
 use App\Services\Grid\GridBinder;
 use App\Services\Grid\GridPlacer;
@@ -193,6 +194,16 @@ class BinaryController extends Controller
         $usdt = Idtc::contract('usdt');
         $referrer = $n['referrer'] ?? null;
         $ends = $this->plans->endsAt();
+        // ยอดในรอบที่ประกาศบนเชนแล้ว + proof — กดรับเองด้วยกระเป๋า (สถานะรับแล้วอ่านสดจากเชน)
+        $claims = [];
+        foreach (['usdt' => BinaryRounds::USDT, 'idtc' => BinaryRounds::IDTC] as $name => $stream) {
+            $c = BinaryRounds::of($stream)->claimsFor($address);
+            $claims[$name] = [
+                'contract' => $c['contract'] ? Address::checksum($c['contract']) : null,
+                'error' => $c['error'] !== null,
+                'items' => array_map(fn ($i) => ['round' => $i['round'], 'amount' => $i['amount'], 'value' => $i['idtc'], 'claimed' => $i['claimed'], 'proof' => $i['proof']], $c['items']),
+            ];
+        }
 
         return response()->json([
             'address' => $me,
@@ -219,6 +230,7 @@ class BinaryController extends Controller
                 'left' => SiteLocale::route('bref', ['wallet' => $me, 'side' => 'l']),
                 'right' => SiteLocale::route('bref', ['wallet' => $me, 'side' => 'r']),
             ],
+            'claims' => $claims,
             'pref' => GridPlacer::side(GridMember::query()->where('wallet', $address)->value('bin_side_pref')),
             'deposits' => BinaryDeposit::query()->where('wallet', $address)->orderByDesc('block_number')->orderByDesc('log_index')->limit(20)->get()
                 ->map(fn (BinaryDeposit $d) => [

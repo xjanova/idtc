@@ -85,7 +85,7 @@ class BinaryPageTest extends TestCase
             'tx_hash' => '0x'.str_pad(dechex($this->seq), 64, 'f', STR_PAD_LEFT), 'log_index' => 0, 'wallet' => strtolower($wallet), 'to' => self::WALLET,
             'amount' => (string) (int) round($usdt * 1e6), 'usdt' => $usdt, 'block_number' => $this->seq, 'block_time' => $ts,
             'week' => GridPlan::purchaseWeek($ts->getTimestamp()), 'status' => $status, 'price' => '0.0000015',
-            'idtc' => $status === 'ok' ? $usdt / 0.0000015 : 0, 'pool_usdt' => $status === 'ok' ? $usdt * 0.30 : 0,
+            'idtc' => $status === 'ok' ? $usdt / 0.0000015 : 0, 'idtc_micro' => $status === 'ok' ? BinaryDeposit::microIdtc((string) (int) round($usdt * 1e6), '0.0000015') : '0', 'pool_usdt' => $status === 'ok' ? $usdt * 0.30 : 0,
         ]);
     }
 

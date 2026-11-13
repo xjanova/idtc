@@ -45,6 +45,18 @@ final class ChainActions
         'rewards.pause' => ['contract' => 'rewards', 'method' => 'pause()', 'label' => 'หยุดรับรางวัล Grid ชั่วคราว', 'guard' => 'owner', 'destructive' => true, 'params' => []],
         'rewards.unpause' => ['contract' => 'rewards', 'method' => 'unpause()', 'label' => 'เปิดรับรางวัล Grid ต่อ', 'guard' => 'owner', 'destructive' => false, 'params' => []],
         'rewards.withdrawExcess' => ['contract' => 'rewards', 'method' => 'withdrawExcess(address,uint256)', 'label' => 'ถอนเหรียญส่วนเกินจากสัญญาจ่ายรางวัล', 'guard' => 'owner', 'destructive' => true, 'params' => ['to' => 'address', 'amount' => 'uint']],
+        // แผน Binary โปรโมชั่น — สัญญา GridRewards ของสาย รางวัลจับคู่ Binary (USDT)
+        'binpay.addRound' => ['contract' => 'binpay', 'method' => 'addRound(uint256,bytes32,uint256,uint64)', 'label' => 'ประกาศรอบจ่าย: รางวัลจับคู่ Binary (USDT)', 'guard' => 'owner', 'destructive' => false, 'params' => ['id' => 'uint', 'root' => 'bytes32', 'total' => 'uint', 'unlockAt' => 'uint']],
+        'binpay.revokeRound' => ['contract' => 'binpay', 'method' => 'revokeRound(uint256)', 'label' => 'ยกเลิกรอบจ่าย: รางวัลจับคู่ Binary (USDT)', 'guard' => 'owner', 'destructive' => true, 'params' => ['id' => 'uint']],
+        'binpay.pause' => ['contract' => 'binpay', 'method' => 'pause()', 'label' => 'หยุดรับชั่วคราว: รางวัลจับคู่ Binary (USDT)', 'guard' => 'owner', 'destructive' => true, 'params' => []],
+        'binpay.unpause' => ['contract' => 'binpay', 'method' => 'unpause()', 'label' => 'เปิดรับต่อ: รางวัลจับคู่ Binary (USDT)', 'guard' => 'owner', 'destructive' => false, 'params' => []],
+        'binpay.withdrawExcess' => ['contract' => 'binpay', 'method' => 'withdrawExcess(address,uint256)', 'label' => 'ถอน USDT ส่วนเกินจากสัญญา: รางวัลจับคู่ Binary (USDT)', 'guard' => 'owner', 'destructive' => true, 'params' => ['to' => 'address', 'amount' => 'uint']],
+        // แผน Binary โปรโมชั่น — สัญญา GridRewards ของสาย ส่ง IDTC ของแผน Binary
+        'bindel.addRound' => ['contract' => 'bindel', 'method' => 'addRound(uint256,bytes32,uint256,uint64)', 'label' => 'ประกาศรอบจ่าย: ส่ง IDTC ของแผน Binary', 'guard' => 'owner', 'destructive' => false, 'params' => ['id' => 'uint', 'root' => 'bytes32', 'total' => 'uint', 'unlockAt' => 'uint']],
+        'bindel.revokeRound' => ['contract' => 'bindel', 'method' => 'revokeRound(uint256)', 'label' => 'ยกเลิกรอบจ่าย: ส่ง IDTC ของแผน Binary', 'guard' => 'owner', 'destructive' => true, 'params' => ['id' => 'uint']],
+        'bindel.pause' => ['contract' => 'bindel', 'method' => 'pause()', 'label' => 'หยุดรับชั่วคราว: ส่ง IDTC ของแผน Binary', 'guard' => 'owner', 'destructive' => true, 'params' => []],
+        'bindel.unpause' => ['contract' => 'bindel', 'method' => 'unpause()', 'label' => 'เปิดรับต่อ: ส่ง IDTC ของแผน Binary', 'guard' => 'owner', 'destructive' => false, 'params' => []],
+        'bindel.withdrawExcess' => ['contract' => 'bindel', 'method' => 'withdrawExcess(address,uint256)', 'label' => 'ถอน IDTC ส่วนเกินจากสัญญา: ส่ง IDTC ของแผน Binary', 'guard' => 'owner', 'destructive' => true, 'params' => ['to' => 'address', 'amount' => 'uint']],
         'vesting.release' => ['contract' => 'vesting', 'method' => 'release()', 'label' => 'ปลดงวดที่ถึงเวลา', 'guard' => 'anyone', 'destructive' => false, 'params' => []],
         'vesting.transferBeneficiary' => ['contract' => 'vesting', 'method' => 'transferBeneficiary(address)', 'label' => 'เริ่มเปลี่ยนผู้รับเหรียญที่ปลดล็อก', 'guard' => 'beneficiary', 'destructive' => true, 'params' => ['newBeneficiary' => 'address']],
         'vesting.acceptBeneficiary' => ['contract' => 'vesting', 'method' => 'acceptBeneficiary()', 'label' => 'รับสิทธิ์ผู้รับเหรียญที่ปลดล็อก', 'guard' => 'pendingBeneficiary', 'destructive' => false, 'params' => []],
@@ -65,6 +77,7 @@ final class ChainActions
             'presale', 'feeder' => 'presale',
             'vesting' => 'vesting',
             'rewards' => 'grid_rounds',
+            'binpay', 'bindel' => 'binary',
             default => null,
         };
     }

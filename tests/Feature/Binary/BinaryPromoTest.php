@@ -151,7 +151,7 @@ class BinaryPromoTest extends TestCase
             'tx_hash' => '0x'.str_pad(dechex($this->seq), 64, 'f', STR_PAD_LEFT), 'log_index' => 0, 'wallet' => $this->w($who), 'to' => strtolower(self::WALLET),
             'amount' => (string) (int) round($usdt * 1e6), 'usdt' => $usdt, 'block_number' => $this->seq, 'block_time' => $ts,
             'week' => GridPlan::purchaseWeek($ts->getTimestamp()), 'status' => 'ok', 'price' => '0.0000015',
-            'idtc' => $usdt / 0.0000015, 'pool_usdt' => $usdt * $pool,
+            'idtc' => $usdt / 0.0000015, 'idtc_micro' => BinaryDeposit::microIdtc((string) (int) round($usdt * 1e6), '0.0000015'), 'pool_usdt' => $usdt * $pool,
         ]);
     }
 
@@ -192,6 +192,9 @@ class BinaryPromoTest extends TestCase
         $this->assertSame('ok', $d->status);
         $this->assertSame(0, $d->week);
         $this->assertEqualsWithDelta(150 / 0.0000015, $d->idtc, 1e-3);          // ราคาตั้งต้น = ราคา presale
+        $this->assertSame('100000000000000', $d->idtc_micro);                    // 100,000,000 IDTC พอดี หน่วย 0.000001 (จำนวนเต็มแม่นยำ)
+        $this->assertSame('66666666666666', BinaryDeposit::microIdtc('100000000', '0.0000015'));   // 66,666,666.666666… ปัดลง ไม่ปัดขึ้น
+        $this->assertSame('0', BinaryDeposit::microIdtc('100000000', '0'));
         $this->assertEqualsWithDelta(45.0, $d->pool_usdt, 1e-9);                 // 30% เข้ากองรางวัล
         $this->assertSame(self::T0 + 1200, $d->block_time->getTimestamp());
 

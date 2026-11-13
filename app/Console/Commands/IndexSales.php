@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Binary\BinaryRounds;
 use App\Services\Binary\DepositIndexer;
 use App\Services\Chain\SalesIndexer;
 use App\Services\Chain\TransferIndexer;
@@ -39,6 +40,11 @@ class IndexSales extends Command
 
         // รอบจ่ายรางวัล Grid: ตัดสินสถานะจากเชน (ประกาศแล้ว / ยกเลิก / ใช้ไม่ได้) + ใครรับไปแล้วในรอบที่ยกเลิก
         $rounds->reconcile() > 0 && $this->info('อัปเดตสถานะรอบจ่ายรางวัล Grid แล้ว');
+
+        // รอบจ่ายของแผน Binary (USDT / IDTC): ตัดสินสถานะจากเชนเหมือนกัน — ยังไม่ตั้งสัญญา = ข้าม
+        foreach ([BinaryRounds::USDT, BinaryRounds::IDTC] as $stream) {
+            BinaryRounds::of($stream)->reconcile() > 0 && $this->info('อัปเดตสถานะรอบจ่าย Binary ('.$stream.') แล้ว');
+        }
 
         // busy = มีรอบอื่นทำอยู่แล้ว ไม่ใช่ความผิดพลาด
         return $result['ok'] || $result['status'] === 'busy' ? self::SUCCESS : self::FAILURE;

@@ -50,6 +50,9 @@ return [
         'pair_tpix' => env('IDTC_PAIR_TPIX'),
         // GridRewards — รอบจ่ายรางวัล IDTC Grid (Merkle) · TPIX-Coin contracts/src/launch/GridRewards.sol
         'rewards' => env('IDTC_GRID_REWARDS_ADDRESS'),
+        // แผน Binary โปรโมชั่น — สัญญา GridRewards อีกสองตัว (ซอร์สเดียวกัน deploy แยก): binpay จ่ายรางวัลจับคู่เป็น USDT · bindel ส่ง IDTC ที่ซื้อ
+        'binpay' => env('IDTC_BINARY_PAY_ADDRESS'),
+        'bindel' => env('IDTC_BINARY_IDTC_ADDRESS'),
     ],
 
     // presale: ราคาฝังในสัญญา FixedPriceSale — ค่านี้ใช้แสดงผลก่อนสัญญาขึ้นเชน และใช้ตรวจว่าสัญญาตรงแผน

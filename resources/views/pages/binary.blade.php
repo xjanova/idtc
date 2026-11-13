@@ -101,6 +101,28 @@
                     </div>
                     <p class="muted small">{{ __('binary.me.payout_note') }}</p>
 
+                    {{-- รับ IDTC ที่ซื้อ และรางวัล USDT จากรอบที่ประกาศบนเชนแล้ว --}}
+                    <div class="grid-box grid-claim" data-testid="binary-claim" x-show="hasClaims" x-cloak>
+                        <h4>{{ __('binary.claim.title') }}</h4>
+                        <div class="grid-two">
+                            @foreach (['idtc' => 'IDTC', 'usdt' => 'USDT'] as $c => $sym)
+                                <div class="grid-leg" x-show="me.claims.{{ $c }}.contract && me.claims.{{ $c }}.items.length">
+                                    <h5>{{ __('binary.claim.'.$c) }}</h5>
+                                    <div class="kv">
+                                        <div><span>{{ __('binary.claim.now') }}</span><b class="num" x-text="claimText('{{ $c }}', claimable('{{ $c }}')) + ' {{ $sym }}'"></b></div>
+                                        <div><span>{{ __('binary.claim.done') }}</span><b class="num" x-text="claimText('{{ $c }}', claimedOf('{{ $c }}')) + ' {{ $sym }}'"></b></div>
+                                    </div>
+                                    <p class="plan-note warn" x-show="me.claims.{{ $c }}.error" x-cloak>{!! $icon !!}<span>{{ __('binary.claim.read_error') }}</span></p>
+                                    <button class="btn btn-primary btn-sm" type="button" @click="claim('{{ $c }}')" :disabled="claiming || depositing || busy || !claimable('{{ $c }}').length">{{ __('binary.claim.button_'.$c) }}</button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <p class="muted small">{{ __('binary.claim.note') }}</p>
+                        <p class="plan-note" x-show="claimMsg" x-cloak role="status">{!! $icon !!}<span x-text="claimMsg"></span></p>
+                        <p class="plan-note warn" x-show="claimErr" x-cloak role="alert">{!! $icon !!}<span x-text="claimErr"></span></p>
+                        <p class="muted small" x-show="claimHash" x-cloak><a :href="explorerTx(claimHash)" target="_blank" rel="noopener">{{ __('binary.claim.tx') }} ↗</a></p>
+                    </div>
+
                     {{-- ฝาก USDT --}}
                     <div class="grid-box bin-deposit" data-testid="binary-deposit">
                         <h4>{{ __('binary.deposit.title') }}</h4>

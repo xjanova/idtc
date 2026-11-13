@@ -2,7 +2,9 @@
  * หน้า /binary — แผน Binary โปรโมชั่น: เชื่อมกระเป๋า → เซ็นข้อความ (เข้าระบบ หรือผูกผู้ชวน) → ฝาก USDT → ดูสองขาและรางวัล
  *
  * การเข้าระบบ/ผูกผู้ชวนเป็น personal_sign ไม่เสียค่าแก๊ส ไม่โอนเหรียญ
- * ธุรกรรมเดียวของหน้านี้: โอน USDT (ERC-20 transfer) จากกระเป๋าของสมาชิกเองไปกระเป๋า Binary ของโครงการ
+ * ธุรกรรมของหน้านี้มีสองอย่าง:
+ *  1) ฝาก: โอน USDT (ERC-20 transfer) จากกระเป๋าของสมาชิกเองไปกระเป๋า Binary ของโครงการ
+ *  2) รับ: claimMany บนสัญญา GridRewards ของแต่ละสาย (IDTC ที่ซื้อ / รางวัล USDT) — เหรียญเข้ากระเป๋าของสมาชิกเท่านั้น
  *   — ที่อยู่ปลายทางและสัญญา USDT มาจากเซิร์ฟเวอร์ (/binary/me) ทุกครั้ง · จำลองก่อนส่ง · ต้องติ๊กยืนยันก่อน
  *   — เซิร์ฟเวอร์ไม่แตะเงิน: อ่านรายการจากเชนเองภายหลัง หน้านี้แค่รอแล้วโหลดข้อมูลใหม่
  * ข้อความทุกตัวจาก lang/{th,en}/js.php (binary.*)
@@ -14,6 +16,7 @@ import { localDate, t } from './i18n';
 
 const USDT_DECIMALS = 6;
 const ERC20 = new Interface(['function transfer(address to, uint256 amount) returns (bool)']);
+const REWARDS = new Interface(['function claimMany(uint256[] roundIds, address account, uint256[] amounts, bytes32[][] proofs)']);
 
 Alpine.data('binaryMember', (cfg = {}) => ({
     ref: cfg.ref || null,
@@ -34,6 +37,11 @@ Alpine.data('binaryMember', (cfg = {}) => ({
     depErr: '',
     depHash: '',
     balance: null, // bigint หน่วยเล็กสุดของ USDT
+    // รับจากรอบจ่าย
+    claiming: false,
+    claimMsg: '',
+    claimErr: '',
+    claimHash: '',
 
     short,
     explorerTx,
@@ -136,7 +144,7 @@ Alpine.data('binaryMember', (cfg = {}) => ({
     },
 
     async deposit() {
-        if (this.depositing || this.busy || this.depositBlock) return;
+        if (this.depositing || this.claiming || this.busy || this.depositBlock) return;
         const id = ++this.flow;
         const to = this.me.wallet;
         const token = this.me.usdt;
@@ -200,11 +208,75 @@ Alpine.data('binaryMember', (cfg = {}) => ({
         }, 15000);
     },
 
+    // ───────────── รับจากรอบจ่าย (สัญญา GridRewards ของแต่ละสาย) ─────────────
+
+    get hasClaims() {
+        const c = this.me?.claims;
+        return !!c && ['usdt', 'idtc'].some((k) => c[k]?.contract && c[k].items.length);
+    },
+    /** รอบที่รับได้ตอนนี้ของสาย kind ('usdt' | 'idtc') — claimed === null = อ่านไม่ได้ ไม่นับ */
+    claimable(kind) { return (this.me?.claims?.[kind]?.items || []).filter((c) => c.claimed === false); },
+    claimedOf(kind) { return (this.me?.claims?.[kind]?.items || []).filter((c) => c.claimed === true); },
+    claimText(kind, list) {
+        const sum = list.reduce((s, c) => s + Number(c.value || 0), 0);
+        return kind === 'usdt' ? this.usd(sum) : this.idtc(sum);
+    },
+
+    async claim(kind) {
+        const items = this.claimable(kind);
+        const to = this.me?.claims?.[kind]?.contract;
+        if (this.claiming || this.depositing || this.busy || !items.length || !to) return;
+        const id = ++this.flow;
+        this.claiming = true;
+        this.claimErr = '';
+        this.claimHash = '';
+        try {
+            this.claimMsg = t('binary.claim.connect');
+            const { account, signer } = await connectWallet();
+            if (id !== this.flow) return;
+            // เหรียญโอนเข้ากระเป๋าที่เข้าระบบไว้เท่านั้น
+            if (account.toLowerCase() !== this.me.address.toLowerCase()) {
+                this.claimMsg = '';
+                this.claimErr = t('binary.claim.other_account', { a: short(this.me.address) });
+                return;
+            }
+            const data = REWARDS.encodeFunctionData('claimMany', [
+                items.map((c) => BigInt(c.round)), this.me.address, items.map((c) => BigInt(c.amount)), items.map((c) => c.proof),
+            ]);
+            // จำลองก่อน — สัญญาจะปฏิเสธก็รู้เลย ไม่ต้องเปิดกระเป๋าเซ็น
+            this.claimMsg = t('binary.claim.check');
+            try {
+                await readProvider().call({ to, data, from: account });
+            } catch {
+                this.claimMsg = '';
+                this.claimErr = t('binary.claim.rejected');
+                await this.load();
+                return;
+            }
+            await assertWallet(account);
+            if (id !== this.flow) return;
+            this.claimMsg = t('binary.claim.sign');
+            const hash = await sendTx(signer, { to, data });
+            this.claimHash = hash;
+            this.claimMsg = t('binary.claim.pending');
+            await waitReceipt(hash);
+            if (id !== this.flow) return;
+            this.claimMsg = t('binary.claim.done', { n: this.claimText(kind, items), unit: kind === 'usdt' ? 'USDT' : 'IDTC' });
+            await this.load();
+        } catch (e) {
+            if (id !== this.flow) return;
+            this.claimMsg = '';
+            this.claimErr = e?.code === 'TIMEOUT' ? t('binary.claim.timeout') : walletError(e);
+        } finally {
+            if (id === this.flow) this.claiming = false;
+        }
+    },
+
     async logout() {
         this.flow++;
         clearTimeout(this._w);
         await this.api(cfg.routes.logout, {});
-        Object.assign(this, { me: null, account: null, busy: false, phase: '', depositing: false, depMsg: '', depErr: '', depHash: '', amount: '', agree: false, balance: null });
+        Object.assign(this, { me: null, account: null, busy: false, phase: '', depositing: false, depMsg: '', depErr: '', depHash: '', amount: '', agree: false, balance: null, claiming: false, claimMsg: '', claimErr: '', claimHash: '' });
     },
 
     async copyText(text, key) {
