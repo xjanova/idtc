@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BinaryController;
 use App\Http\Controllers\Admin\ChainController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -101,7 +102,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('grid/rounds/{round}/discard', [GridRoundsController::class, 'discard'])->whereNumber('round')->name('grid.round.discard');
         });
 
+        // แผน Binary โปรโมชั่น (idtc.online/binary): ดู/แก้อัตรา ตามสิทธิ์ส่วน binary · กระเป๋ารับเงินและเปิด/ปิด = owner (ด้านล่าง)
+        Route::get('binary', [BinaryController::class, 'index'])->middleware('admin.can:binary')->name('binary');
+        Route::middleware('admin.can:binary,edit')->group(function () {
+            Route::post('binary/plan', [BinaryController::class, 'plan'])->name('binary.plan');
+            Route::post('binary/sync', [BinaryController::class, 'sync'])->name('binary.sync');
+            Route::post('binary/deposits/{deposit}/refund', [BinaryController::class, 'refund'])->whereNumber('deposit')->name('binary.refund');
+        });
+
         Route::middleware('admin.role:owner')->group(function () {
+            Route::post('binary/settings', [BinaryController::class, 'settings'])->name('binary.settings');
+            Route::post('binary/toggle', [BinaryController::class, 'toggle'])->name('binary.toggle');
             Route::get('admins', [AdminUserController::class, 'index'])->name('admins');
             Route::post('admins', [AdminUserController::class, 'store'])->name('admins.store');
             Route::post('admins/password-reset', [AdminUserController::class, 'resetPassword'])->name('admins.password.reset');

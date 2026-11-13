@@ -28,6 +28,7 @@ final class AdminPermissions
         'grid_ledger' => ['label' => 'รางวัลรายการซื้อ', 'group' => 'IDTC Grid', 'route' => 'admin.grid.ledger'],
         'grid_plan' => ['label' => 'แผนรางวัล', 'group' => 'IDTC Grid', 'route' => 'admin.grid.plan'],
         'grid_rounds' => ['label' => 'รอบจ่ายรางวัล', 'group' => 'IDTC Grid', 'route' => 'admin.grid.rounds'],
+        'binary' => ['label' => 'แผน Binary (โปรโมชั่น)', 'group' => 'Binary โปรโมชั่น', 'route' => 'admin.binary'],
         'content' => ['label' => 'เนื้อหาและประกาศ', 'group' => 'เว็บไซต์', 'route' => 'admin.content'],
         'settings' => ['label' => 'ตั้งค่าเหรียญ', 'group' => 'เว็บไซต์', 'route' => 'admin.settings'],
         'audit' => ['label' => 'บันทึกการทำงาน', 'group' => 'เว็บไซต์', 'route' => 'admin.audit'],

@@ -161,6 +161,7 @@ return [
         'referrer' => 'This invite link is invalid. Ask your inviter for a new one.',
         'self' => 'You cannot invite yourself — this link belongs to your own wallet.',
         'bound' => 'This wallet is already bound to an inviter; it cannot be changed.',
+        'deposited' => 'This wallet already deposited into the Binary plan, so it can no longer bind an inviter (bind before the first deposit).',
         'bought' => 'This wallet has already bought in the presale, so it can no longer bind an inviter (binding must happen before the first purchase).',
         'cycle' => 'Cannot bind: this inviter is already in your own team.',
         'format' => 'The signed message does not match what the site issued. Try again.',

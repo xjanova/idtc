@@ -20,6 +20,9 @@
             ['route' => 'admin.grid.plan', 'label' => 'แผนรางวัล', 'icon' => 'gear', 'section' => 'grid_plan'],
             ['route' => 'admin.grid.rounds', 'label' => 'รอบจ่ายรางวัล', 'icon' => 'download', 'section' => 'grid_rounds'],
         ]],
+        ['Binary โปรโมชั่น', [
+            ['route' => 'admin.binary', 'label' => 'แผน Binary', 'icon' => 'users', 'section' => 'binary'],
+        ]],
         ['เว็บไซต์', [
             ['route' => 'admin.content', 'label' => 'เนื้อหาและประกาศ', 'icon' => 'layout', 'section' => 'content'],
             ['route' => 'admin.settings', 'label' => 'ตั้งค่าเหรียญ', 'icon' => 'gear', 'section' => 'settings'],

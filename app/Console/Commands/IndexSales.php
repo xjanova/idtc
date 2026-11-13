@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Binary\DepositIndexer;
 use App\Services\Chain\SalesIndexer;
 use App\Services\Chain\TransferIndexer;
 use App\Services\Chain\TxTracker;
@@ -14,7 +15,7 @@ use Illuminate\Console\Command;
 #[Description('ดึงยอดซื้อ presale (event Purchased) จากเชน TPIX ลงฐานข้อมูล การโอนเหรียญ IDTC (ตรวจการถือของ Grid) ตามผลธุรกรรมของหลังบ้านที่ค้างอยู่ และสถานะรอบจ่ายรางวัล Grid')]
 class IndexSales extends Command
 {
-    public function handle(SalesIndexer $indexer, TransferIndexer $transfers, TxTracker $tracker, GridRounds $rounds): int
+    public function handle(SalesIndexer $indexer, TransferIndexer $transfers, TxTracker $tracker, GridRounds $rounds, DepositIndexer $deposits): int
     {
         $result = $indexer->run(max(1, (int) $this->option('max-chunks')));
         $line = "[{$result['status']}] {$result['message']}".($result['inserted'] ? " · รายการใหม่ {$result['inserted']}" : '');
@@ -23,6 +24,13 @@ class IndexSales extends Command
         $moved = $transfers->run(max(1, (int) $this->option('max-chunks')));
         $line2 = "[{$moved['status']}] {$moved['message']}".($moved['inserted'] ? " · การโอนใหม่ {$moved['inserted']}" : '');
         $moved['ok'] || $moved['status'] === 'busy' ? $this->info($line2) : $this->warn($line2);
+
+        // แผน Binary โปรโมชั่น: การโอน USDT เข้ากระเป๋า Binary (ยังไม่ตั้งกระเป๋า = ข้าม)
+        $bin = $deposits->run(max(1, (int) $this->option('max-chunks')));
+        if ($bin['status'] !== 'idle') {
+            $line3 = "[{$bin['status']}] {$bin['message']}".($bin['inserted'] ? " · ยอดฝากใหม่ {$bin['inserted']}" : '');
+            $bin['ok'] || $bin['status'] === 'busy' ? $this->info($line3) : $this->warn($line3);
+        }
 
         $changed = $tracker->refreshPending();
         if ($changed > 0) {
