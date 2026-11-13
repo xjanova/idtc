@@ -166,6 +166,12 @@ return [
     ],
 
     'binary' => [
+        'team' => [
+            'saved' => 'Saved',
+            'confirm' => 'Place :w on the :leg leg of :p? Once placed you cannot move them yourself (contact the administrators).',
+            'left' => 'left',
+            'right' => 'right',
+        ],
         'claim' => [
             'connect' => 'Opening your wallet to claim…',
             'check' => 'Checking with the payout contract…',

@@ -159,8 +159,13 @@ class GridController extends Controller
             return response()->json(['message' => __('grid.err.login'), 'code' => 'login'], 401);
         }
         $side = GridPlacer::side($request->input('side'));
+        // ผังใช้ร่วมกับแผน Binary: ตั้งวิธีวางให้ตรงกัน (L → left · R → right · ว่าง → weak)
         $row = GridMember::query()->firstOrNew(['wallet' => strtolower($address)]);
-        $row->bin_side_pref = $side;
+        GridPlacer::applyMode($row, match ($side) {
+            GridPlacer::LEFT => GridPlacer::LEFT_EDGE,
+            GridPlacer::RIGHT => GridPlacer::RIGHT_EDGE,
+            default => GridPlacer::WEAK,
+        });
         $row->save();
 
         return response()->json(['ok' => true, 'pref' => $side]);

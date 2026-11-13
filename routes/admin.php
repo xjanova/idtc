@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BinaryController;
 use App\Http\Controllers\Admin\BinaryRoundsController;
+use App\Http\Controllers\Admin\BinaryTreeController;
 use App\Http\Controllers\Admin\ChainController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -119,9 +120,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('binary/deposits/{deposit}/refund', [BinaryController::class, 'refund'])->whereNumber('deposit')->name('binary.refund');
         });
 
+        // ผังสายงาน Binary: ดู/ตรวจ = binary · จัด/ย้าย/ต่อสาย/ตั้งวิธีวาง = binary แก้ไขได้ · เปลี่ยนผู้แนะนำ = owner (ด้านล่าง)
+        Route::middleware('admin.can:binary')->group(function () {
+            Route::get('binary/tree', [BinaryTreeController::class, 'index'])->name('binary.tree');
+            Route::get('binary/tree/data', [BinaryTreeController::class, 'data'])->name('binary.tree.data');
+            Route::get('binary/tree/lists', [BinaryTreeController::class, 'lists'])->name('binary.tree.lists');
+            Route::post('binary/tree/check', [BinaryTreeController::class, 'check'])->name('binary.tree.check');
+            Route::post('binary/tree/referrer/check', [BinaryTreeController::class, 'referrerCheck'])->name('binary.tree.referrer.check');
+        });
+        Route::middleware('admin.can:binary,edit')->group(function () {
+            Route::post('binary/tree/place', [BinaryTreeController::class, 'place'])->name('binary.tree.place');
+            Route::post('binary/tree/auto', [BinaryTreeController::class, 'auto'])->name('binary.tree.auto');
+            Route::post('binary/tree/mode', [BinaryTreeController::class, 'mode'])->name('binary.tree.mode');
+        });
+
         Route::middleware('admin.role:owner')->group(function () {
             Route::post('binary/settings', [BinaryController::class, 'settings'])->name('binary.settings');
             Route::post('binary/toggle', [BinaryController::class, 'toggle'])->name('binary.toggle');
+            Route::post('binary/tree/referrer', [BinaryTreeController::class, 'referrer'])->name('binary.tree.referrer');
             Route::get('admins', [AdminUserController::class, 'index'])->name('admins');
             Route::post('admins', [AdminUserController::class, 'store'])->name('admins.store');
             Route::post('admins/password-reset', [AdminUserController::class, 'resetPassword'])->name('admins.password.reset');

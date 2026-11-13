@@ -96,6 +96,7 @@
                             <input class="mono" type="text" readonly :value="me.link" @focus="$event.target.select()">
                             <button class="btn btn-ghost btn-sm" type="button" @click="copy()" x-text="copied ? @js(__('grid.me.copied')) : @js(__('grid.me.copy'))">{{ __('grid.me.copy') }}</button>
                             <button class="btn btn-ghost btn-sm" type="button" x-show="canShare" @click="share()">{{ __('grid.me.share') }}</button>
+                            <button class="btn btn-ghost btn-sm" type="button" data-testid="grid-qr" @click="$store.qr.show(me.link, @js(__('grid.me.link')), 'idtc-grid')">{{ __('site.qr.button') }}</button>
                         </span>
                     </label>
 
@@ -143,6 +144,7 @@
                                         <span class="grid-link-row">
                                             <input class="mono" type="text" readonly :value="me.binary.links.{{ $leg }}" @focus="$event.target.select()">
                                             <button class="btn btn-ghost btn-sm" type="button" @click="copyText(me.binary.links.{{ $leg }}, '{{ $leg }}')" x-text="copiedKey === '{{ $leg }}' ? @js(__('grid.me.copied')) : @js(__('grid.me.copy'))">{{ __('grid.me.copy') }}</button>
+                                            <button class="btn btn-ghost btn-sm" type="button" data-testid="grid-qr-{{ $leg }}" @click="$store.qr.show(me.binary.links.{{ $leg }}, @js(__('grid.bin.link_'.$leg)), 'idtc-grid-{{ $leg }}')">{{ __('site.qr.button') }}</button>
                                         </span>
                                     </label>
                                 </div>

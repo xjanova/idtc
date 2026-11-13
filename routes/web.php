@@ -37,11 +37,14 @@ $pages = function (): void {
     Route::get('/binary', [BinaryController::class, 'page'])->name('binary');
     Route::get('/b/{wallet}/{side?}', [BinaryController::class, 'ref'])->where('wallet', '0x[0-9a-fA-F]{40}')->where('side', '[lrLR]')->name('bref');
     Route::get('/binary/me', [BinaryController::class, 'me'])->name('binary.me');
+    // ผังทีมของแม่ทีม (เฉพาะทีมตัวเอง) + คิวรอจัดสาย
+    Route::get('/binary/team', [BinaryController::class, 'team'])->name('binary.team');
     Route::post('/binary/logout', [BinaryController::class, 'logout'])->name('binary.logout');
     Route::middleware('throttle:grid-auth')->group(function () {
         Route::post('/binary/auth/nonce', [BinaryController::class, 'nonce'])->name('binary.nonce');
         Route::post('/binary/auth/verify', [BinaryController::class, 'verify'])->name('binary.verify');
         Route::post('/binary/side', [BinaryController::class, 'side'])->name('binary.side');
+        Route::post('/binary/team/place', [BinaryController::class, 'teamPlace'])->name('binary.team.place');
     });
 };
 

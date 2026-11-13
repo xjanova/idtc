@@ -894,3 +894,53 @@
 .bin-addr { font-size: 12.5px; overflow-wrap: anywhere; }
 @media (max-width: 860px) { .bin-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bin-amount { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { .bin-flow { grid-template-columns: minmax(0, 1fr); } }
+
+/* /binary — ผังทีม + คิวรอจัดสาย */
+.bin-team h5 { font-size: 14px; color: var(--fg-strong); margin-top: 6px; }
+/* ตัวเลือกวิธีวางมีข้อความยาว — กว้างตามกล่อง ไม่ดันหน้าให้ล้นจอมือถือ */
+.bin-team, .bin-team .grid-link { min-width: 0; }
+.bin-team .grid-select { width: 100%; }
+.bin-team .plan-note { margin: 0; }
+.bin-queue { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+.bin-queue h5 em { font-style: normal; color: var(--gold); margin-left: 6px; }
+.bin-queue-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.bin-queue-row.on { border-color: rgba(163, 230, 53, .5); background: rgba(163, 230, 53, .05); }
+.bin-queue-row > div:first-child { display: grid; gap: 2px; min-width: 0; }
+.bin-queue-act { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.bin-queue-act .grid-select { flex: 1 1 160px; min-width: 0; }
+
+/* ผังต้นไม้ Binary (หน้า /binary และหลังบ้าน) — แถวละ 2^i ช่อง · กว้างไม่พอ = เลื่อนในกล่อง ไม่ล้นหน้า */
+.btree-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.btree { --cols: 4; --cell: 70px; display: grid; gap: 12px; overflow-x: auto; padding: 2px 2px 6px; }
+.btree-row { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 6px; min-width: calc(var(--cols) * var(--cell)); }
+.btree-cell { position: relative; min-width: 0; display: grid; }
+.btree-row + .btree-row .btree-cell::before { content: ""; position: absolute; top: -12px; left: 50%; height: 12px; border-left: 1px solid var(--line-2); }
+.btree-row + .btree-row .btree-cell.none::before { display: none; }
+.btree-node { display: grid; gap: 3px; align-content: start; width: 100%; min-width: 0; min-height: 64px; padding: 8px 6px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel); color: var(--fg); font: inherit; font-size: 11.5px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+.btree-node:hover, .btree-node:focus-visible { border-color: rgba(163, 230, 53, .45); background: rgba(163, 230, 53, .05); }
+.btree-node.top { border-color: rgba(163, 230, 53, .55); cursor: default; }
+.btree-node.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.btree-node.off b { color: var(--fg-2); }
+.btree-node b { font-size: 11.5px; color: var(--fg-strong); overflow-wrap: anywhere; }
+.btree-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+.btree-tags em { font-style: normal; font-size: 10.5px; line-height: 1.6; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--fg-3); }
+.btree-tags em.ok { color: var(--emerald); border-color: rgba(16, 185, 129, .4); }
+.btree-tags em.warn { color: var(--gold); border-color: rgba(245, 200, 107, .4); }
+.btree-tags em.bad { color: var(--red); border-color: rgba(251, 113, 133, .4); }
+.btree-legs { font-size: 11px; color: var(--fg-2); }
+.btree-slot { width: 100%; min-height: 64px; border: 1px dashed var(--line-2); border-radius: 12px; background: transparent; color: var(--fg-3); font: inherit; font-size: 12px; cursor: default; }
+.btree.picking .btree-slot:not(:disabled) { border-color: var(--lime); color: var(--lime); background: rgba(163, 230, 53, .06); font-size: 20px; cursor: pointer; }
+.btree.picking .btree-slot:not(:disabled):hover { background: rgba(163, 230, 53, .14); }
+@media (max-width: 420px) { .btree { --cell: 56px; } .btree-row { gap: 4px; } .btree-node { padding: 6px 3px; } .btree-node b { font-size: 10.5px; } .btree-tags em { font-size: 9.5px; padding: 0 4px; } }
+
+/* กล่อง QR ของลิงก์ชวน (partials/qr-modal) — ใช้ทั้งหน้าเว็บและหลังบ้าน */
+.qr-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgba(2, 6, 8, .74); backdrop-filter: blur(6px); }
+.qr-card { width: min(360px, 100%); max-height: calc(100dvh - 32px); overflow: auto; display: grid; gap: 10px; text-align: center; padding: 20px; border-radius: var(--r-panel); border: 1px solid var(--line-2); background: var(--bg-2); box-shadow: 0 30px 80px rgba(0, 0, 0, .5); }
+.qr-card h3 { font-family: var(--font-display); font-size: 18px; color: var(--fg-strong); }
+.qr-label { font-size: 13.5px; color: var(--fg-2); }
+.qr-img { justify-self: center; width: 240px; max-width: 100%; aspect-ratio: 1; border-radius: 14px; background: #fff; display: grid; place-items: center; overflow: hidden; }
+.qr-img img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.qr-failed { color: #1f2937; font-size: 13px; padding: 12px; }
+.qr-text { width: 100%; min-height: 38px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg-3); color: var(--fg-strong); padding: 0 12px; font-size: 12.5px; }
+.qr-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.qr-note { font-size: 12.5px; line-height: 1.6; color: var(--fg-3); }

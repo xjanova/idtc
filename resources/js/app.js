@@ -6,6 +6,7 @@ import './transparency';
 import './whitepaper';
 import './grid';
 import './binary';
+import './qr';
 
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const B = 1e9;

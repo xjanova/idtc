@@ -63,4 +63,18 @@ return [
         'exp' => '9',
         'unit' => 'billion',
     ],
+
+    // Invite-link QR box (partials/qr-modal) — used on /grid, /binary and the admin
+    'qr' => [
+        'button' => 'QR',
+        'title' => 'Invite link QR code',
+        'alt' => 'QR code of the invite link',
+        'link' => 'Invite link',
+        'download' => 'Download image',
+        'copy' => 'Copy link',
+        'copied' => 'Copied',
+        'close' => 'Close',
+        'failed' => 'Could not draw the QR code — use the link below instead',
+        'note' => 'Let your friend scan it with the phone camera, then open the link in their wallet browser.',
+    ],
 ];
