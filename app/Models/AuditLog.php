@@ -49,6 +49,10 @@ class AuditLog extends Model
         'grid.unhold' => 'ปลดการพักรางวัล Grid',
         'grid.round.build' => 'สร้างรอบจ่ายรางวัล Grid',
         'grid.round.discard' => 'ทิ้งรอบจ่ายรางวัล Grid ที่ยังไม่ประกาศ',
+        'binary.tree.place' => 'จัดสาย / ต่อสาย (ผัง Binary)',
+        'binary.tree.move' => 'ย้ายสายพร้อมทีม (ผัง Binary)',
+        'binary.tree.referrer' => 'เปลี่ยนผู้แนะนำ',
+        'binary.tree.mode' => 'ตั้งวิธีวางคนใหม่ของสมาชิก',
     ];
 
     protected $guarded = ['id'];

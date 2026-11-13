@@ -4,6 +4,7 @@ namespace App\Services\Grid;
 
 use App\Models\GridMember;
 use App\Models\GridPlanVersion;
+use App\Models\GridTreeChange;
 use App\Models\Purchase;
 use App\Support\Idtc;
 use Carbon\CarbonImmutable;
@@ -54,7 +55,7 @@ final class GridLedger
         }
         $fp = implode(':', [
             Purchase::query()->count(), (int) Purchase::query()->max('id'),
-            GridMember::query()->count(), (string) GridMember::query()->max('updated_at'),
+            GridMember::query()->count(), (string) GridMember::query()->max('updated_at'), (int) GridTreeChange::query()->max('id'),
             GridPlanVersion::query()->count(), (string) GridPlanVersion::query()->max('updated_at'),
             DB::table('token_transfers')->count(), (int) DB::table('token_transfers')->max('id'), (string) $this->holds->coveredUntil(), (string) Idtc::contract('token'),
             intdiv($now->getTimestamp(), 60),
@@ -85,8 +86,19 @@ final class GridLedger
             'bin_parent' => null, 'bin_leg' => null, 'bl' => null, 'br' => null, 'bin_nl' => 0, 'bin_nr' => 0, 'bin_l' => 0.0, 'bin_r' => 0.0,
             'bin_cl' => 0.0, 'bin_cr' => 0.0, 'bin_dl' => 0, 'bin_dr' => 0, 'bin_q' => false, 'bin' => 0.0,
         ];
-        foreach (GridMember::query()->orderBy('id')->get(['wallet', 'referrer', 'bound_at', 'held_at', 'bin_parent', 'bin_leg']) as $m) {
+        // ประวัติการย้ายสาย/เปลี่ยนผู้แนะนำ — ผู้แนะนำเดิมยังต้องมีตัวตนในสมุด (รางวัลของการซื้อก่อนเปลี่ยนเป็นของเขา)
+        $changes = BinaryTree::changes();
+        foreach ($changes as $c) {
+            foreach ([$c['from_referrer'], $c['to_referrer']] as $r) {
+                if ($r !== null) {
+                    $nodes[$r] ??= $blank($r);
+                }
+            }
+        }
+        $members = [];
+        foreach (GridMember::query()->orderBy('id')->get(['wallet', 'referrer', 'bound_at', 'held_at', 'bin_parent', 'bin_leg', 'bin_placed_at']) as $m) {
             $w = $m->wallet;
+            $members[$w] = ['referrer' => $m->referrer, 'parent' => $m->bin_parent, 'leg' => $m->bin_leg, 'placed' => $m->bin_placed_at?->getTimestamp()];
             $nodes[$w] ??= $blank($w);
             $nodes[$w]['member'] = true;
             $nodes[$w]['referrer'] = $m->referrer;
@@ -200,6 +212,26 @@ final class GridLedger
         }
         unset($subWeek);
 
+        // ผู้แนะนำ ณ เวลาที่ซื้อ — เปลี่ยนผู้แนะนำแล้ว รางวัลของการซื้อก่อนหน้ายังเป็นของสายเดิม (ไม่จ่ายซ้ำ)
+        $refAt = BinaryTree::referrerAt(array_map(fn ($n) => $n['referrer'], $nodes), $changes);
+        if (BinaryTree::hasReferrerChanges($changes)) {
+            // คะแนน Sprint รายสัปดาห์ก็ต้องเดินตามสายของตอนนั้น (ระดับยังคิดจากสายปัจจุบันเหมือนเดิม)
+            foreach (array_keys($nodes) as $w) {
+                $nodes[$w]['week_team'] = [];
+            }
+            foreach ($purchases as $p) {
+                $buyer = strtolower($p->buyer);
+                $ts = $p->block_time ? CarbonImmutable::parse($p->block_time)->getTimestamp() : $nowTs;
+                $k = GridPlan::purchaseWeek($ts);
+                $v = (float) $p->pay_usdt * $kept($p);
+                $up = [$buyer => true];
+                for ($a = $refAt($buyer, $ts), $i = 0; $a !== null && isset($nodes[$a]) && ! isset($up[$a]) && $i < GridBinder::MAX_WALK; $a = $refAt($a, $ts), $i++) {
+                    $up[$a] = true;
+                    $nodes[$a]['week_team'][$k] = ($nodes[$a]['week_team'][$k] ?? 0) + $v;
+                }
+            }
+        }
+
         // ---- events ----
         $totals = [self::READY => 0.0, self::WAIT => 0.0, self::HELD => 0.0, self::RANK => 0.0, self::NONE => 0.0, self::SOLD => 0.0];
         $weeks = [];
@@ -234,12 +266,15 @@ final class GridLedger
             $f = $kept($p);
             $bn = $nodes[$buyer];
             // ผูกหลังซื้อ (ตัวดึงยอดช้ากว่า) → การซื้อนี้ไม่นับให้สายบน
-            $linked = $bn['referrer'] !== null && $bn['bound_at'] !== null && $bn['bound_at'] <= $ts;
-            if ($linked && $bn['bin_parent'] !== null && ! $bn['held'] && $f > 0) {
-                $binOwn[$buyer][$k] = ($binOwn[$buyer][$k] ?? 0.0) + $idtc * $f;   // ยอดขา Binary ของสายบนในผัง
+            $ref1 = $refAt($buyer, $ts);
+            $linked = $ref1 !== null && $bn['bound_at'] !== null && $bn['bound_at'] <= $ts;
+            // ยอดขา Binary ของสายบนในผัง — สัปดาห์ที่ผู้ซื้อยังไม่อยู่ในผัง BinaryTree ไม่ส่งยอดขึ้นเอง
+            // (ต่อสายโดยแอดมินโดยไม่มีผู้แนะนำ: bound_at ว่าง = นับตั้งแต่สัปดาห์ที่อยู่ในผัง)
+            if (($bn['bound_at'] === null || $bn['bound_at'] <= $ts) && ! $bn['held'] && $f > 0) {
+                $binOwn[$buyer][$k] = ($binOwn[$buyer][$k] ?? 0.0) + $idtc * $f;
             }
             $rewards = [];
-            $a = $linked ? $bn['referrer'] : null;
+            $a = $linked ? $ref1 : null;
             for ($L = 1; $L <= 3; $L++) {
                 $rate = GridPlan::ringRate($plan, $L, $k);
                 $amt = $idtc * $rate;
@@ -257,7 +292,7 @@ final class GridLedger
                         $w['ring'][$L] += $part;
                     }
                 }
-                $a = $a === null ? null : $nodes[$a]['referrer'];
+                $a = $a === null ? null : $refAt($a, $ts);
             }
             $bAmt = $idtc * $plan['buyer'];
             $bStatus = ! $linked ? self::NONE : ($bn['held'] ? self::HELD : ($confirmed ? self::READY : self::WAIT));
@@ -311,7 +346,7 @@ final class GridLedger
             $sprint[$k] = ['week' => $k, 'pool' => $pool, 'cap' => $cap, 'given' => $given, 'state' => $state, 'rows' => $rows];
         }
         // ---- Binary ----
-        [$binary, $binaryReturned, $binaryPaid] = $this->binary($nodes, $weeks, $totals, $binOwn, $ownWeek, $current, $maxWeek, $nowTs, $holdSec, $settled);
+        [$binary, $binaryReturned, $binaryPaid] = $this->binary($nodes, $weeks, $totals, $binOwn, $ownWeek, $current, $maxWeek, $nowTs, $holdSec, $settled, $members, $changes);
         ksort($weeks);
 
         $sold = array_sum(array_column($weeks, 'idtc'));
@@ -365,56 +400,12 @@ final class GridLedger
      * @param  array<string, array<int, float>>  $own  กระเป๋า => [สัปดาห์ => IDTC ที่นับเป็นยอดขา]
      * @param  array<string, array<int, float>>  $ownUsdt  กระเป๋า => [สัปดาห์ => USDT ที่ซื้อเอง (ยังถือ)] ใช้ดูว่าถึงเกณฑ์สปาร์กสัปดาห์ไหน
      * @param  array<string, mixed>  $current
+     * @param  array<string, array{referrer: ?string, parent: ?string, leg: ?string, placed: ?int}>  $members  สถานะผังปัจจุบัน
+     * @param  list<array<string, mixed>>  $changes  ประวัติการย้ายสาย/เปลี่ยนผู้แนะนำ (BinaryTree::changes)
      * @return array{0: array<int, array<string, mixed>>, 1: float, 2: float} [สรุปรายสัปดาห์, คืนงบ, จ่ายรวม]
      */
-    private function binary(array &$nodes, array &$weeks, array &$totals, array $own, array $ownUsdt, array $current, int $maxWeek, int $nowTs, int $holdSec, \Closure $settled): array
+    private function binary(array &$nodes, array &$weeks, array &$totals, array $own, array $ownUsdt, array $current, int $maxWeek, int $nowTs, int $holdSec, \Closure $settled, array $members, array $changes): array
     {
-        // preorder ของผัง (บนก่อนล่าง ซ้ายก่อนขวา) — สายล่างของกระเป๋าหนึ่งเป็นช่วงติดกัน [tin, tin + size)
-        $order = [];
-        foreach ($nodes as $w => $n) {
-            if ($n['bin_parent'] !== null || ($n['bl'] === null && $n['br'] === null)) {
-                continue;
-            }
-            $stack = [$w];
-            while ($stack) {
-                $x = array_pop($stack);
-                $order[] = $x;
-                if ($nodes[$x]['br'] !== null) {
-                    $stack[] = $nodes[$x]['br'];
-                }
-                if ($nodes[$x]['bl'] !== null) {
-                    $stack[] = $nodes[$x]['bl'];
-                }
-            }
-        }
-        $tin = array_flip($order);
-
-        // ล่างขึ้นบน: ขนาดสายล่าง + ยอดรายสัปดาห์ของแต่ละขา
-        $size = [];
-        $sub = [];
-        $legs = [];
-        for ($i = count($order) - 1; $i >= 0; $i--) {
-            $w = $order[$i];
-            $mine = $own[$w] ?? [];
-            $sz = 1;
-            foreach ([GridPlacer::LEFT => $nodes[$w]['bl'], GridPlacer::RIGHT => $nodes[$w]['br']] as $leg => $c) {
-                if ($c === null) {
-                    continue;
-                }
-                $sz += $size[$c];
-                $legs[$w][$leg] = $sub[$c];
-                foreach ($sub[$c] as $k => $v) {
-                    $mine[$k] = ($mine[$k] ?? 0.0) + $v;
-                }
-                $nodes[$w][$leg === GridPlacer::LEFT ? 'bin_nl' : 'bin_nr'] = $size[$c];
-                $nodes[$w][$leg === GridPlacer::LEFT ? 'bin_l' : 'bin_r'] = (float) array_sum($sub[$c]);
-                unset($sub[$c]);
-            }
-            $size[$w] = $sz;
-            $sub[$w] = $mine;
-        }
-        unset($sub);
-
         // สัปดาห์แรกที่ยอดซื้อเองสะสมถึงเกณฑ์สปาร์ก (null = ยังไม่ถึง)
         $need = (int) $current['binary']['directs'];
         $spark = (float) $current['rank']['spark_own'];
@@ -431,36 +422,22 @@ final class GridLedger
 
             return null;
         };
-        // เพื่อนตรงที่ซื้อถึงเกณฑ์แล้ว อยู่ขาไหนของผู้แนะนำ และถึงเกณฑ์สัปดาห์ไหน
-        $directs = [];
-        foreach ($nodes as $c => $n) {
-            $s = $n['referrer'];
-            if ($s === null || ! isset($tin[$c], $tin[$s]) || ($at = $sparkWeek($c)) === null) {
+        // ยอดขารายสัปดาห์ + เพื่อนตรงที่ซื้อถึงเกณฑ์ต่อขา ตามผังของแต่ละสัปดาห์ (ย้ายสายไม่แตะสัปดาห์ที่ปิดแล้ว)
+        // from[w] = สัปดาห์แรกที่ผ่านเงื่อนไขครบ (ยอดสะสมไม่ลดตามเวลา → ผ่านแล้วผ่านตลอด)
+        $tree = BinaryTree::compute($members, $changes, $own, $sparkWeek, $need, $maxWeek);
+        $legs = $tree['legs'];
+        $from = $tree['from'];
+        foreach ($tree['nodes'] as $w => $t) {
+            if (! isset($nodes[$w])) {
                 continue;
             }
-            foreach ([GridPlacer::LEFT => $nodes[$s]['bl'], GridPlacer::RIGHT => $nodes[$s]['br']] as $leg => $top) {
-                if ($top !== null && $tin[$c] >= $tin[$top] && $tin[$c] < $tin[$top] + $size[$top]) {
-                    $directs[$s][$leg][] = $at;
-                    break;
-                }
-            }
-        }
-        // from[w] = สัปดาห์แรกที่ผ่านเงื่อนไขครบ (ยอดสะสมไม่ลดตามเวลา → ผ่านแล้วผ่านตลอด)
-        $from = [];
-        foreach ($order as $w) {
-            $l = $directs[$w][GridPlacer::LEFT] ?? [];
-            $r = $directs[$w][GridPlacer::RIGHT] ?? [];
-            sort($l);
-            sort($r);
-            $nodes[$w]['bin_dl'] = count($l);
-            $nodes[$w]['bin_dr'] = count($r);
-            $self = $sparkWeek($w);
-            $ok = $self !== null && count($l) >= $need && count($r) >= $need;
-            $week = $ok ? max($self, $need > 0 ? $l[$need - 1] : 0, $need > 0 ? $r[$need - 1] : 0) : null;
-            $nodes[$w]['bin_q'] = $week !== null && $week <= $maxWeek;
-            if ($week !== null && isset($legs[$w][GridPlacer::LEFT], $legs[$w][GridPlacer::RIGHT])) {
-                $from[$w] = $week;
-            }
+            $nodes[$w]['bin_nl'] = $t['nl'];
+            $nodes[$w]['bin_nr'] = $t['nr'];
+            $nodes[$w]['bin_l'] = $t['l'];
+            $nodes[$w]['bin_r'] = $t['r'];
+            $nodes[$w]['bin_dl'] = $t['dl'];
+            $nodes[$w]['bin_dr'] = $t['dr'];
+            $nodes[$w]['bin_q'] = $t['q'];
         }
 
         $carry = [];

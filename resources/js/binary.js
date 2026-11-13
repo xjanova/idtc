@@ -29,6 +29,14 @@ Alpine.data('binaryMember', (cfg = {}) => ({
     flow: 0,
     copiedKey: '',
     savingSide: false,
+    // ผังทีม + คิวรอจัดสาย
+    team: null,
+    teamBusy: false,
+    teamErr: '',
+    teamMsg: '',
+    picking: null, // กระเป๋าในคิวที่กำลังเลือกช่องให้
+    placing: false,
+    quickMode: 'fill',
     // ฝาก
     amount: '',
     agree: false,
@@ -70,7 +78,11 @@ Alpine.data('binaryMember', (cfg = {}) => ({
     async load() {
         try {
             const r = await this.api(cfg.routes.me);
-            if (r.ok) { this.me = r.data; this.readBalance(); } else if (r.status !== 401) this.error = t('binary.failed');
+            if (r.ok) {
+                this.me = r.data;
+                this.readBalance();
+                if (!this.team) this.loadTeam();
+            } else if (r.status !== 401) this.error = t('binary.failed');
         } catch {
             this.error = t('binary.failed');
         }
@@ -276,7 +288,7 @@ Alpine.data('binaryMember', (cfg = {}) => ({
         this.flow++;
         clearTimeout(this._w);
         await this.api(cfg.routes.logout, {});
-        Object.assign(this, { me: null, account: null, busy: false, phase: '', depositing: false, depMsg: '', depErr: '', depHash: '', amount: '', agree: false, balance: null, claiming: false, claimMsg: '', claimErr: '', claimHash: '' });
+        Object.assign(this, { me: null, account: null, busy: false, phase: '', depositing: false, depMsg: '', depErr: '', depHash: '', amount: '', agree: false, balance: null, claiming: false, claimMsg: '', claimErr: '', claimHash: '', team: null, teamErr: '', teamMsg: '', picking: null, placing: false });
     },
 
     async copyText(text, key) {
@@ -288,22 +300,91 @@ Alpine.data('binaryMember', (cfg = {}) => ({
         } catch { /* เบราว์เซอร์ไม่ให้คัดลอก — ผู้ใช้เลือกข้อความในช่องเองได้ */ }
     },
 
-    /** ขาที่คนจากลิงก์ที่ไม่ระบุขาจะลง ('' = อัตโนมัติ) */
-    async setSide(value) {
+    /** วิธีวางคนใหม่ที่เราชวน (weak | strong | left | right | fill | manual) */
+    async setMode(value) {
         if (this.savingSide || !this.me) return;
         const id = this.flow;
         this.savingSide = true;
         this.error = '';
+        this.teamMsg = '';
         try {
-            const r = await this.api(cfg.routes.side, { side: value });
+            const r = await this.api(cfg.routes.side, { mode: value });
             if (id !== this.flow || !this.me) return;
-            if (r.ok) this.me.pref = r.data.pref || null;
+            if (r.ok) { this.me.mode = r.data.mode; this.me.pref = r.data.pref || null; this.teamMsg = t('binary.team.saved'); }
             else { this.error = r.data.message || t('binary.failed'); await this.load(); }
         } catch {
             if (id === this.flow) this.error = t('binary.failed');
         } finally {
             this.savingSide = false;
         }
+    },
+
+    // ───────────── ผังทีม + คิวรอจัดสาย (แม่ทีมจัดคนที่ตัวเองชวน) ─────────────
+
+    /** โหลดผังรอบ root (ว่าง = ตัวเอง) — เปิดกล่องผังครั้งแรกค่อยโหลด */
+    async loadTeam(root = null) {
+        if (!this.me || this.teamBusy) return;
+        const id = this.flow;
+        this.teamBusy = true;
+        this.teamErr = '';
+        try {
+            const url = new URL(cfg.routes.team, location.origin);
+            if (root) url.searchParams.set('root', root);
+            const r = await this.api(url.toString());
+            if (id !== this.flow || !this.me) return;
+            if (r.ok) { this.team = r.data; this.me.mode = r.data.mode; this.me.waiting = r.data.queue.length; }
+            else this.teamErr = r.data.message || t('binary.failed');
+        } catch {
+            if (id === this.flow) this.teamErr = t('binary.failed');
+        } finally {
+            this.teamBusy = false;
+        }
+    },
+
+    /** เลือกคนในคิวเพื่อแตะช่องว่างในผัง (เลือกซ้ำ = ยกเลิก) */
+    pickFor(wallet) {
+        this.picking = this.picking === wallet ? null : wallet;
+        this.teamMsg = '';
+        this.teamErr = '';
+    },
+
+    /** วางคนที่เลือกไว้ลงช่องว่าง parent/leg (ถามยืนยันก่อน — ย้ายเองภายหลังไม่ได้) */
+    async placeAt(parent, leg) {
+        if (!this.picking || this.placing) return;
+        const ok = window.confirm(t('binary.team.confirm', {
+            w: short(this.picking), p: short(parent), leg: leg === 'L' ? t('binary.team.left') : t('binary.team.right'),
+        }));
+        if (!ok) return;
+        await this.sendPlace({ wallet: this.picking, parent, leg });
+    },
+
+    /** ให้ระบบเลือกช่องตามวิธีวาง (mode) ในทีมของเรา */
+    async placeQuick(wallet, mode) {
+        if (this.placing || !mode) return;
+        await this.sendPlace({ wallet, mode });
+    },
+
+    async sendPlace(body) {
+        const id = this.flow;
+        this.placing = true;
+        this.teamErr = '';
+        this.teamMsg = '';
+        try {
+            const r = await this.api(cfg.routes.teamPlace, body);
+            if (id !== this.flow || !this.me) return;
+            if (r.ok) { this.teamMsg = r.data.message || t('binary.team.saved'); this.picking = null; }
+            else this.teamErr = r.data.message || t('binary.failed');
+            await this.loadTeam(this.team?.window?.root || null);
+        } catch {
+            if (id === this.flow) this.teamErr = t('binary.failed');
+        } finally {
+            this.placing = false;
+        }
+    },
+
+    /** แถวของผังสำหรับแสดง: ซ่อนแถวที่ไม่มีอะไรเลย */
+    get teamLevels() {
+        return (this.team?.window?.levels || []).filter((row) => row.some((c) => c));
     },
 
     destroy() { clearTimeout(this._k); clearTimeout(this._w); this.flow++; },

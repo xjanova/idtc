@@ -16,6 +16,8 @@
             'verify' => SiteLocale::route('binary.verify'),
             'logout' => SiteLocale::route('binary.logout'),
             'side' => SiteLocale::route('binary.side'),
+            'team' => SiteLocale::route('binary.team'),
+            'teamPlace' => SiteLocale::route('binary.team.place'),
         ],
         'csrf' => csrf_token(),
     ];
@@ -92,6 +94,7 @@
                         </div>
                     </template>
                     <p class="plan-note warn" x-show="me.held" x-cloak>{!! $icon !!}<span>{{ __('binary.me.held') }}</span></p>
+                    <p class="plan-note" x-show="me.pending" x-cloak>{!! $icon !!}<span>{{ __('binary.me.pending') }}</span></p>
 
                     <div class="kpis grid-kpis">
                         <div class="kpi-tile"><span>{{ __('binary.me.kpi_usdt') }}</span><b class="num" x-text="usd(me.mine.usdt)"></b><em>USDT</em></div>
@@ -188,6 +191,7 @@
                                         <span class="grid-link-row">
                                             <input class="mono" type="text" readonly :value="me.links.{{ $leg }}" @focus="$event.target.select()">
                                             <button class="btn btn-ghost btn-sm" type="button" @click="copyText(me.links.{{ $leg }}, '{{ $leg }}')" x-text="copiedKey === '{{ $leg }}' ? @js(__('binary.me.copied')) : @js(__('binary.me.copy'))">{{ __('binary.me.copy') }}</button>
+                                            <button class="btn btn-ghost btn-sm" type="button" data-testid="binary-qr-{{ $leg }}" @click="$store.qr.show(me.links.{{ $leg }}, @js(__('binary.legs.link_'.$leg)), 'idtc-binary-{{ $leg }}')">{{ __('site.qr.button') }}</button>
                                         </span>
                                     </label>
                                 </div>
@@ -200,14 +204,96 @@
                         <p class="muted small" x-show="!me.mine.qualified" x-text="@js(__('binary.legs.need', ['n' => '__N__'])).replace('__N__', me.plan.directs)"></p>
                         <p class="muted small" x-show="me.week.mine && me.week.mine.capped">{{ __('binary.legs.capped') }}</p>
                         <label class="grid-link">
-                            <span>{{ __('binary.legs.pref') }}</span>
-                            <select class="grid-select" @change="setSide($event.target.value)" :disabled="savingSide">
-                                <option value="" :selected="!me.pref">{{ __('binary.legs.pref_auto') }}</option>
-                                <option value="L" :selected="me.pref === 'L'">{{ __('binary.legs.left') }}</option>
-                                <option value="R" :selected="me.pref === 'R'">{{ __('binary.legs.right') }}</option>
-                            </select>
-                            <span class="muted small">{{ __('binary.legs.pref_note') }}</span>
+                            <span>{{ __('binary.legs.link_auto') }}</span>
+                            <span class="grid-link-row">
+                                <input class="mono" type="text" readonly :value="me.links.auto" @focus="$event.target.select()">
+                                <button class="btn btn-ghost btn-sm" type="button" @click="copyText(me.links.auto, 'auto')" x-text="copiedKey === 'auto' ? @js(__('binary.me.copied')) : @js(__('binary.me.copy'))">{{ __('binary.me.copy') }}</button>
+                                <button class="btn btn-ghost btn-sm" type="button" data-testid="binary-qr-auto" @click="$store.qr.show(me.links.auto, @js(__('binary.legs.link_auto')), 'idtc-binary')">{{ __('site.qr.button') }}</button>
+                            </span>
                         </label>
+                    </div>
+
+                    {{-- ผังทีม + วิธีวางคนใหม่ + คิวรอจัดสาย (แม่ทีมจัดคนที่ตัวเองชวน) --}}
+                    <div class="grid-box bin-team" data-testid="binary-team">
+                        <h4>{{ __('binary.team.title') }}</h4>
+                        <label class="grid-link">
+                            <span>{{ __('binary.team.mode') }}</span>
+                            <select class="grid-select" @change="setMode($event.target.value)" :disabled="savingSide" data-testid="binary-mode">
+                                @foreach (\App\Services\Grid\GridPlacer::MODES as $m)
+                                    <option value="{{ $m }}" :selected="me.mode === '{{ $m }}'">{{ __('binary.mode.'.$m) }}</option>
+                                @endforeach
+                            </select>
+                            <span class="muted small">{{ __('binary.team.mode_note') }}</span>
+                        </label>
+                        <p class="plan-note" x-show="teamMsg" x-cloak role="status">{!! $icon !!}<span x-text="teamMsg"></span></p>
+                        <p class="plan-note warn" x-show="teamErr" x-cloak role="alert">{!! $icon !!}<span x-text="teamErr"></span></p>
+
+                        {{-- คิวรอจัดสาย --}}
+                        <div class="bin-queue" x-show="team && (team.queue.length || me.mode === 'manual')" x-cloak>
+                            <h5>{{ __('binary.team.queue_title') }} <em class="num" x-text="team ? team.queue.length : 0"></em></h5>
+                            <p class="muted small" x-show="team && !team.queue.length">{{ __('binary.team.queue_empty') }}</p>
+                            <template x-for="q in (team ? team.queue : [])" :key="q.wallet">
+                                <div class="bin-queue-row" :class="{ on: picking === q.wallet }">
+                                    <div>
+                                        <b class="mono" x-text="q.short"></b>
+                                        <span class="muted small">{{ __('binary.team.since') }} <span x-text="when(q.since)"></span></span>
+                                        <span class="muted small" x-show="q.side === 'L'">· {{ __('binary.team.hint_L') }}</span>
+                                        <span class="muted small" x-show="q.side === 'R'">· {{ __('binary.team.hint_R') }}</span>
+                                        <span class="muted small" x-show="q.usdt > 0">· <span x-text="usd(q.usdt)"></span> USDT</span>
+                                    </div>
+                                    <div class="bin-queue-act">
+                                        <button class="btn btn-sm" :class="picking === q.wallet ? 'btn-primary' : 'btn-ghost'" type="button" @click="pickFor(q.wallet)" :disabled="placing">
+                                            <span x-text="picking === q.wallet ? @js(__('binary.team.cancel')) : @js(__('binary.team.pick'))"></span>
+                                        </button>
+                                        <select class="grid-select" x-model="quickMode" :disabled="placing" aria-label="{{ __('binary.team.quick') }}">
+                                            @foreach (array_diff(\App\Services\Grid\GridPlacer::MODES, ['manual']) as $m)
+                                                <option value="{{ $m }}">{{ __('binary.mode.'.$m) }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="btn btn-ghost btn-sm" type="button" @click="placeQuick(q.wallet, quickMode)" :disabled="placing">{{ __('binary.team.quick') }}</button>
+                                    </div>
+                                </div>
+                            </template>
+                            <p class="muted small">{{ __('binary.team.queue_note') }}</p>
+                        </div>
+                        <p class="plan-note" x-show="picking" x-cloak>{!! $icon !!}<span x-text="@js(__('binary.team.picking', ['w' => '__W__'])).replace('__W__', short(picking || ''))"></span></p>
+
+                        {{-- ผังของเรา (3 ชั้น) --}}
+                        <h5>{{ __('binary.team.tree_title') }}</h5>
+                        <div class="btree-nav" x-show="team && team.window">
+                            <button class="btn btn-ghost btn-sm" type="button" @click="loadTeam(team.window.up)" x-show="team && team.window && team.window.up" :disabled="teamBusy">↑ {{ __('binary.team.up') }}</button>
+                            <button class="btn btn-ghost btn-sm" type="button" @click="loadTeam(null)" x-show="team && team.window && me && team.window.root.toLowerCase() !== me.address.toLowerCase()" :disabled="teamBusy">{{ __('binary.team.home') }}</button>
+                            <button class="btn btn-ghost btn-sm" type="button" @click="loadTeam(team.window.edge.L)" x-show="team && team.window && team.window.edge.L" :disabled="teamBusy">↙ {{ __('binary.team.edge_L') }}</button>
+                            <button class="btn btn-ghost btn-sm" type="button" @click="loadTeam(team.window.edge.R)" x-show="team && team.window && team.window.edge.R" :disabled="teamBusy">↘ {{ __('binary.team.edge_R') }}</button>
+                        </div>
+                        <div class="btree" :class="{ picking: !!picking }" x-show="team && team.window" data-testid="binary-tree" :style="`--cols:${teamLevels.length ? teamLevels[teamLevels.length - 1].length : 1}`">
+                            <template x-for="(row, i) in teamLevels" :key="i">
+                                <div class="btree-row" :style="`--n:${row.length}`">
+                                    <template x-for="(c, j) in row" :key="i + ':' + j">
+                                        <div class="btree-cell" :class="{ none: !c }">
+                                            <template x-if="c && !c.empty">
+                                                <button class="btree-node" type="button" @click="i > 0 && loadTeam(c.wallet)" :class="{ top: i === 0, off: !c.active }" :title="c.wallet">
+                                                    <b class="mono" x-text="c.short"></b>
+                                                    <span class="btree-tags">
+                                                        <em x-show="c.direct">{{ __('binary.team.direct') }}</em>
+                                                        <em :class="c.active ? 'ok' : ''" x-text="c.active ? @js(__('binary.team.active')) : @js(__('binary.team.inactive'))"></em>
+                                                        <em class="warn" x-show="c.waiting" x-text="@js(__('binary.team.waiting', ['n' => '__N__'])).replace('__N__', c.waiting)"></em>
+                                                    </span>
+                                                    <span class="btree-legs num"><span x-text="num(c.nl)"></span> · <span x-text="num(c.nr)"></span></span>
+                                                </button>
+                                            </template>
+                                            <template x-if="c && c.empty">
+                                                <button class="btree-slot" type="button" :disabled="!picking || placing" @click="placeAt(c.parent, c.leg)" :aria-label="@js(__('binary.team.empty')) + ' ' + (c.leg === 'L' ? @js(__('binary.team.left_short')) : @js(__('binary.team.right_short')))">
+                                                    <span x-text="picking ? '+' : @js(__('binary.team.empty'))"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                        <p class="muted small" x-show="teamBusy && !team">…</p>
+                        <p class="muted small">{{ __('binary.team.note') }}</p>
                     </div>
 
                     <h4 class="grid-h">{{ __('binary.history.title') }}</h4>

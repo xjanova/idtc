@@ -5,6 +5,8 @@ namespace App\Services\Binary;
 use App\Models\BinaryDeposit;
 use App\Models\BinaryPlanVersion;
 use App\Models\GridMember;
+use App\Models\GridTreeChange;
+use App\Services\Grid\BinaryTree;
 use App\Services\Grid\GridPlacer;
 use App\Services\Grid\GridPlan;
 use Carbon\CarbonImmutable;
@@ -23,6 +25,7 @@ use Illuminate\Support\Facades\Cache;
  *  - ได้รางวัลตั้งแต่สัปดาห์ที่: ยอดฝากเองสะสมถึงขั้นต่ำของแผน + มีเพื่อนตรงที่ฝากถึงขั้นต่ำครบ directs คนในแต่ละขา
  *    (คิดจากยอดสะสมถึงสัปดาห์นั้น — ผ่านเงื่อนไขทีหลังไม่ได้ส่วนแบ่งของสัปดาห์ที่ปิดไปแล้ว) · ก่อนผ่าน ยอดขาไม่นับและไม่ยกยอด
  *  - สัปดาห์ที่ยังไม่ปิด = ประมาณการ (wait) · ปิดแล้ว = พร้อมจ่าย (ready) · กระเป๋าผู้รับถูกพัก = held
+ *  - ผังของแต่ละสัปดาห์มาจาก BinaryTree (จัด/ย้าย/ต่อสายมีผลตั้งแต่สัปดาห์ที่ทำรายการ ไม่ย้อนไปสัปดาห์ที่ปิดแล้ว)
  *
  * คืน array ล้วน (แคชได้) — ดู compute()
  */
@@ -46,7 +49,7 @@ final class BinaryLedger
         $now = CarbonImmutable::instance($now ?? CarbonImmutable::now());
         $fp = implode(':', [
             BinaryDeposit::query()->count(), (string) BinaryDeposit::query()->max('updated_at'),
-            GridMember::query()->count(), (string) GridMember::query()->max('updated_at'),
+            GridMember::query()->count(), (string) GridMember::query()->max('updated_at'), (int) GridTreeChange::query()->max('id'),
             BinaryPlanVersion::query()->count(), (string) BinaryPlanVersion::query()->max('updated_at'),
             (string) $this->plans->quota(), intdiv($now->getTimestamp(), 30),
         ]);
@@ -75,8 +78,13 @@ final class BinaryLedger
             'nl' => 0, 'nr' => 0, 'l' => 0.0, 'r' => 0.0, 'cl' => 0.0, 'cr' => 0.0, 'dl' => 0, 'dr' => 0, 'q' => false, 'since' => null,
             'ready' => 0.0, 'wait' => 0.0, 'held_amt' => 0.0,
         ];
-        foreach (GridMember::query()->orderBy('id')->toBase()->get(['wallet', 'referrer', 'bound_at', 'held_at', 'bin_parent', 'bin_leg']) as $m) {
+        $members = [];  // สถานะผังปัจจุบัน → BinaryTree ย้อนดูผังของแต่ละสัปดาห์จากประวัติการย้าย
+        foreach (GridMember::query()->orderBy('id')->toBase()->get(['wallet', 'referrer', 'bound_at', 'held_at', 'bin_parent', 'bin_leg', 'bin_placed_at']) as $m) {
             $w = $m->wallet;
+            $members[$w] = [
+                'referrer' => $m->referrer, 'parent' => $m->bin_parent, 'leg' => $m->bin_leg,
+                'placed' => $m->bin_placed_at ? CarbonImmutable::parse($m->bin_placed_at)->getTimestamp() : null,
+            ];
             $nodes[$w] ??= $blank($w);
             $nodes[$w]['referrer'] = $m->referrer;
             $nodes[$w]['bound_at'] = $m->bound_at ? CarbonImmutable::parse($m->bound_at)->getTimestamp() : null;
@@ -120,7 +128,8 @@ final class BinaryLedger
             $n['first_at'] ??= $ts;
             $own[$w][$k] = ($own[$w][$k] ?? 0.0) + (float) $d->usdt;
             // ฝากก่อนผูกผู้แนะนำ = ไม่นับให้สายบน · กระเป๋าที่ถูกพัก = ไม่นับเป็นยอดขา
-            if ($n['parent'] !== null && $n['bound_at'] !== null && $n['bound_at'] <= $ts && ! $n['held']) {
+            // ต่อสายโดยแอดมินโดยไม่มีผู้แนะนำ (bound_at ว่าง) = นับเฉพาะสัปดาห์ที่อยู่ในผังแล้ว — BinaryTree ตัดสัปดาห์ก่อนหน้าให้เอง
+            if (($n['bound_at'] === null || $n['bound_at'] <= $ts) && ! $n['held']) {
                 $vol[$w][$k] = ($vol[$w][$k] ?? 0.0) + (float) $d->usdt;
             }
             unset($n);
@@ -129,50 +138,6 @@ final class BinaryLedger
             $weeks[$k] ??= $weekRow();
         }
         ksort($weeks);
-
-        // ---- ผัง: preorder (บนก่อนล่าง) → สายล่างของกระเป๋าหนึ่งเป็นช่วงติดกัน [tin, tin + size) ----
-        $order = [];
-        foreach ($nodes as $w => $n) {
-            if ($n['parent'] !== null || ($n['bl'] === null && $n['br'] === null)) {
-                continue;
-            }
-            $stack = [$w];
-            while ($stack) {
-                $x = array_pop($stack);
-                $order[] = $x;
-                if ($nodes[$x]['br'] !== null) {
-                    $stack[] = $nodes[$x]['br'];
-                }
-                if ($nodes[$x]['bl'] !== null) {
-                    $stack[] = $nodes[$x]['bl'];
-                }
-            }
-        }
-        $tin = array_flip($order);
-        $size = [];
-        $sub = [];
-        $legs = [];
-        for ($i = count($order) - 1; $i >= 0; $i--) {
-            $w = $order[$i];
-            $mine = $vol[$w] ?? [];
-            $sz = 1;
-            foreach ([GridPlacer::LEFT => $nodes[$w]['bl'], GridPlacer::RIGHT => $nodes[$w]['br']] as $leg => $c) {
-                if ($c === null) {
-                    continue;
-                }
-                $sz += $size[$c];
-                $legs[$w][$leg] = $sub[$c];
-                foreach ($sub[$c] as $k => $v) {
-                    $mine[$k] = ($mine[$k] ?? 0.0) + $v;
-                }
-                $nodes[$w][$leg === GridPlacer::LEFT ? 'nl' : 'nr'] = $size[$c];
-                $nodes[$w][$leg === GridPlacer::LEFT ? 'l' : 'r'] = (float) array_sum($sub[$c]);
-                unset($sub[$c]);
-            }
-            $size[$w] = $sz;
-            $sub[$w] = $mine;
-        }
-        unset($sub);
 
         // ---- เงื่อนไข: สัปดาห์แรกที่ยอดฝากเองสะสมถึงขั้นต่ำ + เพื่อนตรงที่ถึงขั้นต่ำครบในแต่ละขา ----
         $activeWeek = function (string $w) use ($own, $active): ?int {
@@ -188,34 +153,15 @@ final class BinaryLedger
 
             return null;
         };
-        $directs = [];
-        foreach ($nodes as $c => $n) {
-            $s = $n['referrer'];
-            if ($s === null || ! isset($tin[$c], $tin[$s]) || ($at = $activeWeek($c)) === null) {
-                continue;
-            }
-            foreach ([GridPlacer::LEFT => $nodes[$s]['bl'], GridPlacer::RIGHT => $nodes[$s]['br']] as $leg => $top) {
-                if ($top !== null && $tin[$c] >= $tin[$top] && $tin[$c] < $tin[$top] + $size[$top]) {
-                    $directs[$s][$leg][] = $at;
-                    break;
-                }
-            }
-        }
-        $from = [];
-        foreach ($order as $w) {
-            $l = $directs[$w][GridPlacer::LEFT] ?? [];
-            $r = $directs[$w][GridPlacer::RIGHT] ?? [];
-            sort($l);
-            sort($r);
-            $nodes[$w]['dl'] = count($l);
-            $nodes[$w]['dr'] = count($r);
-            $self = $activeWeek($w);
-            $ok = $self !== null && count($l) >= $need && count($r) >= $need;
-            $week = $ok ? max($self, $need > 0 ? $l[$need - 1] : 0, $need > 0 ? $r[$need - 1] : 0) : null;
-            $nodes[$w]['since'] = $week;
-            $nodes[$w]['q'] = $week !== null && $week <= $maxWeek;
-            if ($week !== null && isset($legs[$w][GridPlacer::LEFT], $legs[$w][GridPlacer::RIGHT])) {
-                $from[$w] = $week;
+
+        // ---- ผัง: ยอดแต่ละขารายสัปดาห์ตามผังของสัปดาห์นั้น (ย้ายสายไม่แตะสัปดาห์ที่ปิดแล้ว) ----
+        $tree = BinaryTree::compute($members, BinaryTree::changes(), $vol, $activeWeek, $need, $maxWeek);
+        $legs = $tree['legs'];
+        $from = $tree['from'];
+        foreach ($tree['nodes'] as $w => $t) {
+            $nodes[$w] ??= $blank($w);
+            foreach (['nl', 'nr', 'l', 'r', 'dl', 'dr', 'q', 'since'] as $key) {
+                $nodes[$w][$key] = $t[$key];
             }
         }
 

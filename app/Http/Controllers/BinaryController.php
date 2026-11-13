@@ -14,6 +14,8 @@ use App\Services\Chain\Address;
 use App\Services\Grid\GridBinder;
 use App\Services\Grid\GridPlacer;
 use App\Services\Grid\GridPlan;
+use App\Services\Grid\TreeEditor;
+use App\Services\Grid\TreeView;
 use App\Support\Idtc;
 use App\Support\SiteLocale;
 use Illuminate\Contracts\View\View;
@@ -153,7 +155,10 @@ class BinaryController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    /** ขาที่คนจากลิงก์ที่ไม่ระบุขาจะลง (ว่าง = อัตโนมัติ) — ไม่ย้ายคนที่วางไปแล้ว */
+    /**
+     * วิธีวางคนใหม่ที่เราชวน (mode: weak | strong | left | right | fill | manual) — ไม่ย้ายคนที่วางไปแล้ว
+     * ยังรับ side (L | R | ว่าง) แบบเดิมได้: L → left · R → right · ว่าง → weak
+     */
     public function side(Request $request): JsonResponse
     {
         $this->access($request) ?? abort(404);
@@ -161,12 +166,67 @@ class BinaryController extends Controller
         if (! is_string($address)) {
             return response()->json(['message' => __('binary.err.login'), 'code' => 'login'], 401);
         }
-        $side = GridPlacer::side($request->input('side'));
-        $row = GridMember::query()->firstOrNew(['wallet' => strtolower($address)]);
-        $row->bin_side_pref = $side;
-        $row->save();
+        $mode = $request->has('mode')
+            ? GridPlacer::mode($request->input('mode'))
+            : match (GridPlacer::side($request->input('side'))) {
+                GridPlacer::LEFT => GridPlacer::LEFT_EDGE,
+                GridPlacer::RIGHT => GridPlacer::RIGHT_EDGE,
+                default => GridPlacer::WEAK,
+            };
+        if ($mode === null) {
+            return response()->json(['message' => __('binary.tree.err.mode'), 'code' => 'mode'], 422);
+        }
+        $row = app(TreeEditor::class)->setMode($address, $mode);
 
-        return response()->json(['ok' => true, 'pref' => $side]);
+        return response()->json(['ok' => true, 'mode' => $mode, 'pref' => $row->bin_side_pref]);
+    }
+
+    /**
+     * ผังทีมของเรา (root = เราหรือคนในทีมเรา) + คิวรอจัดสายของคนที่เราชวน
+     */
+    public function team(Request $request, BinaryLedger $ledger, TreeView $view): JsonResponse
+    {
+        $this->access($request) ?? abort(404);
+        $address = $request->session()->get(GridController::SESSION);
+        if (! is_string($address)) {
+            return response()->json(['message' => __('binary.err.login'), 'code' => 'login'], 401);
+        }
+        $address = strtolower($address);
+        $book = $ledger->book();
+        $root = $request->query('root');
+        $root = is_string($root) && Address::isValid($root) ? strtolower($root) : $address;
+        $window = $view->window($root, 2, $book, $address) ?? $view->window($address, 2, $book, $address);
+
+        return response()->json([
+            'window' => $window,
+            'queue' => $view->queue($book, $address),
+            'mode' => GridPlacer::modeOf(GridMember::query()->where('wallet', $address)->first()),
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * แม่ทีมจัดสายคนที่ตัวเองชวนซึ่งรออยู่ในคิว: เลือกช่องเอง (parent + leg) หรือให้ระบบเลือก (mode)
+     * วางได้เฉพาะช่องว่างในทีมตัวเอง — ย้ายคนที่วางไปแล้วทำไม่ได้ (หลังบ้านเท่านั้น)
+     */
+    public function teamPlace(Request $request, TreeEditor $editor): JsonResponse
+    {
+        $this->access($request) ?? abort(404);
+        $address = $request->session()->get(GridController::SESSION);
+        if (! is_string($address)) {
+            return response()->json(['message' => __('binary.err.login'), 'code' => 'login'], 401);
+        }
+        $wallet = (string) $request->input('wallet');
+        $result = $request->filled('mode')
+            ? $editor->placeAuto($wallet, (string) $request->input('mode'), $address, 'member', $address)
+            : $editor->place($wallet, (string) $request->input('parent'), (string) $request->input('leg'), $address, 'member', null, $address);
+        if (is_string($result)) {
+            $key = 'binary.tree.err.'.$result;
+            $message = __($key);
+
+            return response()->json(['message' => $message === $key ? __('binary.tree.err.format') : $message, 'code' => $result], 422);
+        }
+
+        return response()->json(['ok' => true, 'message' => __('binary.team.place_ok')]);
     }
 
     public function me(Request $request, BinaryLedger $ledger, GridBinder $binder): JsonResponse
@@ -180,12 +240,13 @@ class BinaryController extends Controller
         $book = $ledger->book();
         $plan = $this->plans->current();
         $n = $book['nodes'][$address] ?? [];
+        $row = GridMember::query()->where('wallet', $address)->first();
         $week = max(0, $book['nowWeek']);
         $w = $book['weeks'][$week] ?? null;
         $mine = null;
-        foreach ($w['rows'] ?? [] as $row) {
-            if ($row['wallet'] === $address) {
-                $mine = ['matched' => $row['matched'], 'share' => $row['share'], 'capped' => $row['capped']];
+        foreach ($w['rows'] ?? [] as $r) {
+            if ($r['wallet'] === $address) {
+                $mine = ['matched' => $r['matched'], 'share' => $r['share'], 'capped' => $r['capped']];
             }
         }
         $short = fn (?string $a) => $a ? Idtc::short($a) : null;
@@ -231,7 +292,11 @@ class BinaryController extends Controller
                 'right' => SiteLocale::route('bref', ['wallet' => $me, 'side' => 'r']),
             ],
             'claims' => $claims,
-            'pref' => GridPlacer::side(GridMember::query()->where('wallet', $address)->value('bin_side_pref')),
+            'pref' => GridPlacer::side($row?->bin_side_pref),
+            'mode' => GridPlacer::modeOf($row),
+            'waiting' => GridMember::query()->where('referrer', $address)->whereNotNull('bin_wait_at')->whereNull('bin_parent')->count(),
+            // ตัวเองอยู่ในคิวรอจัดสายของผู้ชวน (ยังไม่มีตำแหน่ง)
+            'pending' => $row?->bin_wait_at !== null && $row->bin_parent === null,
             'deposits' => BinaryDeposit::query()->where('wallet', $address)->orderByDesc('block_number')->orderByDesc('log_index')->limit(20)->get()
                 ->map(fn (BinaryDeposit $d) => [
                     'at' => $d->block_time?->getTimestamp(), 'usdt' => $d->usdt, 'idtc' => $d->idtc, 'tx' => $d->tx_hash,

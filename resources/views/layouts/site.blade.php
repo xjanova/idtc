@@ -16,6 +16,10 @@
         array_splice($nav, 2, 0, ['binary']);
     }
     $langs = ['th' => 'TH', 'en' => 'EN'];
+    // ลิงก์หลังบ้าน: แสดงเฉพาะเมื่อ session ล็อกอินหลังบ้านครบทุกขั้นแล้ว และกระเป๋านั้นยังมีสิทธิ์ (ถูกถอดแล้วจะไม่เห็น)
+    // ระหว่างรอรหัสผ่านอยู่ใน admin_pending ไม่ใช่ admin.address — สิทธิ์จริงยังตรวจที่ middleware EnsureAdmin ทุกคำขอ
+    $adminAddress = session('admin.address');
+    $isAdmin = is_string($adminAddress) && app(\App\Services\Admin\AdminRegistry::class)->roleFor($adminAddress) !== null;
 @endphp
 <!doctype html>
 <html lang="{{ SiteLocale::htmlLang() }}">
@@ -77,7 +81,12 @@
                         @unless ($loop->last)<span aria-hidden="true">|</span>@endunless
                     @endforeach
                 </div>
-                <button class="btn btn-ghost btn-sm" type="button" @click="addNetwork()">{{ __('site.add_network') }}</button>
+                {{-- แอดมิน: ปุ่มหลังบ้านแทนที่ปุ่มเพิ่มเชน (หน้าเพิ่มเชนยังอยู่ในเมนูหลัก) — ป้ายสั้นกว่า แถบเมนูจึงไม่กว้างขึ้น --}}
+                @if ($isAdmin)
+                    <a class="btn btn-ghost btn-sm" href="{{ route('admin.dashboard') }}" data-testid="nav-admin">{{ __('site.nav.admin') }}</a>
+                @else
+                    <button class="btn btn-ghost btn-sm" type="button" @click="addNetwork()">{{ __('site.add_network') }}</button>
+                @endif
                 <button class="btn btn-primary btn-sm" type="button" @click="connect()" x-text="account ? short(account) : @js(__('site.connect'))">{{ __('site.connect') }}</button>
                 <button class="nav-burger" type="button" @click="menu = !menu" :aria-expanded="menu.toString()" aria-controls="navDrawer" aria-label="{{ __('site.nav.menu') }}">
                     <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -88,6 +97,9 @@
             @foreach ($nav as $page)
                 <a href="{{ lroute($page) }}">{{ __('site.nav.'.$page) }}</a>
             @endforeach
+            @if ($isAdmin)
+                <a href="{{ route('admin.dashboard') }}" data-testid="nav-admin-drawer">{{ __('site.nav.admin') }}</a>
+            @endif
             <a href="#" @click.prevent="addNetwork(); menu = false">{{ __('site.add_network_full') }}</a>
             <div class="lang-switch lang-switch--drawer" role="group" aria-label="{{ __('site.lang.label') }}">
                 @foreach ($langs as $code => $label)
@@ -139,6 +151,7 @@
             <button type="button" class="lang-hint__x" @click="dismiss()" aria-label="{{ __('site.hint.dismiss', [], 'en') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
     @endif
+    @include('partials.qr-modal')
     @stack('scripts')
 </body>
 </html>
