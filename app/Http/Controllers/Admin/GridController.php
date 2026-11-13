@@ -10,12 +10,15 @@ use App\Services\Admin\AdminContext;
 use App\Services\Admin\Audit;
 use App\Services\Chain\Address;
 use App\Services\Grid\GridLedger;
+use App\Services\Grid\GridPlacer;
 use App\Services\Grid\GridPlan;
 use App\Support\Settings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -89,6 +92,7 @@ class GridController extends Controller
             'n' => $node,
             'row' => GridMember::query()->where('wallet', $wallet)->first(),
             'upline' => $book->upline($wallet, 10),
+            'binUpline' => $book->upline($wallet, 10, true),
             'rings' => $book->rings($wallet, 3, 100),
             'rewards' => $book->rewardsTo($wallet, 200),
             'purchases' => Purchase::query()->where('buyer', $wallet)->orderByDesc('block_time')->limit(100)->get(),
@@ -105,14 +109,16 @@ class GridController extends Controller
         }
         $depth = min(8, max(1, (int) $request->query('depth', 6)));
         $root = $root !== '' ? $root : null;
+        $binary = $request->query('tree') === 'binary';   // ผัง Binary (สองขา) แทนสายแนะนำ
 
         return view('admin.grid.map', [
             'title' => 'ผังสายงาน Grid',
             'book' => $book,
             'root' => $root,
             'depth' => $depth,
-            'slice' => $book->slice($root, $depth, 2500),
-            'upline' => $root !== null ? array_reverse($book->upline($root, 12)) : [],
+            'binary' => $binary,
+            'slice' => $book->slice($root, $depth, 2500, $binary),
+            'upline' => $root !== null ? array_reverse($book->upline($root, 12, $binary)) : [],
         ]);
     }
 
@@ -171,7 +177,7 @@ class GridController extends Controller
         ]);
     }
 
-    public function planStore(Request $request): RedirectResponse
+    public function planStore(Request $request, GridPlacer $placer): RedirectResponse
     {
         $pct = fn ($v) => is_numeric($v) ? (float) $v / 100 : -1.0;
         $input = $request->input();
@@ -183,6 +189,7 @@ class GridController extends Controller
             // หน้าจอนับสัปดาห์จาก 1 (สัปดาห์ 1–3) · ข้อมูลนับจาก 0 แบบ [from, to)
             $boost[] = ['from' => (int) ($b['from'] ?? 0) - 1, 'to' => (int) ($b['to'] ?? 0), 'add' => $pct($b['add'] ?? null)];
         }
+        $base = ($this->plans->pending()['plan'] ?? $this->plans->current())['binary'];
         $plan = GridPlan::normalize([
             'levels' => [$pct($input['l1'] ?? null), $pct($input['l2'] ?? null), $pct($input['l3'] ?? null)],
             'buyer' => $pct($input['buyer'] ?? null),
@@ -200,6 +207,13 @@ class GridController extends Controller
                 'core_t' => is_numeric($input['core_t'] ?? null) ? (float) $input['core_t'] : -1,
             ],
             'budget' => preg_match('/^\d{1,15}$/', (string) ($input['budget'] ?? '')) ? (string) $input['budget'] : '0',
+            // ช่อง Binary ที่ไม่ได้ส่งมา = คงค่าเดิมของแผน (ฟอร์ม/สคริปต์รุ่นก่อนไม่รู้จักช่องนี้)
+            'binary' => [
+                'pool' => array_key_exists('bin_pool', $input) ? $pct($input['bin_pool']) : $base['pool'],
+                'pair' => array_key_exists('bin_pair', $input) ? $pct($input['bin_pair']) : $base['pair'],
+                'cap' => array_key_exists('bin_cap', $input) ? $pct($input['bin_cap']) : $base['cap'],
+                'directs' => array_key_exists('bin_directs', $input) ? (is_numeric($input['bin_directs']) ? (int) $input['bin_directs'] : -1) : $base['directs'],
+            ],
         ]);
         $note = trim((string) $request->input('note', ''));
 
@@ -232,6 +246,10 @@ class GridController extends Controller
         GridPlanVersion::query()->where('from_week', '>=', $from)->whereKeyNot($row->id)->delete();
         $this->plans->forget();
         Audit::record('grid.plan', ['from_week' => $from + 1, 'note' => $note, 'old' => $before, 'new' => $plan]);
+        // เปิดกอง Binary: คนที่ผูกผู้แนะนำไว้ก่อนมีผังต้องมีตำแหน่งก่อนสัปดาห์ที่แผนมีผล (ปกติไม่มีค้าง — วางตอนผูกอยู่แล้ว)
+        if (GridPlan::binaryPool($plan) > 0 && $placer->missing() > 0) {
+            Cache::lock(GridPlacer::LOCK, 120)->block(10, fn () => DB::transaction(fn () => $placer->placeMissing()));
+        }
 
         return redirect()->route('admin.grid.plan')->with('status', $from === 0 && GridPlan::weekAt(now()) < 0
             ? 'บันทึกแผนแล้ว — มีผลตั้งแต่เปิดขายสัปดาห์แรก'

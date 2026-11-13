@@ -7,7 +7,7 @@ namespace App\Services\Grid;
  *
  * nodes[wallet]  กระเป๋าทุกใบที่ผูกผู้แนะนำ เป็นผู้แนะนำ หรือซื้อ presale
  * events         การซื้อแต่ละรายการ พร้อมรางวัลที่เกิด (วง 1..3 + ผู้ซื้อ) และสถานะ
- * weeks[k]       สรุปรายสัปดาห์ขาย · sprint[k] กอง Sprint ของสัปดาห์นั้น
+ * weeks[k]       สรุปรายสัปดาห์ขาย · sprint[k] กอง Sprint ของสัปดาห์นั้น · binary[k] กอง Binary (รางวัลจับคู่) ของสัปดาห์นั้น
  * totals         รวมตามสถานะ + งบ + ภาระสูงสุดถ้าขายหมด
  *
  * จำนวน IDTC เป็นทศนิยม (ใช้แสดงและประมาณการ) — รอบจ่ายจริงจะแปลงเป็นหน่วยเล็กสุดตอนสร้างรอบ
@@ -20,6 +20,7 @@ final class GridBook
      * @param  array<int, array<string, mixed>>  $weeks
      * @param  array<int, array<string, mixed>>  $sprint
      * @param  array<string, mixed>  $totals
+     * @param  array<int, array<string, mixed>>  $binary
      */
     public function __construct(
         public readonly array $nodes,
@@ -29,6 +30,7 @@ final class GridBook
         public readonly array $totals,
         public readonly int $nowWeek,
         public readonly int $at,
+        public readonly array $binary = [],
     ) {}
 
     /** @return array<string, mixed> ข้อมูลล้วน (ใช้แคช) */
@@ -36,14 +38,14 @@ final class GridBook
     {
         return [
             'nodes' => $this->nodes, 'events' => $this->events, 'weeks' => $this->weeks, 'sprint' => $this->sprint,
-            'totals' => $this->totals, 'nowWeek' => $this->nowWeek, 'at' => $this->at,
+            'totals' => $this->totals, 'nowWeek' => $this->nowWeek, 'at' => $this->at, 'binary' => $this->binary,
         ];
     }
 
     /** @param array<string, mixed> $d */
     public static function fromArray(array $d): self
     {
-        return new self($d['nodes'], $d['events'], $d['weeks'], $d['sprint'], $d['totals'], (int) $d['nowWeek'], (int) $d['at']);
+        return new self($d['nodes'], $d['events'], $d['weeks'], $d['sprint'], $d['totals'], (int) $d['nowWeek'], (int) $d['at'], $d['binary'] ?? []);
     }
 
     /** @return array<string, mixed>|null */
@@ -110,14 +112,15 @@ final class GridBook
         return $rings;
     }
 
-    /** @return list<string> สายบนจากผู้แนะนำตรงขึ้นไป */
-    public function upline(string $wallet, int $max = 64): array
+    /** @return list<string> สายบนจากผู้แนะนำตรงขึ้นไป · $binary = ตามผัง Binary (คนที่อยู่เหนือในผัง) */
+    public function upline(string $wallet, int $max = 64, bool $binary = false): array
     {
+        $key = $binary ? 'bin_parent' : 'referrer';
         $out = [];
-        $w = $this->nodes[strtolower($wallet)]['referrer'] ?? null;
+        $w = $this->nodes[strtolower($wallet)][$key] ?? null;
         while ($w !== null && count($out) < $max && ! in_array($w, $out, true)) {
             $out[] = $w;
-            $w = $this->nodes[$w]['referrer'] ?? null;
+            $w = $this->nodes[$w][$key] ?? null;
         }
 
         return $out;
@@ -129,25 +132,34 @@ final class GridBook
      *
      * node = [wallet, parent|null, วง, rank, own_usdt, team_usdt, team_count, held, fold]
      *
+     * $binary = ไล่ตามผัง Binary (ลูกซ้าย/ขวา) แทนสายแนะนำ — ทั้งระบบ = กระเป๋าบนสุดของแต่ละผังที่มีคนอยู่ใต้
+     *
      * @return array{root: string|null, nodes: list<array{0: string, 1: string|null, 2: int, 3: int, 4: float, 5: float, 6: int, 7: bool, 8: int}>, total: int, shown: int}
      */
-    public function slice(?string $root, int $depth = 6, int $max = 2500): array
+    public function slice(?string $root, int $depth = 6, int $max = 2500, bool $binary = false): array
     {
         $root = $root !== null ? strtolower($root) : null;
+        $up = $binary ? 'bin_parent' : 'referrer';
+        $kids = $binary
+            ? fn (array $n): array => array_values(array_filter([$n['bl'] ?? null, $n['br'] ?? null], fn ($c) => $c !== null))
+            : fn (array $n): array => $n['children'];
+        $below = $binary
+            ? fn (array $n): int => (int) ($n['bin_nl'] ?? 0) + (int) ($n['bin_nr'] ?? 0)
+            : fn (array $n): int => (int) $n['team_count'];
         if ($root !== null) {
-            $front = $this->nodes[$root]['children'] ?? [];
-            $total = (int) ($this->nodes[$root]['team_count'] ?? 0);
+            $front = isset($this->nodes[$root]) ? $kids($this->nodes[$root]) : [];
+            $total = isset($this->nodes[$root]) ? $below($this->nodes[$root]) : 0;
         } else {
             $front = [];
             $total = 0;
             foreach ($this->nodes as $w => $n) {
-                if ($n['referrer'] === null) {
+                if (($n[$up] ?? null) === null && (! $binary || $kids($n) !== [])) {
                     $front[] = $w;
-                    $total += 1 + $n['team_count'];
+                    $total += 1 + $below($n);
                 }
             }
             // ทีมใหญ่ก่อน — ถ้าถูกตัด ส่วนที่หายเป็นกระเป๋าเดี่ยว ๆ
-            usort($front, fn ($a, $b) => $this->nodes[$b]['team_count'] <=> $this->nodes[$a]['team_count'] ?: strcmp($a, $b));
+            usort($front, fn ($a, $b) => $below($this->nodes[$b]) <=> $below($this->nodes[$a]) ?: strcmp($a, $b));
         }
 
         $out = [];
@@ -156,17 +168,17 @@ final class GridBook
             $next = [];
             foreach ($front as $w) {
                 $n = $this->nodes[$w];
-                $parent = $d === 1 ? null : $n['referrer'];
+                $parent = $d === 1 ? null : ($n[$up] ?? null);
                 if (count($out) >= $max) {
                     if ($parent !== null && isset($index[$parent])) {
-                        $out[$index[$parent]][8] += 1 + $n['team_count'];
+                        $out[$index[$parent]][8] += 1 + $below($n);
                     }
 
                     continue;
                 }
                 $index[$w] = count($out);
-                $out[] = [$w, $parent, $d, (int) $n['rank'], round((float) $n['own_usdt'], 2), round((float) $n['team_usdt'], 2), (int) $n['team_count'], (bool) $n['held'], 0];
-                foreach ($n['children'] as $c) {
+                $out[] = [$w, $parent, $d, (int) $n['rank'], round((float) $n['own_usdt'], 2), round((float) $n['team_usdt'], 2), $below($n), (bool) $n['held'], 0];
+                foreach ($kids($n) as $c) {
                     $next[] = $c;
                 }
             }
@@ -174,9 +186,9 @@ final class GridBook
         }
         // วงสุดท้ายที่แสดง: สายล่างที่ลึกกว่านั้นพับไว้
         foreach ($front as $w) {
-            $p = $this->nodes[$w]['referrer'];
+            $p = $this->nodes[$w][$up] ?? null;
             if ($p !== null && isset($index[$p])) {
-                $out[$index[$p]][8] += 1 + $this->nodes[$w]['team_count'];
+                $out[$index[$p]][8] += 1 + $below($this->nodes[$w]);
             }
         }
 

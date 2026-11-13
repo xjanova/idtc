@@ -15,6 +15,7 @@ const CLAIM_ERRORS = ['AlreadyClaimed', 'NotUnlocked', 'InvalidProof', 'RoundRev
 
 Alpine.data('gridMember', (cfg = {}) => ({
     ref: cfg.ref || null,
+    side: cfg.side || null, // ขาในผัง Binary ที่ลิงก์ชวนระบุ (L | R)
     ranks: cfg.ranks || {},
     me: null,
     account: null,
@@ -22,6 +23,8 @@ Alpine.data('gridMember', (cfg = {}) => ({
     phase: '',
     error: '',
     copied: false,
+    copiedKey: '',
+    savingSide: false,
     flow: 0,
     claiming: false,
     claimMsg: '',
@@ -75,7 +78,7 @@ Alpine.data('gridMember', (cfg = {}) => ({
             this.account = account;
             if (purpose === 'bind' && this.refIsMe) purpose = 'login';
 
-            const n = await this.api(cfg.routes.nonce, { address: account, purpose, referrer: purpose === 'bind' ? this.ref : undefined });
+            const n = await this.api(cfg.routes.nonce, { address: account, purpose, referrer: purpose === 'bind' ? this.ref : undefined, side: purpose === 'bind' ? this.side || undefined : undefined });
             if (!n.ok) {
                 this.error = n.data.message || t('grid.failed');
                 // ผูกไม่ได้ (ซื้อแล้ว/ผูกแล้ว/ลิงก์ของตัวเอง) — ยังเข้าระบบปกติได้ด้วยปุ่มข้าม
@@ -182,11 +185,39 @@ Alpine.data('gridMember', (cfg = {}) => ({
         } catch { /* เบราว์เซอร์ไม่ให้คัดลอก — ผู้ใช้เลือกข้อความในช่องเองได้ */ }
     },
 
+    /** คัดลอกลิงก์ขาซ้าย/ขวาของผัง Binary */
+    async copyText(text, key) {
+        try {
+            await navigator.clipboard.writeText(text);
+            this.copiedKey = key;
+            clearTimeout(this._k);
+            this._k = setTimeout(() => { this.copiedKey = ''; }, 1600);
+        } catch { /* เบราว์เซอร์ไม่ให้คัดลอก — ผู้ใช้เลือกข้อความในช่องเองได้ */ }
+    },
+
+    /** ขาที่คนจากลิงก์ปกติจะลง ('' = อัตโนมัติ) — ล้มเหลว = คืนค่าที่เซิร์ฟเวอร์เก็บอยู่ */
+    async setSide(value) {
+        if (this.savingSide || !this.me) return;
+        const id = this.flow;
+        this.savingSide = true;
+        this.error = '';
+        try {
+            const r = await this.api(cfg.routes.side, { side: value });
+            if (id !== this.flow || !this.me) return;
+            if (r.ok) this.me.binary.pref = r.data.pref || null;
+            else { this.error = r.data.message || t('grid.failed'); await this.load(); }
+        } catch {
+            if (id === this.flow) this.error = t('grid.failed');
+        } finally {
+            this.savingSide = false;
+        }
+    },
+
     async share() {
         try { await navigator.share({ title: 'IDTC Grid', text: t('grid.share_text'), url: this.me.link }); } catch { /* ผู้ใช้ปิดหน้าต่างแชร์ */ }
     },
 
-    destroy() { clearTimeout(this._c); this.flow++; },
+    destroy() { clearTimeout(this._c); clearTimeout(this._k); this.flow++; },
 
     idtc: (v) => fmt(Math.floor(Number(v) || 0)),
     fmtIdtc: (v) => fmt(Math.floor((Number(v) || 0) * 100) / 100, 2),

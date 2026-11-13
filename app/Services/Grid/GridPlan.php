@@ -84,6 +84,7 @@ final class GridPlan
             }
         }
         $rank = (array) ($p['rank'] ?? []) + (array) ($d['rank'] ?? []);
+        $bin = (array) ($p['binary'] ?? []) + (array) ($d['binary'] ?? []);
 
         return [
             'levels' => [(float) ($levels[0] ?? 0), (float) ($levels[1] ?? 0), (float) ($levels[2] ?? 0)],
@@ -102,10 +103,16 @@ final class GridPlan
                 'core_t' => (float) ($rank['core_t'] ?? 10000),
             ],
             'budget' => (string) (is_numeric($p['budget'] ?? null) ? $p['budget'] : ($d['budget'] ?? '0')),
+            'binary' => [
+                'pool' => (float) ($bin['pool'] ?? 0),
+                'pair' => (float) ($bin['pair'] ?? 0.1),
+                'cap' => (float) ($bin['cap'] ?? 0.2),
+                'directs' => (int) ($bin['directs'] ?? 1),
+            ],
         ];
     }
 
-    /** อัตรารวมสูงสุดที่การซื้อหนึ่งรายการอาจต้องจ่าย (ทุกวง + โบนัสสูงสุด + ผู้ซื้อ + Sprint) */
+    /** อัตรารวมสูงสุดที่การซื้อหนึ่งรายการอาจต้องจ่าย (ทุกวง + โบนัสสูงสุด + ผู้ซื้อ + Sprint + กอง Binary) */
     public static function maxRate(array $p): float
     {
         $boost = 0.0;
@@ -113,7 +120,13 @@ final class GridPlan
             $boost = max($boost, (float) $b['add']);
         }
 
-        return array_sum($p['levels']) + $boost + $p['buyer'] + $p['sprint'];
+        return array_sum($p['levels']) + $boost + $p['buyer'] + $p['sprint'] + self::binaryPool($p);
+    }
+
+    /** กอง Binary ของแผนนี้ (สัดส่วนของ IDTC ที่ขายในสัปดาห์) · 0 = ปิด Binary */
+    public static function binaryPool(array $p): float
+    {
+        return max(0.0, (float) ($p['binary']['pool'] ?? 0));
     }
 
     /** อัตราวง L (1..3) ของสัปดาห์ k ในแผนนี้ */
@@ -186,6 +199,19 @@ final class GridPlan
             $e['rank'] = 'เงื่อนไขระดับต้องไม่ติดลบ';
         } elseif ($r['grid_d'] < $r['cell_d'] || $r['core_d'] < $r['grid_d'] || $r['core_t'] < $r['grid_t']) {
             $e['rank'] = 'เงื่อนไขระดับสูงต้องไม่ต่ำกว่าระดับก่อนหน้า (เซลล์ ≤ กริด ≤ คอร์)';
+        }
+        $b = $p['binary'];
+        if (! $rate($b['pool'], 0.1)) {
+            $e['binary.pool'] = 'กอง Binary ต้องอยู่ระหว่าง 0% ถึง 10% (0 = ปิด Binary)';
+        }
+        if (! $rate($b['pair'], 0.5) || ($b['pool'] > 0 && $b['pair'] <= 0)) {
+            $e['binary.pair'] = 'อัตราจับคู่ต้องมากกว่า 0% และไม่เกิน 50% ของยอดขาอ่อน';
+        }
+        if (! ($b['cap'] >= 0.01 && $b['cap'] <= 1)) {
+            $e['binary.cap'] = 'เพดาน Binary ต่อคนต้องอยู่ระหว่าง 1% ถึง 100% ของกอง';
+        }
+        if ($b['directs'] < 0 || $b['directs'] > 10) {
+            $e['binary.directs'] = 'เพื่อนตรงต่อขาต้องอยู่ระหว่าง 0 ถึง 10 คน';
         }
         $budget = (float) $p['budget'];
         $ops = self::operationsAllocation();

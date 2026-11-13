@@ -27,6 +27,7 @@
                 <div><span>ส่วนผู้ซื้อ</span><b>{{ $pct($current['buyer']) }}%</b></div>
                 <div><span>โบนัสวง 1 ช่วงเปิดตัว</span><b>{{ $current['boost'] ? implode(' · ', array_map(fn ($b) => 'สัปดาห์ '.($b['from'] + 1).'–'.$b['to'].' +'.$pct($b['add']).'%', $current['boost'])) : '—' }}</b></div>
                 <div><span>Sprint / เพดานต่อคน</span><b>{{ $pct($current['sprint']) }}% / {{ $pct($current['sprint_cap']) }}%</b></div>
+                <div><span>Binary: กอง / จับคู่ / เพดานต่อคน</span><b>{{ $current['binary']['pool'] > 0 ? $pct($current['binary']['pool']).'% / '.$pct($current['binary']['pair']).'% / '.$pct($current['binary']['cap']).'%' : 'ปิดอยู่ (กอง 0%)' }}</b></div>
                 <div><span>ระยะถือ / รับทันที</span><b>{{ $current['hold_days'] }} วัน / {{ $pct($current['instant']) }}%</b></div>
                 <div><span>งบ</span><b>{{ number_format((float) $current['budget']) }} IDTC</b></div>
                 <div><span>อัตรารวมสูงสุดต่อการซื้อ</span><b>{{ $pct($maxNow) }}% → ถ้าขายครบ {{ number_format($saleCap) }} IDTC จ่ายไม่เกิน {{ number_format($saleCap * $maxNow) }}</b></div>
@@ -74,6 +75,18 @@
                 @error("boost.$i")<p class="err">{{ $message }}</p>@enderror
             @endforeach
             @error('boost')<p class="err">{{ $message }}</p>@enderror
+
+            <h3 style="margin-top:18px">Binary — จับคู่ยอดสองขา <span class="meta">กอง 0% = ปิด · ตำแหน่งซ้าย/ขวาบันทึกไว้ทุกคนอยู่แล้ว เปิดเมื่อไรก็ใช้ได้</span></h3>
+            <div class="plan-grid">
+                <label class="field"><span>กอง Binary (% ของ IDTC ที่ขายในสัปดาห์)</span><input class="input" name="bin_pool" inputmode="decimal" value="{{ $field('bin_pool', $pct($plan['binary']['pool'])) }}" @error('binary.pool') aria-invalid="true" @enderror></label>
+                <label class="field"><span>อัตราจับคู่ (% ของยอดขาอ่อน)</span><input class="input" name="bin_pair" inputmode="decimal" value="{{ $field('bin_pair', $pct($plan['binary']['pair'])) }}" @error('binary.pair') aria-invalid="true" @enderror></label>
+                <label class="field"><span>เพดาน Binary ต่อคน (% ของกอง)</span><input class="input" name="bin_cap" inputmode="decimal" value="{{ $field('bin_cap', $pct($plan['binary']['cap'])) }}" @error('binary.cap') aria-invalid="true" @enderror></label>
+                <label class="field"><span>เพื่อนตรงที่ซื้อแล้ว ต่อขา (คน)</span><input class="input" name="bin_directs" inputmode="numeric" value="{{ $field('bin_directs', $plan['binary']['directs']) }}" @error('binary.directs') aria-invalid="true" @enderror></label>
+            </div>
+            @foreach (['binary.pool', 'binary.pair', 'binary.cap', 'binary.directs'] as $k)
+                @error($k)<p class="err">{{ $message }}</p>@enderror
+            @endforeach
+            <p class="fine">รางวัลจับคู่ของสัปดาห์ = อัตราจับคู่ × ยอดขาที่น้อยกว่า (IDTC) · จ่ายรวมไม่เกินกองของสัปดาห์ ถ้าเกินทุกคนถูกลดลงเท่ากัน ที่จ่ายไม่ถึงคืนเข้างบ · ส่วนเกินของขาที่มากกว่ายกไปสัปดาห์ถัดไป · กองนับรวมในอัตรารวมสูงสุดที่ใช้ตรวจงบ</p>
 
             <h3 style="margin-top:18px">เงื่อนไขระดับ</h3>
             <div class="plan-grid">
