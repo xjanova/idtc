@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 @php
     use App\Services\Binary\BinaryMap;
+    use App\Services\Binary\BinarySample;
     use App\Support\AdminFormat as F;
     use App\Support\Idtc;
     $zero = '0x'.str_repeat('0', 40);
@@ -8,7 +9,7 @@
     $top = $slice['nodes'][0] ?? null;          // แถวของกระเป๋าบนสุดที่แสดง — ดูลำดับคอลัมน์ที่ BinaryMap
     $num = fn ($v) => number_format((float) $v);
     $usd = fn ($v) => number_format((float) $v, 2);
-    $mq = ['depth' => $depth];
+    $mq = ['depth' => $depth] + ($sample ? ['sample' => $sample] : []);   // โหมดตัวอย่างติดไปกับทุกลิงก์ในหน้า
     $crumbs = $slice['crumbs'];
     $long = count($crumbs) > 7;                  // สายบนยาวมาก: แสดงบนสุด 2 + ใกล้สุด 4
     $shownCrumbs = $long ? array_merge(array_slice($crumbs, 0, 2), [null], array_slice($crumbs, -4)) : $crumbs;
@@ -18,7 +19,7 @@
         'root' => $root,
         'nodes' => $slice['nodes'],
         'mapUrl' => route('admin.binary.map', $mq),
-        'treeUrl' => route('admin.binary.tree'),
+        'treeUrl' => $sample ? null : route('admin.binary.tree'),       // กระเป๋าตัวอย่างจัดสายไม่ได้
         'memberUrl' => $canMember ? route('admin.grid.member', $zero) : null,
         'zero' => $zero,
     ];
@@ -30,21 +31,38 @@
 
 @section('actions')
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary') }}">← แผน Binary</a>
-    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.tree', array_filter(['root' => $asked])) }}"><x-admin.icon name="users"/>จัดสาย · ย้ายสาย</a>
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.tree', $sample ? [] : array_filter(['root' => $asked])) }}"><x-admin.icon name="users"/>จัดสาย · ย้ายสาย</a>
+    @if ($sample)
+        <a class="btn btn-primary btn-sm" href="{{ route('admin.binary.map') }}" data-testid="bmap-real"><x-admin.icon name="tree"/>กลับไปข้อมูลจริง</a>
+    @else
+        <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.map', ['sample' => BinarySample::DEFAULT]) }}" data-testid="bmap-sample-btn"><x-admin.icon name="tree"/>ตัวอย่าง</a>
+    @endif
     @if ($asked)
         <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.map', $mq) }}"><x-admin.icon name="tree"/>ผังหลัก</a>
     @endif
 @endsection
 
 @section('content')
+    @if ($sample)
+        <div class="flash warn bmap-sample" role="note" data-testid="bmap-sample">
+            <span><b>ข้อมูลตัวอย่าง</b> — ที่อยู่กระเป๋า ยอดฝาก และสายงานในหน้านี้เป็นข้อมูลสมมติ ไม่ใช่สมาชิกจริง ไม่ถูกบันทึก และไม่ถูกใช้คิดรางวัล</span>
+            @foreach (BinarySample::SETS as $key => [, , $label])
+                <a @class(['btn btn-ghost btn-sm', 'on' => $key === $sample]) href="{{ route('admin.binary.map', ['depth' => $depth, 'sample' => $key]) }}" @if ($key === $sample) aria-current="true" @endif>{{ $label }}</a>
+            @endforeach
+        </div>
+    @endif
     @if ($missing)
-        <p class="flash err" role="alert">ไม่พบกระเป๋า <b class="mono">{{ $missing }}</b> ในแผน Binary — ตรวจที่อยู่อีกครั้ง (ด้านล่างเป็นผังหลัก)</p>
+        <p class="flash err" role="alert">ไม่พบกระเป๋า <b class="mono">{{ $missing }}</b> {{ $sample ? 'ในผังตัวอย่าง' : 'ในแผน Binary' }} — ตรวจที่อยู่อีกครั้ง (ด้านล่างเป็นผังหลัก)</p>
     @endif
 
     @if ($root === null)
         <div class="panel" data-testid="bmap-empty">
             <p class="muted">ยังไม่มีผัง — ยังไม่มีใครถูกวางในผัง Binary</p>
-            <p class="section-gap"><a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.tree') }}">ไปหน้าจัดสาย</a></p>
+            <p class="section-gap bmap-nav">
+                <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.tree') }}">ไปหน้าจัดสาย</a>
+                <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.map', ['sample' => BinarySample::DEFAULT]) }}"><x-admin.icon name="tree"/>ดูผังตัวอย่าง</a>
+            </p>
+            <p class="muted section-gap">ปุ่ม "ตัวอย่าง" แสดงหน้าตาผังด้วยข้อมูลสมมติ — ไม่กระทบข้อมูลจริง</p>
         </div>
     @else
         <div class="kpis">
@@ -71,13 +89,14 @@
             </nav>
 
             <form class="map-bar bmap-bar" method="GET" action="{{ route('admin.binary.map') }}" @submit.prevent="find()">
+                @if ($sample)<input type="hidden" name="sample" value="{{ $sample }}">@endif
                 <label class="field bmap-search"><span>ไปที่กระเป๋า</span>
                     <input class="input mono" type="text" name="root" x-model="q" placeholder="0x… (ใส่บางส่วนเพื่อหาในผังที่แสดง)" autocomplete="off" spellcheck="false" maxlength="64">
                 </label>
                 <button class="btn btn-ghost btn-sm" type="submit">ค้นหา</button>
                 <label class="field"><span>ความลึก</span>
                     <select class="input" name="depth" onchange="location.href = this.dataset.url.replace('__D__', this.value)"
-                            data-url="{{ route('admin.binary.map', array_filter(['root' => $asked]) + ['depth' => '__D__']) }}">
+                            data-url="{{ route('admin.binary.map', array_filter(['root' => $asked]) + ['depth' => '__D__'] + ($sample ? ['sample' => $sample] : [])) }}">
                         @foreach ($depths as $d)<option value="{{ $d }}" @selected($d === $depth)>{{ $d }} ชั้น</option>@endforeach
                     </select>
                 </label>
@@ -130,7 +149,7 @@
                             <em x-show="!tip.pinned">คลิกเพื่อเลือก · ดับเบิลคลิก = เริ่มผังจากกระเป๋านี้</em>
                             <span class="map-tip-act" x-show="tip.pinned">
                                 <a class="btn btn-ghost btn-sm" :href="tip.map" x-show="!tip.root">เริ่มผังจากที่นี่</a>
-                                <a class="btn btn-ghost btn-sm" :href="tip.tree">จัดสาย</a>
+                                <a class="btn btn-ghost btn-sm" :href="tip.tree" x-show="tip.tree">จัดสาย</a>
                                 <a class="btn btn-ghost btn-sm" :href="tip.member" x-show="tip.member">ข้อมูลกระเป๋า</a>
                                 <button class="btn btn-ghost btn-sm" type="button" @click="copy()" x-text="copied ? 'คัดลอกแล้ว' : 'คัดลอกที่อยู่'"></button>
                             </span>

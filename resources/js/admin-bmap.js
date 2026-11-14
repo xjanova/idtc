@@ -298,7 +298,8 @@ Alpine.data('binaryMap', () => {
         },
 
         mapUrl(w) { const u = new URL(S.d.mapUrl, location.href); u.searchParams.set('root', w); return u.toString(); },
-        treeUrl(w) { const u = new URL(S.d.treeUrl, location.href); u.searchParams.set('root', w); return u.toString(); },
+        // โหมดตัวอย่างไม่มีหน้าจัดสาย/ข้อมูลกระเป๋า (treeUrl, memberUrl เป็น null) → ไม่มีปุ่ม
+        treeUrl(w) { if (!S.d.treeUrl) return ''; const u = new URL(S.d.treeUrl, location.href); u.searchParams.set('root', w); return u.toString(); },
         memberUrl(w) { return S.d.memberUrl ? String(S.d.memberUrl).replace(S.d.zero, w) : ''; },
 
         tipFor(i, px, py, pinned) {
