@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BinaryController;
+use App\Http\Controllers\Admin\BinaryMapController;
 use App\Http\Controllers\Admin\BinaryRoundsController;
 use App\Http\Controllers\Admin\BinaryTreeController;
 use App\Http\Controllers\Admin\ChainController;
@@ -122,6 +123,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // ผังสายงาน Binary: ดู/ตรวจ = binary · จัด/ย้าย/ต่อสาย/ตั้งวิธีวาง = binary แก้ไขได้ · เปลี่ยนผู้แนะนำ = owner (ด้านล่าง)
         Route::middleware('admin.can:binary')->group(function () {
+            Route::get('binary/map', [BinaryMapController::class, 'index'])->name('binary.map');   // ผังต้นไม้ทั้งผัง (ดูอย่างเดียว) — แยกจากผังวงของ Grid
             Route::get('binary/tree', [BinaryTreeController::class, 'index'])->name('binary.tree');
             Route::get('binary/tree/data', [BinaryTreeController::class, 'data'])->name('binary.tree.data');
             Route::get('binary/tree/lists', [BinaryTreeController::class, 'lists'])->name('binary.tree.lists');

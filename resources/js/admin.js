@@ -4,6 +4,7 @@ import { BrowserProvider, getAddress } from 'ethers';
 import { CFG, connectWallet, injected, readProvider, short, walletError } from './chain';
 import { ACTIONS, AdminError, adminError, api, runAction } from './admin-chain';
 import './admin-map';
+import './admin-bmap';
 import './admin-tree';
 import './qr';
 

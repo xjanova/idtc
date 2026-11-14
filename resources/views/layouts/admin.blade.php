@@ -22,7 +22,8 @@
         ]],
         ['Binary โปรโมชั่น', [
             ['route' => 'admin.binary', 'label' => 'แผน Binary', 'icon' => 'users', 'section' => 'binary'],
-            ['route' => 'admin.binary.tree', 'label' => 'ผังสายงาน · จัดสาย', 'icon' => 'wallet', 'section' => 'binary'],
+            ['route' => 'admin.binary.map', 'label' => 'ผังสายงาน Binary', 'icon' => 'tree', 'section' => 'binary'],
+            ['route' => 'admin.binary.tree', 'label' => 'จัดสาย · ย้ายสาย', 'icon' => 'wallet', 'section' => 'binary'],
         ]],
         ['เว็บไซต์', [
             ['route' => 'admin.content', 'label' => 'เนื้อหาและประกาศ', 'icon' => 'layout', 'section' => 'content'],

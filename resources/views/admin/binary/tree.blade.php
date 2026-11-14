@@ -11,7 +11,7 @@
 
 @section('actions')
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary') }}">← แผน Binary</a>
-    <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', ['tree' => 'binary']) }}"><x-admin.icon name="users"/>ผังวงกลมทั้งระบบ</a>
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.map') }}"><x-admin.icon name="tree"/>ดูผังทั้งต้น</a>
 @endsection
 
 @section('content')

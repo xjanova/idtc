@@ -20,7 +20,8 @@
 @endsection
 
 @section('actions')
-    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.tree') }}"><x-admin.icon name="users"/>ผังสายงาน · จัดสาย</a>
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.map') }}"><x-admin.icon name="tree"/>ผังสายงาน</a>
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.tree') }}"><x-admin.icon name="users"/>จัดสาย · ย้ายสาย</a>
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.rounds', 'usdt') }}"><x-admin.icon name="download"/>รอบจ่าย USDT</a>
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.rounds', 'idtc') }}"><x-admin.icon name="download"/>รอบส่ง IDTC</a>
     @unless ($ro)

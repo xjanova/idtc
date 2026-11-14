@@ -323,3 +323,41 @@
 .adm .act > b .muted { font-weight: 500; font-size: 12.5px; }
 .adm .flash.warn .btn { margin-left: 8px; }
 .adm .btree .btree-slot.target, .adm .btree.picking .btree-slot.target:not(:disabled) { border-style: solid; border-color: var(--gold); color: var(--gold); background: rgba(245, 200, 107, .1); }
+
+/* ── ผังสายงาน Binary (admin/binary/map) — ต้นไม้สองขา · ใช้กรอบ .map-wrap/.map-tip ร่วมกับผัง Grid ── */
+.adm .bmap canvas { height: min(72vh, 720px); min-height: 420px; outline: none; }
+.adm .bmap canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--lime); }
+.adm .bmap-kpi.l { border-color: rgba(45, 212, 191, .32); }
+.adm .bmap-kpi.r { border-color: rgba(245, 200, 107, .32); }
+.adm .bmap-kpi.l > span { color: #5eead4; }
+.adm .bmap-kpi.r > span { color: var(--gold); }
+.adm .map-bar .bmap-search { flex: 1 1 280px; max-width: 460px; min-width: 0; }
+.adm .bmap-note { margin: 10px 0 0; font-size: 13px; color: #fde68a; overflow-wrap: anywhere; }
+.adm .bmap-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.adm .bmap-count { margin: 10px 0 0; font-size: 13px; }
+.adm .crumbs .bmap-root { min-width: 0; overflow-wrap: anywhere; }
+.adm .bmap-tip { width: 300px; max-width: calc(100% - 16px); }
+.adm .bmap-state.q { color: var(--lime); }
+.adm .bmap-state.a { color: #6ee7b7; }
+.adm .bmap-state.i { color: var(--fg-3); }
+.adm .bmap-legs { width: 100%; border-collapse: collapse; margin: 4px 0 2px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.adm .bmap-legs th, .adm .bmap-legs td { padding: 4px 0 4px 8px; text-align: right; font-weight: 500; border-top: 1px solid var(--line); color: var(--fg); }
+.adm .bmap-legs thead th { border-top: 0; font-weight: 700; }
+.adm .bmap-legs th:first-child { text-align: left; padding-left: 0; color: var(--fg-3); }
+.adm .bmap-legs th.l { color: #2dd4bf; }
+.adm .bmap-legs th.r { color: var(--gold); }
+.adm .bmap-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--fg-2); }
+.adm .bmap-legend li { display: inline-flex; align-items: center; gap: 7px; }
+.adm .bmap-legend i { width: 12px; height: 12px; border-radius: 4px; border: 2px solid #5b6b66; flex: none; }
+.adm .bmap-legend i.q { border-color: #a3e635; }
+.adm .bmap-legend i.a { border-color: #10b981; }
+.adm .bmap-legend i.held { border-color: #fb7185; }
+.adm .bmap-legend i.fold { border-color: rgba(245, 200, 107, .6); background: rgba(245, 200, 107, .14); border-radius: 999px; width: 18px; }
+.adm .bmap-legend i.ln { width: 18px; height: 0; border: 0; border-top: 3px solid #2dd4bf; border-radius: 0; }
+.adm .bmap-legend i.ln.r { border-top-color: #f5c86b; }
+.adm .bmap-tops { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) {
+    .adm .bmap canvas { height: 62vh; min-height: 340px; }
+    .adm .bmap-bar > .field { flex: 1 1 100%; max-width: none; }
+    .adm .bmap-bar > .btn { flex: 1 1 100%; }
+}
