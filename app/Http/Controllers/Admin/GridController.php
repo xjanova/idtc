@@ -100,8 +100,14 @@ class GridController extends Controller
     }
 
     /** ผังสายงาน (canvas) — ทั้งระบบ หรือเริ่มจากกระเป๋าที่เลือก */
-    public function map(Request $request): View
+    public function map(Request $request): View|RedirectResponse
     {
+        // ผัง Binary มีหน้าของตัวเองแล้ว (หลังบ้าน > Binary > ผังสายงาน) — ลิงก์เก่า ?tree=binary พาไปที่นั่น
+        if ($request->query('tree') === 'binary') {
+            $root = (string) $request->query('root', '');
+
+            return redirect()->route('admin.binary.map', Address::isValid($root) ? ['root' => strtolower($root)] : []);
+        }
         $book = $this->ledger->book();
         $root = strtolower(trim((string) $request->query('root', '')));
         if ($root !== '' && (! Address::isValid($root) || $book->node($root) === null)) {
@@ -109,16 +115,14 @@ class GridController extends Controller
         }
         $depth = min(8, max(1, (int) $request->query('depth', 6)));
         $root = $root !== '' ? $root : null;
-        $binary = $request->query('tree') === 'binary';   // ผัง Binary (สองขา) แทนสายแนะนำ
 
         return view('admin.grid.map', [
             'title' => 'ผังสายงาน Grid',
             'book' => $book,
             'root' => $root,
             'depth' => $depth,
-            'binary' => $binary,
-            'slice' => $book->slice($root, $depth, 2500, $binary),
-            'upline' => $root !== null ? array_reverse($book->upline($root, 12, $binary)) : [],
+            'slice' => $book->slice($root, $depth, 2500),
+            'upline' => $root !== null ? array_reverse($book->upline($root, 12)) : [],
         ]);
     }
 

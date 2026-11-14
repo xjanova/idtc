@@ -426,10 +426,11 @@ class GridBinaryTest extends TestCase
         $this->loginAsOwner();
 
         $this->get('/admin/grid/members/'.$this->w('A'))->assertOk()
-            ->assertSee('data-testid="member-binary"', false)->assertSee('ขาซ้าย')->assertSee('tree=binary', false);
+            ->assertSee('data-testid="member-binary"', false)->assertSee('ขาซ้าย')->assertSee('admin/binary/map?root='.$this->w('A'), false);
         $this->get('/admin/grid/members/'.$this->w('D'))->assertOk()->assertSee('ขาซ้าย ของ');
-        $this->get('/admin/grid/map?tree=binary')->assertOk()->assertSee('ผัง Binary')->assertSee('ดูผังสายแนะนำ');
-        $this->get('/admin/grid/map?tree=binary&root='.$this->w('B'))->assertOk();
+        // ผัง Binary มีหน้าของตัวเอง (/admin/binary/map — BinaryMapTest) · ลิงก์เก่าบนผัง Grid พาไปที่นั่น
+        $this->get('/admin/grid/map?tree=binary')->assertRedirect('/admin/binary/map');
+        $this->get('/admin/binary/map?root='.$this->w('B'))->assertOk()->assertSee('ผังสายงาน Binary');
         $this->get('/admin/grid')->assertOk()->assertSee('Binary จ่ายไม่ถึงกอง');
 
         // ผัง Binary: D อยู่ใต้ B (ไม่ใช่ใต้ A ผู้แนะนำ)

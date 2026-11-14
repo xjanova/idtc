@@ -70,7 +70,7 @@
     </div>
 
     <div class="panel section-gap" data-testid="member-binary">
-        <h3>ผัง Binary <span class="meta">สองขา · {{ ($book->totals['binary_on'] ?? false) ? 'แผนเปิดกอง Binary อยู่' : 'แผนปิดกอง Binary อยู่ — ตำแหน่งบันทึกไว้แล้ว' }}</span> <a class="btn btn-ghost btn-sm" href="{{ route('admin.grid.map', ['root' => $n['wallet'], 'tree' => 'binary']) }}">ดูผัง Binary</a></h3>
+        <h3>ผัง Binary <span class="meta">สองขา · {{ ($book->totals['binary_on'] ?? false) ? 'แผนเปิดกอง Binary อยู่' : 'แผนปิดกอง Binary อยู่ — ตำแหน่งบันทึกไว้แล้ว' }}</span> @if ($me->canView('binary'))<a class="btn btn-ghost btn-sm" href="{{ route('admin.binary.map', ['root' => $n['wallet']]) }}">ดูผัง Binary</a>@endif</h3>
         <div class="kv">
             <div><span>ตำแหน่ง</span><b>@if ($n['bin_parent'] ?? null){{ $n['bin_leg'] === 'L' ? 'ขาซ้าย' : 'ขาขวา' }} ของ <a class="mono" href="{{ route('admin.grid.member', $n['bin_parent']) }}">{{ F::addr($n['bin_parent']) }}</a>@else<span class="muted">บนสุดของผัง (ไม่มีคนเหนือ)</span>@endif</b></div>
             @foreach ([['ขาซ้าย', 'bl', 'bin_nl', 'bin_l', 'bin_cl', 'bin_dl'], ['ขาขวา', 'br', 'bin_nr', 'bin_r', 'bin_cr', 'bin_dr']] as [$label, $kid, $cnt, $vol, $carry, $dir])
