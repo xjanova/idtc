@@ -6,6 +6,7 @@ use App\Models\BinaryDeposit;
 use App\Models\GridMember;
 use App\Services\Binary\BinaryLedger;
 use App\Services\Binary\BinaryMap;
+use App\Services\Binary\BinarySample;
 use App\Services\Grid\GridPlan;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -273,6 +274,107 @@ class BinaryMapTest extends TestCase
         $this->assertSame(1, $s['others']);
         $this->assertSame($this->w('G'), $s['edge']['L']);
         $this->assertSame($this->w('F'), $s['edge']['R']);
+    }
+
+    // ───────────── โหมดตัวอย่าง (ปุ่ม "ตัวอย่าง") ─────────────
+
+    public function test_sample_button_is_offered_on_the_real_map_and_on_the_empty_state(): void
+    {
+        // ยังไม่มีสมาชิก (สภาพของเว็บจริงก่อนเปิดแผน): มีปุ่มไปดูตัวอย่าง
+        $this->loginAsOwner()->get('/admin/binary/map')->assertOk()
+            ->assertSee('data-testid="bmap-empty"', false)->assertSee('data-testid="bmap-sample-btn"', false)
+            ->assertSee('ตัวอย่าง')->assertSee('admin/binary/map?sample=small', false)->assertDontSee('data-testid="bmap-sample"', false);
+
+        $this->tree();
+        $res = $this->get('/admin/binary/map')->assertOk()->assertSee('data-testid="bmap-sample-btn"', false)->assertDontSee('ข้อมูลตัวอย่าง');
+        $this->assertSame($this->w('A'), $this->payload($res)['root']);          // ข้อมูลจริงยังเป็นค่าเริ่มต้น
+    }
+
+    public function test_sample_mode_draws_made_up_wallets_and_never_touches_real_data(): void
+    {
+        $this->tree();
+        $this->deposit('B', 100);
+        $members = GridMember::query()->count();
+        $deposits = BinaryDeposit::query()->count();
+
+        $res = $this->loginAsOwner()->get('/admin/binary/map?sample=mid')->assertOk()
+            ->assertSee('ผังสายงาน Binary (ตัวอย่าง)')->assertSee('data-testid="bmap-sample"', false)->assertSee('ข้อมูลตัวอย่าง')
+            ->assertSee('data-testid="bmap-real"', false)->assertSee('กลับไปข้อมูลจริง')
+            ->assertSee('ทีมเริ่มต้น 20 คน')->assertSee('ทีมกลาง 150 คน')->assertSee('ทีมใหญ่ 900 คน')
+            ->assertSee('จาก 150 กระเป๋า')->assertDontSee('data-testid="bmap-sample-btn"', false);
+        $p = $this->payload($res);
+
+        // ไม่มีกระเป๋าจริงปนอยู่ และไม่มีลิงก์ไปหน้าจัดสาย/ข้อมูลสมาชิกของกระเป๋าสมมติ
+        $real = array_map(fn ($n) => $this->w($n), ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y']);
+        $this->assertSame([], array_values(array_intersect(array_column($p['nodes'], 0), $real)));
+        $this->assertNull($p['treeUrl']);
+        $this->assertNull($p['memberUrl']);
+        $this->assertStringContainsString('sample=mid', $p['mapUrl']);
+        // ไม่เขียนอะไรลงฐานข้อมูล
+        $this->assertSame($members, GridMember::query()->count());
+        $this->assertSame($deposits, BinaryDeposit::query()->count());
+
+        // เปิดซ้ำได้ผังเดิม → ลิงก์ ?root= ในโหมดตัวอย่างใช้ได้ และทุกลิงก์ในหน้ายังอยู่ในโหมดตัวอย่าง
+        $again = $this->payload($this->get('/admin/binary/map?sample=mid')->assertOk());
+        $this->assertSame($p['nodes'], $again['nodes']);
+        $child = $p['nodes'][1][0];
+        $sub = $this->get('/admin/binary/map?sample=mid&depth=4&root='.$child)->assertOk()
+            ->assertSee('ขึ้นหนึ่งชั้น')->assertSee('root='.$p['root'].'&amp;depth=4&amp;sample=mid', false)
+            ->assertSee('name="sample" value="mid"', false);
+        $this->assertSame($child, $this->payload($sub)['root']);
+        $this->assertDoesNotMatchRegularExpression('/admin\/binary\/map\?(root=0x[0-9a-f]{40}&amp;)?depth=\d+"/', (string) $sub->getContent());
+
+        // กระเป๋าจริงไม่อยู่ในผังตัวอย่าง · ชื่อชุดที่ไม่รู้จัก = ข้อมูลจริง
+        $this->get('/admin/binary/map?sample=mid&root='.$this->w('A'))->assertOk()->assertSee('ในผังตัวอย่าง');
+        $this->assertSame($this->w('A'), $this->payload($this->get('/admin/binary/map?sample=nope')->assertOk()->assertDontSee('ข้อมูลตัวอย่าง'))['root']);
+    }
+
+    public function test_sample_mode_follows_the_binary_permission(): void
+    {
+        $this->get('/admin/binary/map?sample=small')->assertRedirect('/admin/login');
+        $this->loginAs(self::VIEWER, 'viewer', ['grid_map' => 'view'])->get('/admin/binary/map?sample=small')->assertForbidden();
+        $this->loginAs(self::VIEWER, 'viewer', ['binary' => 'view'])->get('/admin/binary/map?sample=small')->assertOk()->assertSee('ข้อมูลตัวอย่าง');
+    }
+
+    public function test_every_sample_set_is_a_consistent_two_leg_tree(): void
+    {
+        foreach (BinarySample::SETS as $key => [$count]) {
+            $book = app(BinarySample::class)->book($key, 10.0);
+            $nodes = $book['nodes'];
+            $this->assertSame($book, app(BinarySample::class)->book($key, 10.0), $key.' is not repeatable');
+
+            $s = app(BinaryMap::class)->slice($book, null, BinaryMap::MAX_DEPTH, 10.0);
+            $this->assertSame($count, $s['total'], $key);
+            $this->assertSame($count, $s['shown'] + array_sum(array_column($s['nodes'], 12)), $key);
+            $this->assertSame($count, 1 + $s['nodes'][0][5] + $s['nodes'][0][6], $key);
+            $this->assertSame(1, $s['others'], $key);                            // มีผังแยกหนึ่งผังให้เห็น
+
+            $active = fn (array $n) => $n['usdt'] >= 10.0;
+            foreach ($nodes as $w => $n) {
+                $this->assertMatchesRegularExpression('/^0x[0-9a-f]{40}$/', $w);
+                foreach (['bl' => 'L', 'br' => 'R'] as $slot => $leg) {
+                    if ($n[$slot] !== null) {
+                        $this->assertSame([$w, $leg], [$nodes[$n[$slot]]['parent'], $nodes[$n[$slot]]['leg']]);
+                    }
+                }
+                // ยอดขา = ยอดฝากของคนในขานั้น (ไม่นับกระเป๋าที่ถูกพัก)
+                foreach (['bl' => 'l', 'br' => 'r'] as $slot => $vol) {
+                    $kid = $n[$slot] !== null ? $nodes[$n[$slot]] : null;
+                    $want = $kid === null ? 0.0 : ($kid['held'] ? 0.0 : $kid['usdt']) + $kid['l'] + $kid['r'];
+                    $this->assertEqualsWithDelta($want, $n[$vol], 1e-6);
+                }
+                $this->assertSame($active($n) && $n['dl'] >= 1 && $n['dr'] >= 1, $n['q']);
+                $this->assertEqualsWithDelta($n['q'] ? abs($n['l'] - $n['r']) : 0.0, $n['cl'] + $n['cr'], 1e-6);
+            }
+            $this->assertGreaterThan(0, count(array_filter($nodes, fn ($n) => $n['q'])), $key);
+            $this->assertGreaterThan(0, count(array_filter($nodes, fn ($n) => ! $active($n))), $key);
+        }
+        $this->assertGreaterThan(0, count(array_filter(app(BinarySample::class)->book('mid', 10.0)['nodes'], fn ($n) => $n['held'])));
+
+        $this->assertSame('mid', BinarySample::key('mid'));
+        foreach ([null, '', 'MID', 'nope', ['mid'], 1] as $bad) {
+            $this->assertNull(BinarySample::key($bad));
+        }
     }
 
     public function test_slice_survives_a_looped_tree(): void

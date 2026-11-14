@@ -336,6 +336,10 @@
 .adm .bmap-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .adm .bmap-count { margin: 10px 0 0; font-size: 13px; }
 .adm .crumbs .bmap-root { min-width: 0; overflow-wrap: anywhere; }
+.adm .bmap-sample { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.adm .bmap-sample > span { flex: 1 1 280px; min-width: 0; }
+.adm .bmap-sample .btn { margin-left: 0; }
+.adm .bmap-sample .btn.on { border-color: var(--lime); color: var(--lime); }
 .adm .bmap-tip { width: 300px; max-width: calc(100% - 16px); }
 .adm .bmap-state.q { color: var(--lime); }
 .adm .bmap-state.a { color: #6ee7b7; }
